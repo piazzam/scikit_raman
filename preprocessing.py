@@ -17,78 +17,37 @@ from itertools import groupby
 import seaborn as sn
 import matplotlib.pyplot as plt
 
-def resample_shift_due(df, start = 400, end=1600, points=991):
-    """
-    Calculate new set of points for the x-axis. Doesnt apply the shift of 
-    spectra.
-
-    Parameters
-    ----------
-    df : TYPE
-        DESCRIPTION.
-    start : TYPE, optional
-        DESCRIPTION. The default is 400.
-    end : TYPE, optional
-        DESCRIPTION. The default is 1600.
-    points : TYPE, optional
-        DESCRIPTION. The default is 991.
-
-    Returns
-    -------
-    None.
-
-    """
-    Y = list(df.Spectra)
-    X = list(df.x_axis)
-    label = list(df.label)
-    user = list(df.user)
-    Y_new = []
-    Y_original = []
-
-    for i in tqdm(range(len(Y))):
-       # x = literal_eval(X[i])
-       # y = literal_eval(Y[i])
-       x = X[i]
-       y = Y[i]
-       x = np.array([float(el) for el in x])
-       y = np.array([float(el) for el in y])
-       xnew = np.linspace(start, end, points)
-       fi = interpolate.interp1d(x, y, kind = 'linear', bounds_error=False,
-                                  fill_value='extrapolate')
-       ynew = fi(xnew)
-       Y_new.append(ynew)
-       Y_original.append(y)
-    y = list(df.label)
-    X = Y_new
-    return X
-
-def resample_shift(df, raman_shift, start = 400, end = 1600, points = 991):
+def resample_shift(df, start = 400, end = 1600, points = 991):
     """Calculate the new set of points for the spectras contained in the dataframe
      providen in input. Apply the shift of the spectra. 
 
     Parameters:
-    df (pd.DataFrame): dataframe containing the spectras
-    raman_shift (np.ndarray): the raman shift of the spectras in the dataframe
+    df : pd.DataFrame 
+        dataframe formatted by our policy
 
     Returns:
-    result (list): a list of all resampled spectras
-    x_new (np.ndarray): the new xaxis
+    df : pd.DataFrame
+        dataframe formatted by our policy with the new x-axis and the new
+        spectra
     """
 
-    x = raman_shift
     x_new = np.linspace(start, end, points)
 
     result = []
     for index, row in df.iterrows():
 
-        y = row[:-3]
+        y = row['spectra']
+        x = row['x-axis']
 
         fi = interpolate.interp1d(x, y, kind='linear', bounds_error=False,
                                   fill_value='extrapolate')
         y_new = fi(x_new)
         result.append(y_new)
-
-    return (result, x_new)
+        
+        
+    df['spectra'] = result
+    df['x-axis'] = [x_new] * len(df['x-axis'])
+    return df
 
 def delete_uninformative_spectra(X,y,user):
     """

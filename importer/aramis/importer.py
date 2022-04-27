@@ -51,10 +51,12 @@ def load_single_file(folder_path, filename):
     raw = True
     for j in range(len(rows)-1):
         if(rows[0][1] == ''):
-            raman_shift = rows[0][2:]
+            #raman_shift = rows[0][2:]
+            raman_shift = [float(el) for el in rows[0][2:]]
             line = [float(el) for el in rows[j+1][2:]]
         else:
-            raman_shift = rows[0][1:]
+            raman_shift = [float(el) for el in rows[0][1:]]
+            #raman_shift = rows[0][1:]
             line = [float(el) for el in rows[j+1][1:]]
         patient_spectras = patient_spectras.append({'user': u, 'name':'Raw', 'raw':raw, 'spectra': line, 'category': l, 'x-axis':raman_shift}, ignore_index = True)
     return patient_spectras

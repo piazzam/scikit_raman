@@ -47,7 +47,8 @@ def load_file(folder_path, filename,):
     user = user.replace('S', category)
     patient_spectras = pd.DataFrame(columns = ['user', 'spectra', 'x-axis', 'category', 'name', 'raw'])
     
-    raman_shift = imported_file['Raman Shift']
+    #raman_shift = imported_file['Raman Shift']
+    raman_shift = list(imported_file['Raman Shift'].replace(",",".", regex=True).astype(float))
     imported_file.drop('Raman Shift', inplace = True, axis = 1)
     imported_file.drop('Pixel', inplace = True, axis = 1, errors='ignore')
     raw = False
