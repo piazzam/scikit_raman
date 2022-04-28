@@ -49,78 +49,49 @@ def resample_shift(df, start = 400, end = 1600, points = 991):
     df['x-axis'] = [x_new] * len(df['x-axis'])
     return df
 
-def delete_uninformative_spectra(X,y,user):
-    """
-    Delete uninformative spectra. 
-    The uninformativa spectra are defined by up to 10% of null values or up
-    to 10% of saturate values.
-
-    Parameters
-    ----------
-    X : TYPE
-        DESCRIPTION.
-    y : TYPE
-        DESCRIPTION.
-    user : TYPE
-        DESCRIPTION.
-
-    Returns
-    -------
-    X : TYPE
-        DESCRIPTION.
-    y : TYPE
-        DESCRIPTION.
-    user : TYPE
-        DESCRIPTION.
-
-    """
+def delete_uninformative_spectra(df):
     tot = 0
-    for i in range(len(X))[::-1]:
-        nz = len(X[i]) - np.count_nonzero(X[i])
-        if(nz >= (10*len(X[i]))/100):
-            X.pop(i)
-            y.pop(i)
-            user.pop(i)
-            print('Item removed! '+str(nz)+' zeros found')
+    for i in range(len(df)):
+        current_spectra = df.iloc[i]['spectra']
+        nz = len(current_spectra) - np.count_nonzero(current_spectra)
+        if nz >= (10*len(current_spectra))/100:
+            df.drop(index = df.iloc[i].index, inplace = True)
             tot += 1
-    #remove repeated continuous values (signal saturated)
-    for i in range(len(X))[::-1]:
-        counts = [(k, sum(1 for i in g)) for k,g in groupby(X[i])]
+    for i in range(len(df)):
+        current_spectra = df.iloc[i]['spectra']
+        counts = [(k, sum(1 for i in g)) for k,g in groupby(current_spectra)]
         mc = max([c[1] for c in counts])
-        if(mc >= (10*len(X[i]))/100):
-            X.pop(i)
-            y.pop(i)
-            user.pop(i)
-            print('Item removed! '+str(mc)+' identical consecutive intensities found')
-            tot += 1 
-    print('\n'+str(tot)+' uninformative spectras removed')
-    return X,y,user
+        if mc >= (10*len(current_spectra))/100:
+            df.drop(index = df.iloc[i].index, inplace = True)
+            tot += 1
+    return df
 
-def remove_alluminium(X, y, allu):
+
+def remove_alluminium(df, df_allu):
     """
-    Remove signal of the alluminium substrate.
+    Removes the alluminium substrate
 
     Parameters
     ----------
-    X : TYPE
-        DESCRIPTION.
-    y : TYPE
-        DESCRIPTION.
-    allu : TYPE
-        DESCRIPTION.
+    df : pd.DataFrame
+        A dataframe formatted by our policy.
+    df_allu : pd.DataFrame
+        An alluminium dataframe formatted by our policy.
 
     Returns
     -------
-    X_new : List(float)
-        List that contains the new points without alluminium substrate
+    df : pd.DataFrame
+        A new dataframe formatted without alluminium substrate.
 
     """
-    X_new = []
-    for spectra in X:
-        spectra_new = []
-        for s,al in zip(spectra, allu):
-            spectra_new.append(s-al)
-    return X_new
+    allu = df_allu.iloc[0]['spectra']
+    for i in range(len(df)):
+        current_spectra = df.iloc[i]['spectra']
+        new_spectra = []
+        for s,al in zip(current_spectra,allu):
+            new_spectra.append(s-al)
+        df.iloc[i]['spectra'] = new_spectra
+    return df
 
 def modified_z_score(intensity):
     """
@@ -258,21 +229,3 @@ def median_filtering(X, y, labels, filter_size = 5, plot = True):
                 plt.plot(subX[j])
         X_mf.extend(subX)
     return X_mf
-
-import pandas as pd
-import pickle
-
-with open('../dataset/data_raman_portable.pkl', 'rb') as pickle_file:
-    content_due = pickle.load(pickle_file)
-    
-#with open('../dataset/raman_shift_portable.pkl', 'rb') as pickle_file:
-#    content_tre = pickle.load(pickle_file)
-    
-with open('../dataset/data_raman_raw_portable.pkl', 'rb') as pickle_file:
-    content_uno = pickle.load(pickle_file)
-    
-with open('../dataset/data_raman_aramis.pkl', 'rb') as pickle_file:
-    aramis = pickle.load(pickle_file)
-    
-#print(aramis[0])
-#print(aramis[1])    
