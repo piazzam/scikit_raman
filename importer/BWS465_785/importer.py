@@ -100,17 +100,8 @@ def save_as_pickle(df, filename):
     filename : string
         Path in which save the file
 
-    Returns
-    -------
-    bool
-        True if the saving of the file has worked properly. False otherwise.
-
     """
-    try:
-        df.to_pickle(filename)
-        return True
-    except:
-        return False
+    df.to_pickle(filename)
     
 def get_raw_data(df):
     """
