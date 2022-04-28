@@ -50,6 +50,21 @@ def resample_shift(df, start = 400, end = 1600, points = 991):
     return df
 
 def delete_uninformative_spectra(df):
+    """
+    Delete uninformative spectra. Uninformative spectras are defined by:
+        10% of zeros or 10% repeated continuos values.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        A dataframe formatted by our policy.
+
+    Returns
+    -------
+    df : pd.DataFrame
+        A dataframe without uninformative spectras.
+
+    """
     tot = 0
     for i in range(len(df)):
         current_spectra = df.iloc[i]['spectra']
