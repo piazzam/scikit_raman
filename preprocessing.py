@@ -194,7 +194,7 @@ def spike_removal(X):
         X_c.append(x_fix)
     return X_c
 
-def remove_baseline(spectra, deg = 6, max_it = 100000, tol = pow(10, -11)):
+def remove_baseline(df, deg = 6, max_it = 100000, tol = pow(10, -11)):
     """
     Remove baseline (background noise) from the spectra
 
@@ -217,14 +217,15 @@ def remove_baseline(spectra, deg = 6, max_it = 100000, tol = pow(10, -11)):
     """
     #df_final = pd.DataFrame(columns = df.columns, index = df.index)
     #print(df_final)
+    spectra = list(df['spectra'])
     X_out = []
     for i in tqdm(range(len(spectra))):
         if(np.any(spectra[i])):
-            baseline_values = peakutils.baseline(spectra[i], deg = deg, max_it = max_it, tol = tol)
+            baseline_values = peakutils.baseline(np.array(spectra[i]), deg = deg, max_it = max_it, tol = tol)
             z = zip(spectra[i], baseline_values)
-            #df_final.loc[:, 'Spectra'] = [x[0] - x[1] for x in z] 
             X_out.append([x[0] - x[1] for x in z])
-    return X_out
+    df['spectra'] = X_out
+    return df
 
 #median filtering of the spectra
 # X = list of spectra
