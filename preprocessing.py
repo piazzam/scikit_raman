@@ -23,11 +23,11 @@ def resample_shift(df, start = 400, end = 1600, points = 991):
 
     Parameters:
     df : pd.DataFrame 
-        dataframe formatted by our policy
+        dataframe formatted according to our policy
 
     Returns:
     df : pd.DataFrame
-        dataframe formatted by our policy with the new x-axis and the new
+        dataframe formatted according to our policy with the new x-axis and the new
         spectra
     """
 
@@ -57,7 +57,7 @@ def delete_uninformative_spectra(df):
     Parameters
     ----------
     df : pd.DataFrame
-        A dataframe formatted by our policy.
+        A dataframe formatted according to our policy.
 
     Returns
     -------
@@ -89,14 +89,14 @@ def remove_alluminium(df, df_allu):
     Parameters
     ----------
     df : pd.DataFrame
-        A dataframe formatted by our policy.
+        A dataframe formatted according to our policy.
     df_allu : pd.DataFrame
-        An alluminium dataframe formatted by our policy.
+        An alluminium dataframe formatted according to our policy.
 
     Returns
     -------
     df : pd.DataFrame
-        A new dataframe formatted without alluminium substrate.
+        A new dataframe without alluminium substrate.
 
     """
     allu = df_allu.iloc[0]['spectra']
@@ -196,7 +196,7 @@ def spike_removal(X):
 
 def remove_baseline(spectra, deg = 6, max_it = 100000, tol = pow(10, -11)):
     """
-    Remove baseline (bacground noise) from the spectra
+    Remove baseline (background noise) from the spectra
 
     Parameters
     ----------
@@ -227,7 +227,10 @@ def remove_baseline(spectra, deg = 6, max_it = 100000, tol = pow(10, -11)):
     return X_out
 
 #median filtering of the spectra
-def median_filtering(X, y, labels, filter_size = 5, plot = True):
+# X = list of spectra
+# y = list of labels in numeric form
+# labels = names of different labels
+def median_filtering_old(X, y, labels, filter_size = 5, plot = True):
     X_mf = []
     for i in range(len(set(y))):
         if(plot == True):
@@ -242,5 +245,36 @@ def median_filtering(X, y, labels, filter_size = 5, plot = True):
             subX[j] = medfilt(subX[j], filter_size)
             if(plot == True):
                 plt.plot(subX[j])
+        X_mf.extend(subX)
+    return X_mf
+
+def median_filtering(df, filter_size = 5):
+    """
+    Apply the median filtering approach to remove the background noise. 
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        A DataFrame formated according to our policy.
+    filter_size : Int, optional
+        Dimension of the filter size. The default is 5.
+
+    Returns
+    -------
+    X_mf : 
+        The new spectra with media filtering. The median filtering of the 
+        spectra.
+
+    """
+    X_mf = []
+    label_set = set(df['label'])
+    X = list(df['spectra'])
+    for i in range(len(label_set)):
+        subX = []
+        for j in range(len(X)):
+            if(df.iloc[j]['label'] == i):
+                subX.append(X[j])
+        for j in range(len(subX)):
+            subX[j] = medfilt(subX[j, filter_size])
         X_mf.extend(subX)
     return X_mf

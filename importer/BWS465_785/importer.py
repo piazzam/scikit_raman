@@ -110,12 +110,12 @@ def get_raw_data(df):
     Parameters
     ----------
     df : pd.DataFrame
-        A DataFrame formatted by our policies.
+        A DataFrame formatted according to our policy.
 
     Returns
     -------
     df_return : pd.DataFrame
-        A DataFrame formatted by our policies with only raw data.
+        A DataFrame formatted according to our policy with only raw data.
 
     """
     df_return = df[df['raw'] == True]
@@ -128,12 +128,12 @@ def get_dark_data(df):
     Parameters
     ----------
     df : pd.DataFrame
-        A DataFrame formatted by our policies.
+        A DataFrame formatted according to our policy.
 
     Returns
     -------
     df_return : pd.DataFrame
-        A DataFrame formatted by our policies with only dark data.
+        A DataFrame formatted according to our policy with only dark data.
 
     """
     df_return = df[df['raw'] == False]
@@ -148,8 +148,8 @@ def category_to_label(df, conversion_dictionary):
     Parameters
     ----------
     df : pd.DataFrame
-        A Dataframe that contained dataset defined as our policies. There is 
-        category field. 
+        A Dataframe that contained dataset formatted according to our policy. 
+        The Dataframe must have category field. 
     conversion_dictionary : dict
         A dictionary that contains the rules for the conversion category to 
         label.
@@ -171,14 +171,14 @@ def change_category_name(df, change_dictionary):
     Parameters
     ----------
     df : pd.DataFrame
-        A dataframe formatted by our policies.
+        A dataframe formatted according to our policy.
     change_dictionary : dict
         A dictionary that mapped old category names to new category names.
 
     Returns
     -------
     df : pd.DataFrame
-        A dataframe formatted by our policies with new category names.
+        A dataframe formatted according to our policy with new category names.
 
     """
     for el in change_dictionary:
@@ -193,14 +193,14 @@ def change_user_name_string(df, change_dictionary):
     Parameters
     ----------
     df : pd.DataFrame
-        A dataframe formatted by our policy.
+        A dataframe formatted according to our policy.
     change_dictionary : dict
         A dictionary that mapped old user names to new user names.
 
     Returns
     -------
     df : pd.DataFrame
-        A dataframe formatted by our policies with new user names.
+        A dataframe formatted according to our policy with new user names.
 
     """
     for el in df['user']:
@@ -221,7 +221,7 @@ def change_user_and_category(df, change_dictionary):
     arameters
     ----------
     df : pd.DataFrame
-        A dataframe formatted by our policy.
+        A dataframe formatted according to our policy.
     change_dictionary : dict
         A dictionary that mapped old user names and categories 
         to new ones.
@@ -229,7 +229,7 @@ def change_user_and_category(df, change_dictionary):
     Returns
     -------
     df : pd.DataFrame
-        A dataframe formatted by our policies with new user names and 
+        A dataframe formatted according to our policy with new user names and 
         categories.
 
     """
