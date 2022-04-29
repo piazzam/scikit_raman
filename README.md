@@ -1,6 +1,6 @@
 # scikit-raman
 
-A library to manipulate and make analysis of Raman Spectral Data. This project is the result of my thesis at Master's degree in computer science at University of Milan-Bicocca.
+A Python library to manipulate and Analyse Raman Spectral Data. This project is the result of my thesis at Master's degree in computer science at University of Milan-Bicocca.
 
 ## Getting started
 
