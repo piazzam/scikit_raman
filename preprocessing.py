@@ -31,7 +31,7 @@ def resample_shift(df, start = 400, end = 1600, points = 991):
         spectra
     """
 
-    x_new = np.linspace(start, end, points)
+    x_new = list(np.linspace(start, end, points))
 
     result = []
     for index, row in df.iterrows():
@@ -42,7 +42,7 @@ def resample_shift(df, start = 400, end = 1600, points = 991):
         fi = interpolate.interp1d(x, y, kind='linear', bounds_error=False,
                                   fill_value='extrapolate')
         y_new = fi(x_new)
-        result.append(y_new)
+        result.append(list(y_new))
         
         
     df['spectra'] = result
@@ -66,19 +66,28 @@ def delete_uninformative_spectra(df):
 
     """
     tot = 0
+    df_to_remove = []
     for i in range(len(df)):
         current_spectra = df.iloc[i]['spectra']
         nz = len(current_spectra) - np.count_nonzero(current_spectra)
         if nz >= (10*len(current_spectra))/100:
-            df.drop(index = df.iloc[i].index, inplace = True)
+            #df.drop(index = df.iloc[i].index, inplace = True)
+            df_to_remove.append(df.iloc[i].index)
             tot += 1
+    df.drop(df_to_remove, inplace = True)
+    return df
+    df_to_remove = []
     for i in range(len(df)):
         current_spectra = df.iloc[i]['spectra']
         counts = [(k, sum(1 for i in g)) for k,g in groupby(current_spectra)]
         mc = max([c[1] for c in counts])
+        print(mc)
         if mc >= (10*len(current_spectra))/100:
-            df.drop(index = df.iloc[i].index, inplace = True)
+            #df.drop(index = df.iloc[i].index, inplace = True)
+            df_to_remove.append(df.iloc[i].index)
             tot += 1
+    print("TOT = "+str(tot))
+    df.drop(df_to_remove, inplace = True)
     return df
 
 

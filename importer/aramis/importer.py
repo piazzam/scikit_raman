@@ -26,6 +26,7 @@ def importer(folder_path):
         f = re.split('(\d+)',f[0])
         patient_spectras = load_single_file(folder_path, filename)
         imported_data = imported_data.append(patient_spectras)
+    imported_data.reset_index()
     return imported_data
 
 def load_single_file(folder_path, filename):
