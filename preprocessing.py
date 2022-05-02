@@ -172,7 +172,7 @@ def fixer(X,m,index,threshold = 3.5, plot=False):
                 X_out[i] = np.mean(np.array(X)[w2]) # and we average their values
                 ns +=1
     if(ns > 0):
-        print('Found '+str(ns)+' spikes')
+        #print('Found '+str(ns)+' spikes')
         if(plot == True):
             sn.set()
             plt.figure()
@@ -183,7 +183,7 @@ def fixer(X,m,index,threshold = 3.5, plot=False):
             plt.plot(X_out)
     return X_out
 
-def spike_removal(X):
+def spike_removal(df):
     """
     Remove spikes from spectra.
 
@@ -198,11 +198,13 @@ def spike_removal(X):
         DESCRIPTION.
 
     """
+    X = list(df['spectra'])
     X_c = []
     for x in X:
         x_fix = fixer(x,5, X.index(x), threshold=3.5)
         X_c.append(x_fix)
-    return X_c
+    df['spectra'] = X_c
+    return df
 
 def remove_baseline_polynomial(df, deg = 6, max_it = 100000, tol = pow(10, -11)):
     """
