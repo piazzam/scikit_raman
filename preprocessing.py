@@ -138,7 +138,7 @@ def modified_z_score(intensity):
     modified_z_scores = 0.6745 * (intensity - median_int) / mad_int
     return modified_z_scores
 
-def fixer(X,m,index,threshold = 3.5, plot=False):
+def fixer(X,m,index,threshold = 3.5):
     """
     Function propaedeutics for spike removal function   
 
@@ -152,8 +152,6 @@ def fixer(X,m,index,threshold = 3.5, plot=False):
         DESCRIPTION.
     threshold : TYPE, optional
         DESCRIPTION. The default is 3.5.
-    plot : TYPE, optional
-        DESCRIPTION. The default is False.
 
     Returns
     -------
@@ -171,31 +169,24 @@ def fixer(X,m,index,threshold = 3.5, plot=False):
             if(len(w2) != 0): #avoid erroneous detected spikes ([2m+1]+ consecutive spikes)
                 X_out[i] = np.mean(np.array(X)[w2]) # and we average their values
                 ns +=1
-    if(ns > 0):
+    #if(ns > 0):
         #print('Found '+str(ns)+' spikes')
-        if(plot == True):
-            sn.set()
-            plt.figure()
-            plt.title('Spectra '+ str(index))
-            plt.plot(spikes*1000)
-            plt.plot(X, alpha = 0.5)
-            plt.figure()
-            plt.plot(X_out)
     return X_out
 
 def spike_removal(df):
     """
-    Remove spikes from spectra.
+    Removes the spikes from the spectra.
 
     Parameters
     ----------
-    X : TYPE
-        DESCRIPTION.
+    df : pd.DataFrame
+        A Dataframe formatted according to our policy.
 
     Returns
     -------
-    X_c : TYPE
-        DESCRIPTION.
+    df : pd.DataFrame
+        A Dataframe formatted according to our policy. In the spectra fields
+        the spike spectra are removed.
 
     """
     X = list(df['spectra'])
