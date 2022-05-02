@@ -16,6 +16,7 @@ from ast import literal_eval
 from itertools import groupby
 import seaborn as sn
 import matplotlib.pyplot as plt
+from scipy.signal import savgol_filter
 
 def resample_shift(df, start = 400, end = 1600, points = 991):
     """Calculate the new set of points for the spectras contained in the dataframe
@@ -203,29 +204,29 @@ def spike_removal(X):
         X_c.append(x_fix)
     return X_c
 
-def remove_baseline(df, deg = 6, max_it = 100000, tol = pow(10, -11)):
+def remove_baseline_polynomial(df, deg = 6, max_it = 100000, tol = pow(10, -11)):
     """
-    Remove baseline (background noise) from the spectra
+    Removes baseline (background noise) from the spectra. It apply the 
+    polinomyal fitting approach.
 
     Parameters
     ----------
-    spectra : TYPE
-        DESCRIPTION.
-    deg : TYPE, optional
-        DESCRIPTION. The default is 6.
-    max_it : TYPE, optional
-        DESCRIPTION. The default is 100000.
-    tol : TYPE, optional
-        DESCRIPTION. The default is pow(10, -11).
+    df : pd.DataFrame
+        A Dataframe formatted according to out policy.
+    deg : int, optional
+        degree of the polynomial. The default is 6.
+    max_it : int, optional
+        maximum number of iterations. The default is 100000.
+    tol : int, optional
+        tolerance value. The default is pow(10, -11).
 
     Returns
     -------
-    X_out : TYPE
-        DESCRIPTION.
+    df : pd.DataFrame
+        A DataFrame formatted according to our policy. It contains in the 
+        spectra fields the field without background noise.
 
     """
-    #df_final = pd.DataFrame(columns = df.columns, index = df.index)
-    #print(df_final)
     spectra = list(df['spectra'])
     X_out = []
     for i in tqdm(range(len(spectra))):
@@ -288,3 +289,32 @@ def median_filtering(df, filter_size = 5):
             subX[j] = medfilt(subX[j, filter_size])
         X_mf.extend(subX)
     return X_mf
+
+def smoothing_savitzky_golay(df, window_length = 9, polyorder = 2):
+    """
+    Removes the baseline (background noise). It applies the Savitzy-Golay
+    smoothing.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        A Dataframe formated according to our policy.
+    window_length : int, optional
+        Window length for the Savitzky-Golay function. The default is 9.
+    polyorder : int, optional
+        polyorder for the Savitzky-Golay function. The default is 2.
+
+    Returns
+    -------
+    df : pd.DataFrame
+        A Dataframe formatted according to out policy. In the spectra field 
+        the spectra are smoothed with Savitzky-Golay filter.
+
+    """
+    X = list(df['spectra'])
+    X_filter = savgol_filter(X, window_length = window_length, polyorder = polyorder)
+    X_filter_bis = []
+    for el in X_filter:
+        X_filter_bis.append(list(el))
+    df['spectra'] = X_filter_bis
+    return df

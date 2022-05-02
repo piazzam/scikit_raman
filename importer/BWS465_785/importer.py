@@ -24,7 +24,7 @@ def importer(folder_path):
     for filename in tqdm(os.listdir(folder_path)):
         patient_spectras = load_file(folder_path, filename)
         imported_data = imported_data.append(patient_spectras)
-    imported_data = imported_data.reset_index()
+    imported_data = imported_data.reset_index(drop=True)
     return imported_data
 
 def load_file(folder_path, filename,):
