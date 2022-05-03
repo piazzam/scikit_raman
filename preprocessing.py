@@ -17,6 +17,8 @@ from itertools import groupby
 import seaborn as sn
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
+from sklearn.preprocessing import MinMaxScaler
+
 
 def resample_shift(df, start = 400, end = 1600, points = 991):
     """Calculate the new set of points for the spectras contained in the dataframe
@@ -335,4 +337,31 @@ def snv(df):
         data_snv[i,:] = list((X[i] - np.mean(X[i])) / np.std(X[i]))
     l = data_snv.tolist()
     df['spectra'] = l
+    return df
+
+def min_max(df):
+    """
+    Apply the min-max normalization.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        A DataFrame formatted according to our policy. 
+
+    Returns
+    -------
+    df : TYPE
+        A DataFrame formatted according to our policy. In the spectra column 
+        the value are substituted with the normalized values. 
+
+    """
+    X = list(df['spectra'])
+    norm = X.copy()
+    scaler = MinMaxScaler()
+    for i in range(len(X)):
+        # Apply correction
+        x = np.array(X[i])
+        norm[i] = scaler.fit_transform(np.reshape(x, (-1,1)))
+        norm[i] = list(norm[i].reshape(991))
+    df['spectra'] = norm
     return df
