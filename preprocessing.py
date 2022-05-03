@@ -311,3 +311,28 @@ def smoothing_savitzky_golay(df, window_length = 9, polyorder = 2):
         X_filter_bis.append(list(el))
     df['spectra'] = X_filter_bis
     return df
+
+def snv(df):
+    """
+    Apply the normalization with the SNV approach.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        A Dataframe formatted according to our policy.
+
+    Returns
+    -------
+    df : pd.DataFrame
+        A Dataframe formatted according to out policy. In the spectra column 
+        the value are substituted with the normalized values.
+
+    """
+    X = list(df['spectra'])
+    data_snv = np.zeros_like(X)
+    for i in range(len(X)):
+        # Apply correction
+        data_snv[i,:] = list((X[i] - np.mean(X[i])) / np.std(X[i]))
+    l = data_snv.tolist()
+    df['spectra'] = l
+    return df
