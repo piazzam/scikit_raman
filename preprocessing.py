@@ -18,6 +18,7 @@ import seaborn as sn
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 from sklearn.preprocessing import MinMaxScaler
+from sklearn import preprocessing
 
 
 def resample_shift(df, start = 400, end = 1600, points = 991):
@@ -314,7 +315,7 @@ def smoothing_savitzky_golay(df, window_length = 9, polyorder = 2):
     df['spectra'] = X_filter_bis
     return df
 
-def snv(df):
+def snv_normalization(df):
     """
     Apply the normalization with the SNV approach.
 
@@ -339,7 +340,7 @@ def snv(df):
     df['spectra'] = l
     return df
 
-def min_max(df):
+def min_max_normalization(df):
     """
     Apply the min-max normalization.
 
@@ -364,4 +365,25 @@ def min_max(df):
         norm[i] = scaler.fit_transform(np.reshape(x, (-1,1)))
         norm[i] = list(norm[i].reshape(991))
     df['spectra'] = norm
+    return df
+
+def l2_normalization(df):
+    """
+    Apply the l2 - normalization.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        A Dataframe formatted according to our policy.
+
+    Returns
+    -------
+    df : pd.DaraFrame
+        A dataframe formatted according to our policy. In the spectra column 
+        the value are substituted with the normalized values. 
+
+    """
+    X = list(df['spectra'])
+    X_norm = preprocessing.normalize(X, norm='l2')
+    df['spectra'] = X_norm.tolist()
     return df
