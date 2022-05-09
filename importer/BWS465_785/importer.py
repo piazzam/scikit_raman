@@ -2,6 +2,7 @@ import pandas as pd
 from tqdm import tqdm
 import os
 import re
+import numpy as np
 
 def importer(folder_path):
     """
@@ -50,6 +51,7 @@ def load_file(folder_path, filename,):
     
     #raman_shift = imported_file['Raman Shift']
     raman_shift = list(imported_file['Raman Shift'].replace(",",".", regex=True).astype(float))
+    raman_shift = np.array(raman_shift)
     imported_file.drop('Raman Shift', inplace = True, axis = 1)
     imported_file.drop('Pixel', inplace = True, axis = 1, errors='ignore')
     raw = False
@@ -60,7 +62,9 @@ def load_file(folder_path, filename,):
             raw = True
         else:
             raw = False
-        patient_spectras = patient_spectras.append({'user': user, 'name':imported_file[column].name, 'raw':raw, 'spectra': list(imported_file[column].replace(",",".", regex=True).astype(float)), 'category': category, 'x-axis':raman_shift}, ignore_index = True)
+        spectra = list(imported_file[column].replace(",",".", regex=True).astype(float))
+        spectra = np.array(spectra)
+        patient_spectras = patient_spectras.append({'user': user, 'name':imported_file[column].name, 'raw':raw, 'spectra': spectra, 'category': category, 'x-axis':raman_shift}, ignore_index = True)
     return patient_spectras
     
 def get_label_user(filename):

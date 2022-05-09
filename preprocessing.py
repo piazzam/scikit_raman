@@ -1,20 +1,18 @@
 import numpy as np
-import pickle
+#import pickle
 import pandas as pd
-from collections import Counter
+#from collections import Counter
 from sklearn import preprocessing
-from sklearn.preprocessing import LabelEncoder
-from keras.utils import np_utils
-from sklearn.manifold import TSNE
-from scipy.spatial.distance import euclidean
+#from sklearn.manifold import TSNE
+#from scipy.spatial.distance import euclidean
 import peakutils
 from tqdm import tqdm
-import statistics as st
+#import statistics as st
 from scipy.signal import medfilt
 from scipy import interpolate
-from ast import literal_eval
+#from ast import literal_eval
 from itertools import groupby
-import seaborn as sn
+#import seaborn as sn
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 from sklearn.preprocessing import MinMaxScaler
