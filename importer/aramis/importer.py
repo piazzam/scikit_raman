@@ -55,15 +55,15 @@ def load_single_file(folder_path, filename):
         if(rows[0][1] == ''):
             #raman_shift = rows[0][2:]
             raman_shift = [float(el) for el in rows[0][2:]]
-            raman_shift = np.array(raman_shift)
+            #raman_shift = np.array(raman_shift)
             line = [float(el) for el in rows[j+1][2:]]
             line = np.array(line)
         else:
             raman_shift = [float(el) for el in rows[0][1:]]
-            raman_shift = np.array(raman_shift)
+            #raman_shift = np.array(raman_shift)
             #raman_shift = rows[0][1:]
             line = [float(el) for el in rows[j+1][1:]]
-            line = np.array(line)
+            #line = np.array(line)
         patient_spectras = patient_spectras.append({'user': u, 'name':'Raw', 'raw':raw, 'spectra': line, 'category': l, 'x-axis':raman_shift}, ignore_index = True)
     return patient_spectras
 

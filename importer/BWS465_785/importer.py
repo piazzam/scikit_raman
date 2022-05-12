@@ -51,7 +51,7 @@ def load_file(folder_path, filename,):
     
     #raman_shift = imported_file['Raman Shift']
     raman_shift = list(imported_file['Raman Shift'].replace(",",".", regex=True).astype(float))
-    raman_shift = np.array(raman_shift)
+    #raman_shift = np.array(raman_shift)
     imported_file.drop('Raman Shift', inplace = True, axis = 1)
     imported_file.drop('Pixel', inplace = True, axis = 1, errors='ignore')
     raw = False
@@ -63,7 +63,7 @@ def load_file(folder_path, filename,):
         else:
             raw = False
         spectra = list(imported_file[column].replace(",",".", regex=True).astype(float))
-        spectra = np.array(spectra)
+        #spectra = np.array(spectra)
         patient_spectras = patient_spectras.append({'user': user, 'name':imported_file[column].name, 'raw':raw, 'spectra': spectra, 'category': category, 'x-axis':raman_shift}, ignore_index = True)
     return patient_spectras
     
