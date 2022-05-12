@@ -57,7 +57,7 @@ def load_single_file(folder_path, filename):
             raman_shift = [float(el) for el in rows[0][2:]]
             #raman_shift = np.array(raman_shift)
             line = [float(el) for el in rows[j+1][2:]]
-            line = np.array(line)
+            #line = np.array(line)
         else:
             raman_shift = [float(el) for el in rows[0][1:]]
             #raman_shift = np.array(raman_shift)
