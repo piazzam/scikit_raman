@@ -122,6 +122,7 @@ def get_raw_data(df):
 
     """
     df_return = df[df['raw'] == True]
+    df_return = df_return.reset_index()
     return df_return
 
 def get_dark_data(df):
@@ -140,6 +141,7 @@ def get_dark_data(df):
 
     """
     df_return = df[df['raw'] == False]
+    df_return = df_return.reset_index()
     return df_return
 
 def category_to_label(df, conversion_dictionary):

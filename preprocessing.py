@@ -1,18 +1,11 @@
 import numpy as np
-#import pickle
 import pandas as pd
-#from collections import Counter
 from sklearn import preprocessing
-#from sklearn.manifold import TSNE
-#from scipy.spatial.distance import euclidean
 import peakutils
 from tqdm import tqdm
-#import statistics as st
 from scipy.signal import medfilt
 from scipy import interpolate
-#from ast import literal_eval
 from itertools import groupby
-#import seaborn as sn
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 from sklearn.preprocessing import MinMaxScaler
@@ -231,29 +224,7 @@ def remove_baseline_polynomial(df, deg = 6, max_it = 100000, tol = pow(10, -11))
     df['spectra'] = X_out
     return df
 
-#median filtering of the spectra
-# X = list of spectra
-# y = list of labels in numeric form
-# labels = names of different labels
-def median_filtering_old(X, y, labels, filter_size = 5, plot = True):
-    X_mf = []
-    for i in range(len(set(y))):
-        if(plot == True):
-            plt.figure(figsize=[10,5])
-            plt.title('Spectra '+labels[i])
-        subX = []
-        for j in range(len(X)):
-            if(y[j] == i):
-                subX.append(X[j])
-
-        for j in range(len(subX)):
-            subX[j] = medfilt(subX[j], filter_size)
-            if(plot == True):
-                plt.plot(subX[j])
-        X_mf.extend(subX)
-    return X_mf
-
-def median_filtering(df, filter_size = 5):
+def remove_baseline_median_filtering(df, filter_size = 5):
     """
     Apply the median filtering approach to remove the background noise. 
 
@@ -266,9 +237,9 @@ def median_filtering(df, filter_size = 5):
 
     Returns
     -------
-    X_mf : 
-        The new spectra with media filtering. The median filtering of the 
-        spectra.
+    df : pd.DataFrame
+        A DataFrame formatted according to our policy. It contains in the 
+        spectra fields the field without background noise.
 
     """
     X_mf = []
@@ -282,6 +253,7 @@ def median_filtering(df, filter_size = 5):
         for j in range(len(subX)):
             subX[j] = medfilt(subX[j, filter_size])
         X_mf.extend(subX)
+    df['spectra'] = X_mf
     return X_mf
 
 def smoothing_savitzky_golay(df, window_length = 9, polyorder = 2):
@@ -337,6 +309,7 @@ def snv_normalization(df):
     l = data_snv.tolist()
     df['spectra'] = l
     return df
+    
 
 def min_max_normalization(df):
     """
@@ -383,5 +356,26 @@ def l2_normalization(df):
     """
     X = list(df['spectra'])
     X_norm = preprocessing.normalize(X, norm='l2')
+    df['spectra'] = X_norm.tolist()
+    return df
+
+def peak_normalization(df):
+    """
+    Apply the peak - normalization.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        A Dataframe formatted according to our policy.
+
+    Returns
+    -------
+    df : pd.DaraFrame
+        A dataframe formatted according to our policy. In the spectra column 
+        the value are substituted with the normalized values. 
+
+    """
+    X = list(df['spectra'])
+    X_norm = preprocessing.normalize(X, norm='max')
     df['spectra'] = X_norm.tolist()
     return df
