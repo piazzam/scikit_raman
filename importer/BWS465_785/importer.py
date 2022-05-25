@@ -87,7 +87,7 @@ def get_label_user(filename):
 
     """
     if '_20' in filename:
-        filename = filename.replace('_20', '')
+        filename = filename.replace('_', '')
     f = filename.split('_10000')
     f = re.split('(\d+)', f[0])
     #return f[2], f[0]+f[1]
