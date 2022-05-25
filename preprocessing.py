@@ -62,26 +62,23 @@ def delete_uninformative_spectra(df):
     """
     tot = 0
     df_to_remove = []
-    for i in range(len(df)):
-        current_spectra = df.iloc[i]['spectra']
+    #for i in range(len(df)):
+    for index, row in df.iterrows():
+        current_spectra = row['spectra']
         nz = len(current_spectra) - np.count_nonzero(current_spectra)
         if nz >= (10*len(current_spectra))/100:
-            #df.drop(index = df.iloc[i].index, inplace = True)
-            df_to_remove.append(df.iloc[i].index)
+            df_to_remove.append(index)
             tot += 1
     df.drop(df_to_remove, inplace = True)
-    return df
     df_to_remove = []
-    for i in range(len(df)):
-        current_spectra = df.iloc[i]['spectra']
+    for index, row in df.iterrows():
+        current_spectra = row['spectra']
         counts = [(k, sum(1 for i in g)) for k,g in groupby(current_spectra)]
         mc = max([c[1] for c in counts])
-        print(mc)
         if mc >= (10*len(current_spectra))/100:
-            #df.drop(index = df.iloc[i].index, inplace = True)
-            df_to_remove.append(df.iloc[i].index)
+            df_to_remove.append(index)
             tot += 1
-    print("TOT = "+str(tot))
+    print("Tot = "+str(tot) + " spettri rimossi")
     df.drop(df_to_remove, inplace = True)
     return df
 
@@ -129,7 +126,12 @@ def modified_z_score(intensity):
     """
     median_int = np.median(intensity)
     mad_int = np.median([np.abs(intensity - median_int)])
-    modified_z_scores = 0.6745 * (intensity - median_int) / mad_int
+    try:
+        modified_z_scores = 0.6745 * (intensity - median_int) / mad_int
+    except RuntimeWarning:
+        print(intensity)
+        print(mad_int)
+        modified_z_scores = 0.6745 * (intensity - median_int) / 1
     return modified_z_scores
 
 def fixer(X,m,index,threshold = 3.5):
@@ -164,7 +166,7 @@ def fixer(X,m,index,threshold = 3.5):
                 X_out[i] = np.mean(np.array(X)[w2]) # and we average their values
                 ns +=1
     #if(ns > 0):
-        #print('Found '+str(ns)+' spikes')
+    #    print('Found '+str(ns)+' spikes')
     return X_out
 
 def spike_removal(df):
