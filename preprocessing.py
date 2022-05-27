@@ -126,12 +126,7 @@ def modified_z_score(intensity):
     """
     median_int = np.median(intensity)
     mad_int = np.median([np.abs(intensity - median_int)])
-    try:
-        modified_z_scores = 0.6745 * (intensity - median_int) / mad_int
-    except RuntimeWarning:
-        print(intensity)
-        print(mad_int)
-        modified_z_scores = 0.6745 * (intensity - median_int) / 1
+    modified_z_scores = 0.6745 * (intensity - median_int) / mad_int
     return modified_z_scores
 
 def fixer(X,m,index,threshold = 3.5):
