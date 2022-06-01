@@ -32,6 +32,7 @@ def pca_fit_transform(df, n_components = 2):
     for i in range(len(df)):
         df.at[i,'components'] = pca[i].tolist()
     return df
+    #return pca
 
 def pca_fit(df, n_components = 2):
     """
@@ -111,5 +112,5 @@ def tsne_fit_transform(df, n_components = 2):
     df['components'] = np.nan
     df['components'] = df['components'].astype('object')
     for i in range(len(df)):
-        df.at[i,'components'] = pca[i].tolist()
+        df.at[i,'components'] = tsne_res[i].tolist()
     return df    

@@ -80,6 +80,7 @@ def delete_uninformative_spectra(df):
             tot += 1
     print("Tot = "+str(tot) + " spettri rimossi")
     df.drop(df_to_remove, inplace = True)
+    df = df.reset_index()
     return df
 
 
