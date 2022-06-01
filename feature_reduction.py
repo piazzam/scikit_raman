@@ -26,12 +26,12 @@ def pca_fit_transform(df, n_components = 2):
     pca=PCA(n_components=n_components)
     spectra = list(df['spectra'])
     pca=pca.fit_transform(spectra)
-    if 'label' in df.columns:
-        df_pca=pd.concat([pd.DataFrame(pca, columns = ["component" + str(i) for i in range(n_components)]),df.user, df.category, df.label], axis=1)
-        
-    else:
-        df_pca=pd.concat([pd.DataFrame(pca, columns = ["component" + str(i) for i in range(n_components)]),df.user, df.category], axis=1)
-    return df_pca
+    df.drop(columns = ['spectra', 'x-axis'], inplace = True)
+    df['components'] = np.nan
+    df['components'] = df['components'].astype('object')
+    for i in range(len(df)):
+        df.at[i,'components'] = pca[i].tolist()
+    return df
 
 def pca_fit(df, n_components = 2):
     """
@@ -77,11 +77,12 @@ def pca_transform(df, pca):
     spectra = list(df['spectra'])
     pca_result = pca.transform(spectra)
     n_components = pca_result.shape[1]
-    if 'label' in df.columns:
-        df_pca=pd.concat([pd.DataFrame(pca_result, columns = ["component" + str(i) for i in range(n_components)]),df.user, df.category, df.label], axis=1)
-    else:
-        df_pca=pd.concat([pd.DataFrame(pca_result, columns = ["component" + str(i) for i in range(n_components)]),df.user, df.category], axis=1)
-    return df_pca
+    df.drop(columns = ['spectra', 'x-axis'], inplace = True)
+    df['components'] = np.nan
+    df['components'] = df['components'].astype('object')
+    for i in range(len(df)):
+        df.at[i,'components'] = pca[i].tolist()
+    return df
 
 def tsne_fit_transform(df, n_components = 2):
     """
@@ -106,8 +107,9 @@ def tsne_fit_transform(df, n_components = 2):
     tsne=TSNE(n_components=n_components)
     spectra = list(df['spectra'])
     tsne_res = tsne.fit_transform(spectra)
-    if 'label' in df.columns:
-        df_tsne=pd.concat([pd.DataFrame(tsne_res, columns = ["component" + str(i) for i in range(n_components)]),df.user, df.category, df.label], axis=1)    
-    else:
-        df_tsne=pd.concat([pd.DataFrame(tsne_res, columns = ["component" + str(i) for i in range(n_components)]),df.user, df.category], axis=1)
-    return df_tsne    
+    df.drop(columns = ['spectra', 'x-axis'], inplace = True)
+    df['components'] = np.nan
+    df['components'] = df['components'].astype('object')
+    for i in range(len(df)):
+        df.at[i,'components'] = pca[i].tolist()
+    return df    
