@@ -376,3 +376,27 @@ def peak_normalization(df):
     X_norm = preprocessing.normalize(X, norm='max')
     df['spectra'] = X_norm.tolist()
     return df
+
+def category_to_label(df, conversion_dictionary):
+    """
+    Return a new dataframe with one more column named 'label'. This column 
+    corresponds to a conversion from category to numerical label. The 
+    conversion is made using the dictionary in input.
+    
+    Parameters
+    ----------
+    df : pd.DataFrame
+        A Dataframe that contained dataset formatted according to our policy. 
+        The Dataframe must have category field. 
+    conversion_dictionary : dict
+        A dictionary that contains the rules for the conversion category to 
+        label.
+
+    Returns
+    -------
+    df : pd.DataFrame
+        A complete DataFrame with the column label. 
+
+    """
+    df['label'] = [conversion_dictionary[el] for el in df['category']]
+    return df
