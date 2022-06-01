@@ -2,6 +2,10 @@ import pandas as pd
 import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
+import plotly.io as pio
 
 def pca_fit_transform(df, n_components = 2):
     """
@@ -113,4 +117,30 @@ def tsne_fit_transform(df, n_components = 2):
     df['components'] = df['components'].astype('object')
     for i in range(len(df)):
         df.at[i,'components'] = tsne_res[i].tolist()
-    return df    
+    return df
+
+def plot_pca_matplotlib(df):
+    x = []
+    y = []
+    for i in range(len(df)):
+        x.append(df.iloc[i]['components'][0])
+        y.append(df.iloc[i]['components'][1])
+    fig, ax = plt.subplots()
+    scatter = ax.scatter(x, y, c=df['label'])
+    legend1 = ax.legend(*scatter.legend_elements(),
+                        loc="lower left", title="Category")
+    ax.add_artist(legend1)
+    plt.show()
+    
+def plot_pca_plotly(df):
+    #pio.renderers.default='browser'
+    x = []
+    y = []
+    for i in range(len(df)):
+        x.append(df.iloc[i]['components'][0])
+        y.append(df.iloc[i]['components'][1])
+    fig = go.Figure()
+    fig.update_layout(title_text="PCA - Non allineati - Preprocessing")
+    fig = px.scatter(x = x, y = y, color = df['category'])
+    fig.show()
+        
