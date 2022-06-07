@@ -23,12 +23,14 @@ def importer(folder_path):
     """
     imported_data = pd.DataFrame()
     for filename in tqdm(os.listdir(folder_path)):
+        cat = os.path.basename(os.path.normpath(folder_path))
+        cat = cat.split('_')[0]
         patient_spectras = load_file(folder_path, filename)
         imported_data = imported_data.append(patient_spectras)
     imported_data = imported_data.reset_index(drop=True)
     return imported_data
 
-def load_file(folder_path, filename,):
+def load_file(folder_path, filename,cat):
     """load the data from a single file. The file has to been formatted 
        followed the type of Raman BWS465-785. Further information in docs.
 
@@ -46,6 +48,17 @@ def load_file(folder_path, filename,):
      """
     imported_file = pd.read_csv(folder_path+ '/' + filename, sep=";")
     category, user = get_label_user(filename)
+    if "FARM" in user:
+      user = user.replace("FARM", cat)
+      user = user + 'F'
+      category = cat
+    elif ('20' in user.split('_')[1]) and user.split('_')[1] != '20':
+        user = user.replace('20', 'H')
+    if category != cat:
+      user = user.replace(category, cat)
+      category = cat
+    if len(user.split('_')) > 2:
+      return None
     user = user.replace('S', category)
     patient_spectras = pd.DataFrame(columns = ['user', 'spectra', 'x-axis', 'category', 'name', 'raw'])
     

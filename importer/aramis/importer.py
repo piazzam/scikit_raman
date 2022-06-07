@@ -23,14 +23,18 @@ def importer(folder_path):
     """
     imported_data = pd.DataFrame()
     for filename in tqdm(os.listdir(folder_path)):
+        cat = os.path.basename(os.path.normpath(folder_path))
+        cat = cat.split('_')[0]
         f = filename.split('_Allu')
         f = re.split('(\d+)',f[0])
-        patient_spectras = load_single_file(folder_path, filename)
+        patient_spectras = load_single_file(folder_path, filename, cat)
         imported_data = imported_data.append(patient_spectras)
     imported_data = imported_data.reset_index(drop=True)
     return imported_data
 
-def load_single_file(folder_path, filename):
+
+
+def load_single_file(folder_path, filename, cat):
     """load the data from a single file. The file has to been formatted 
        followed the type of Raman Aramis. Further information in docs.
 
@@ -39,6 +43,8 @@ def load_single_file(folder_path, filename):
           the folder path to access the file
       filename : string 
           the filename to load
+      cat: string
+          the category extracted from the folder path
           
       Returns:
       patient_spectras (pd.DataFrame): 
@@ -47,6 +53,17 @@ def load_single_file(folder_path, filename):
 
      """
     l,u = get_label_user(filename)
+    if "FARM" in u:
+      u = u.replace("FARM", cat)
+      u = u + 'F'
+      l = cat
+    elif ('20' in u.split('_')[1]) and u.split('_')[1] != '20':
+        u = u.replace('20', 'H')
+    if l != cat:
+      u = u.replace(l, cat)
+      l = cat
+    if len(u.split('_')) > 2:
+      return None
     patient_spectras = pd.DataFrame(columns=['user', 'name', 'raw', 'spectra', 'category', 'x-axis'])
     data = open(folder_path+'/'+filename)
     rows = [line.split('\t') for line in data]

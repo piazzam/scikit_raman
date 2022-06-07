@@ -120,27 +120,69 @@ def tsne_fit_transform(df, n_components = 2):
     return df
 
 def plot_pca_matplotlib(df):
-    x = []
-    y = []
-    for i in range(len(df)):
-        x.append(df.iloc[i]['components'][0])
-        y.append(df.iloc[i]['components'][1])
-    fig, ax = plt.subplots()
-    scatter = ax.scatter(x, y, c=df['label'])
-    legend1 = ax.legend(*scatter.legend_elements(),
+    #x = []
+    #y = []
+    #for i in range(len(df)):
+    #    x.append(df.iloc[i]['components'][0])
+    #    y.append(df.iloc[i]['components'][1])
+    com_list = get_pca_components(df)
+    if(len(com_list) == 2):
+        x = com_list[0]
+        y = com_list[1]
+        fig, ax = plt.subplots()
+        scatter = ax.scatter(x, y, c=df['label'])
+        legend1 = ax.legend(*scatter.legend_elements(),
                         loc="lower left", title="Category")
-    ax.add_artist(legend1)
-    plt.show()
+        ax.add_artist(legend1)
+        plt.show()
+    elif(len(com_list) == 3):
+        x = com_list[0]
+        y = com_list[1]
+        z = com_list[2]
+        fig, ax = plt.subplots()
+        scatter = ax.scatter(x, y, c=df['label'])
+        legend1 = ax.legend(*scatter.legend_elements(),
+                        loc="lower left", title="Category")
+        ax.add_artist(legend1)
+        plt.show()
+    else:
+        print("Error - impossible to show more than 3 components or less than 2")        
+        
     
-def plot_pca_plotly(df):
-    #pio.renderers.default='browser'
-    x = []
-    y = []
+def plot_pca_plotly(df, title = "PCA plot"):
+    #x = []
+    #y = []
+    #for i in range(len(df)):
+    #    x.append(df.iloc[i]['components'][0])
+    #    y.append(df.iloc[i]['components'][1])
+    com_list = get_pca_components(df)
+    if(len(com_list) == 2):
+        x = com_list[0]
+        y = com_list[1]
+        fig = go.Figure()
+        fig.update_layout(title_text=title)
+        fig = px.scatter(x = x, y = y, color = df['category'])
+        fig.show()
+    elif(len(com_list) == 3):
+        x = com_list[0]
+        y = com_list[1]
+        z = com_list[2]
+        fig = go.Figure()
+        fig.update_layout(title_text=title)
+        fig = px.scatter(x = x, y = y, z=z, color = df['category'])
+        fig.show()
+    else:
+        print("Error - impossible to show more than 3 components or less than 2")
+        
+    
+def get_pca_components(df):
+    n_components = len(df.iloc[0]["components"])
+    component_list = [[]] * n_components
     for i in range(len(df)):
-        x.append(df.iloc[i]['components'][0])
-        y.append(df.iloc[i]['components'][1])
-    fig = go.Figure()
-    fig.update_layout(title_text="PCA - Non allineati - Preprocessing")
-    fig = px.scatter(x = x, y = y, color = df['category'])
-    fig.show()
+        for j in range(n_components):
+            print(j)
+            component_list[j].append(df.iloc[i]['components'][j])
+            print(component_list[j])
+        break
+    return component_list
         
