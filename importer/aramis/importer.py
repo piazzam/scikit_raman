@@ -59,11 +59,11 @@ def load_single_file(folder_path, filename, cat):
       l = cat
     elif ('20' in u.split('_')[1]) and u.split('_')[1] != '20':
         u = u.replace('20', 'H')
+    if len(u.split('_')) > 2:
+      return None
     if l != cat:
       u = u.replace(l, cat)
       l = cat
-    if len(u.split('_')) > 2:
-      return None
     patient_spectras = pd.DataFrame(columns=['user', 'name', 'raw', 'spectra', 'category', 'x-axis'])
     data = open(folder_path+'/'+filename)
     rows = [line.split('\t') for line in data]

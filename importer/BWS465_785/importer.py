@@ -54,11 +54,11 @@ def load_file(folder_path, filename,cat):
       category = cat
     elif ('20' in user.split('_')[1]) and user.split('_')[1] != '20':
         user = user.replace('20', 'H')
+    if len(user.split('_')) > 2:
+      return None
     if category != cat:
       user = user.replace(category, cat)
       category = cat
-    if len(user.split('_')) > 2:
-      return None
     user = user.replace('S', category)
     patient_spectras = pd.DataFrame(columns = ['user', 'spectra', 'x-axis', 'category', 'name', 'raw'])
     
