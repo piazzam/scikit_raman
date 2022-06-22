@@ -11,6 +11,12 @@ from scipy.signal import savgol_filter
 from sklearn.preprocessing import MinMaxScaler
 from sklearn import preprocessing
 
+def resample_one_shift(y, x, start = 400, end = 1600, points = 991):
+    x_new = list(np.linspace(start, end, points))
+    fi = interpolate.interp1d(x, y, kind='linear', bounds_error=False,
+                              fill_value='extrapolate')
+    y_new = fi(x_new)
+    return y_new, x_new
 
 def resample_shift(df, start = 400, end = 1600, points = 991):
     """Calculate the new set of points for the spectras contained in the dataframe

@@ -19,7 +19,7 @@ def cv_model(df, model, folds):
         print(f"{j}-th fold, current patient: ",np.unique(names_test_cv))
         #model.fit(X_train_cv, y_train_cv_cat)
         
-        pred = model.predict(X_test_cv)
+        y_pred = model.predict(X_test_cv)
         #y_pred = np.argmax(pred, axis =1)
         print(y_pred)
         print(y_test_cv)
