@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+from sklearn.model_selection import GroupKFold, LeaveOneGroupOut
 
 class Dataset:
     """
@@ -117,3 +119,23 @@ class Dataset:
     def change_category_and_user(self, dictionary):
         self.change_category_name(dictionary)
         self.change_user_name_string(dictionary)
+
+    def k_fold(self, k):
+        x_train = self.dataset.spectra
+        if not hasattr(self.dataset, 'labels'):
+            raise Exception("This dataset doesn't have labels")
+        else:
+            y_train = self.dataset.labels
+            groups = np.array(self.dataset.user).unique()
+            folds = list(GroupKFold(n_splits=k).split(x_train, y_train, groups=groups))
+            return folds
+
+    def leave_one_patient_cv(self):
+        x_train = self.dataset.spectra
+        if not hasattr(self.dataset, 'labels'):
+            raise Exception("This dataset doesn't have labels")
+        else:
+            y_train = self.dataset.labels
+            groups = np.array(self.dataset.user).unique()
+            folds = list(LeaveOneGroupOut().split(x_train, y_train, groups=groups))
+            return folds
