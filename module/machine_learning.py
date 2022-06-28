@@ -1,6 +1,6 @@
-from scikit_raman.utility import spectra_to_numpy
+from scikit_raman.module.utility import spectra_to_numpy
 import numpy as np
-from sklearn.metrics import classification_report, accuracy_score, precision_recall_fscore_support
+from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 
 def cv_model(df, model, folds):

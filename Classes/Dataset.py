@@ -2,7 +2,7 @@ import pandas as pd
 
 class Dataset:
     """
-    
+
     """
 
     def __init__(self, file_type, file_name, label_dictionary = {'cov':0, 'covNeg': 1, 'ctrl':2}):

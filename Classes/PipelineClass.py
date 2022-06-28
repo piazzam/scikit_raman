@@ -1,6 +1,6 @@
 import pandas as pd
-import scikit_raman.preprocessing as preprocessing
-import scikit_raman.feature_reduction as f_reduction
+import scikit_raman as preprocessing
+import scikit_raman as f_reduction
 import matplotlib.pyplot as plt
 
 class PipelineClass:
