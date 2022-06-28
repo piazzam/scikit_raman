@@ -5,6 +5,8 @@ import tqdm
 import peakutils
 from sklearn.preprocessing import MinMaxScaler
 from sklearn import preprocessing
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 
 class Processor:
 
@@ -127,3 +129,26 @@ class Processor:
         X = self.dataset.spectra
         X_norm = preprocessing.normalize(X, norm='max')
         self.dataset.spectra = X_norm.tolist()
+
+    def pca_fit_transform(self, n_components=2):
+        pca = PCA(n_components=n_components)
+        spectra = self.dataset.spectra
+        pca = pca.fit_transform(spectra)
+        return pca
+
+    def pca_fit(self, n_components=2):
+        pca = PCA(n_components=n_components)
+        spectra = self.dataset.spectra
+        pca_el = pca.fit(spectra)
+        return pca_el
+
+    def pca_transform(self, pca):
+        spectra = self.dataset.spectra
+        pca_result = pca.transform(spectra)
+        return pca_result
+
+    def tsne_fit_transform(self, n_components=2):
+        tsne = TSNE(n_components=n_components)
+        spectra = self.dataset.spectra
+        tsne_res = tsne.fit_transform(spectra)
+        return tsne_res
