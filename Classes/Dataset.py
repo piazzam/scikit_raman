@@ -139,3 +139,10 @@ class Dataset:
             groups = np.array(self.dataset.user).unique()
             folds = list(LeaveOneGroupOut().split(x_train, y_train, groups=groups))
             return folds
+
+    def spectra_to_numpy(self):
+        spectra_list = []
+        for el in self.spectra:
+            spectra_list.append(np.array(el))
+        spectra_list = np.array(spectra_list)
+        self.spectra = spectra_list
