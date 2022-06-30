@@ -4,61 +4,85 @@ from sklearn.model_selection import GroupKFold, LeaveOneGroupOut
 
 class Dataset:
     """
+    A class to represent a scikit Dataset.
 
+    ...
+
+    Attributes
+    ----------
+    spectra : list
+        list of the spectra of the dataset.
+    x_axis : list
+        list of the x_axis of all the spectra of the dataset.
+    raw : list
+        list of bool that represent if that spectra is raw or dark.
+    user: list
+        list of string that contains the code of every patients of the dataset.
+    name: list
+        list of string that represents if the spectra is raw or dark.
+    category: list
+        list of category of the spectra (Cov, CovNeg, C).
+    labels: list
+        list of labels in numeric form.
     """
 
-    def __init__(self, file_type, file_name, label_dictionary = {'cov':0, 'covNeg': 1, 'ctrl':2}):
-        self.file_type = file_type
-        self.file_name = file_name
-        self.label_dictionary = label_dictionary
-        self.load_file()
-
-    def __init__(self, file_type, file_name,spectra, x_axis, raw, user, name, category, labels, label_dictionary = {'cov':0, 'covNeg': 1, 'ctrl':2}):
-        self.file_type = file_type
-        self.file_name = file_name
+    def __init__(self,spectra, x_axis, raw, user, name, category, labels, label_dictionary = {'cov':0, 'covNeg': 1, 'ctrl':2}):
         self.spectra = spectra
         self.x_axis = x_axis
         self.raw = raw
         self.user = user
         self.name = name
         self.category = category
-        self.labels = labels
-        self.label_dictionary = label_dictionary
+        #self.label_dictionary = label_dictionary
+        if labels != []:
+            self.labels = labels
+        else:
+            self.create_label(label_dictionary)
 
-    def __init__(self, spectra, x_axis, raw, user, name, category, labels):
-        self.spectra = spectra
-        self.x_axis = x_axis
-        self.raw = raw
-        self.user = user
-        self.name = name
-        self.category = category
-        self.labels = labels
 
-    def load_file(self):
-        if self.file_type == 'pkl':
-            df = pd.read_pickle(self.file_name)
-        elif self.file_type == 'csv':
-            df = pd.read_csv(self.file_name)
+    @classmethod
+    def load_file(ds, file_type, file_name, label_dictionary = {'cov':0, 'covNeg': 1, 'ctrl':2}):
+        """
+        Load a file and automatically create a Dataset object.
+        :param ds: Dataset object to be returned.
+        :param file_type: type of file to load.
+        :param file_name: name of the file to load
+        :param label_dictionary: dictionary for mapping category (str) in numeric label
+        :return: a dataset object loaded from pickle. The pickle must be a pd.DataFrame well-formatted
+                followed our policies.
+        """
+        if file_type == 'pkl':
+            df = pd.read_pickle(file_name)
+        elif file_type == 'csv':
+            df = pd.read_csv(file_name)
         else:
             print("Error file type not supported")
-        self.spectra = df['spectra'].tolist()
-        self.x_axis = df['x-axis'].tolist()
-        self.raw = df['raw'].tolist()
-        self.user = df['user'].tolist()
-        self.name = df['name'].tolist()
-        self.category = df['category'].tolist()
+        spectra = df['spectra'].tolist()
+        x_axis = df['x-axis'].tolist()
+        raw = df['raw'].tolist()
+        user = df['user'].tolist()
+        name = df['name'].tolist()
+        category = df['category'].tolist()
         if 'label' in df.columns:
-            self.labels = df['label'].tolist()
+            labels = df['label'].tolist()
         else:
-            self.create_label()
+            labels = []
+        return ds(spectra, x_axis, raw, user, name, category, labels, label_dictionary)
 
-    def create_label(self):
+    def create_label(self, label_dictionary):
+        """
+        Create numeric labels for the dataset object.
+        """
         labels = []
         for el in self.category:
-            labels.append(self.label_dictionary[el])
+            labels.append(label_dictionary[el])
         self.labels = labels
 
     def get_raw_data(self):
+        """
+        Return a new Dataset object with only raw data.
+        :return: Dataset object
+        """
         spectra = []
         x_axis = []
         raw = []
@@ -75,10 +99,14 @@ class Dataset:
                 name.append(self.name[i])
                 category.append(self.category[i])
                 labels.append(self.labels[i])
-        ds = Dataset(self.file_type, self.file_name, spectra, x_axis, raw, user, name, category, labels)
+        ds = Dataset(spectra, x_axis, raw, user, name, category, labels, self.label_dictionary)
         return ds
 
     def get_dark_data(self):
+        """
+        Return new dataset with only dark data.
+        :return: Dataset
+        """
         spectra = []
         x_axis = []
         raw = []
@@ -95,16 +123,26 @@ class Dataset:
                 name.append(self.name[i])
                 category.append(self.category[i])
                 labels.append(self.labels[i])
-        ds = Dataset(self.file_type, self.file_name, spectra, x_axis, raw, user, name, category, labels)
+        ds = Dataset(spectra, x_axis, raw, user, name, category, labels, self.label_dictionary)
         return ds
 
     def change_category_name(self, dictionary):
+        """
+        Change the name of the category in string form based on dictionary.
+        :param dictionary: dict
+            Map old names with new names.
+        """
         new_category = []
         for el in self.category:
             new_category.append(dictionary[el])
         self.category = new_category
 
     def change_user_name_string(self, dictionary):
+        """
+        Change the name of the user name based on dictionary.
+        :param dictionary: dict
+            Map old names with new names.
+        """
         new_users = []
         for el in self.user:
             l = el.split('_')
@@ -117,32 +155,75 @@ class Dataset:
         self.user = new_users
 
     def change_category_and_user(self, dictionary):
+        """
+        Change both category and user names based on the dictionary.
+        :param dictionary: dict
+            Map old names with new names.
+        :return:
+        """
         self.change_category_name(dictionary)
         self.change_user_name_string(dictionary)
 
     def k_fold(self, k):
-        x_train = self.dataset.spectra
-        if not hasattr(self.dataset, 'labels'):
+        """
+        Implements the k-fold strategies. It preserves the patients.
+        :param k: int
+            Number of the fold
+        :return:
+            folds: (j, (train_ids, test_ids))
+                Different fold for the different cv cycle.
+        """
+        x_train = self.spectra
+        if not hasattr(self, 'labels'):
             raise Exception("This dataset doesn't have labels")
         else:
-            y_train = self.dataset.labels
-            groups = np.array(self.dataset.user).unique()
+            y_train = self.labels
+            groups = self.user
             folds = list(GroupKFold(n_splits=k).split(x_train, y_train, groups=groups))
             return folds
 
     def leave_one_patient_cv(self):
-        x_train = self.dataset.spectra
-        if not hasattr(self.dataset, 'labels'):
+        """
+        Apply leave-one-patient out cross-validation.
+        :return:
+            folds: (j, (train_ids, test_ids))
+                Different folds for the different cv cycle. J corresponds to the number of
+                patients.
+        """
+        x_train = self.spectra
+        if not hasattr(self, 'labels'):
             raise Exception("This dataset doesn't have labels")
         else:
-            y_train = self.dataset.labels
-            groups = np.array(self.dataset.user).unique()
+            y_train = self.labels
+            groups = self.user
             folds = list(LeaveOneGroupOut().split(x_train, y_train, groups=groups))
             return folds
 
     def spectra_to_numpy(self):
+        """
+        Transform the spectra list in numpy.array
+        :return:
+        """
         spectra_list = []
         for el in self.spectra:
             spectra_list.append(np.array(el))
         spectra_list = np.array(spectra_list)
         self.spectra = spectra_list
+
+    def get_unique_category(self):
+        """
+        Get a numpy array with unique category values.
+        :return:
+            np.array:
+                contains unique value of the categories
+        """
+        return np.unique(np.array(self.category))
+
+    def get_unique_user(self):
+        """
+        Get a numpy array with unique user names.
+        :return:
+            np.array:
+                contains unique value of the users.
+        """
+        return np.unique(np.array(self.user))

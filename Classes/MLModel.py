@@ -14,12 +14,12 @@ class MLModel:
         tot_name_list = []
         dataset.spectra_to_numpy()
         for j, (train_idx, test_idx) in enumerate(folds):
-            X_train_cv = self.spectra[train_idx]
-            X_test_cv = self.spectra[train_idx]
-            y_train_cv = self.labels[train_idx]
-            names_train_cv = self.user[train_idx]
-            y_test_cv = self.labels[test_idx]
-            names_test_cv = self.user[test_idx]
+            X_train_cv = dataset.spectra[train_idx]
+            X_test_cv = dataset.spectra[train_idx]
+            y_train_cv = dataset.labels[train_idx]
+            names_train_cv = dataset.user[train_idx]
+            y_test_cv = dataset.labels[test_idx]
+            names_test_cv = dataset.user[test_idx]
             tot_name_list.append(names_test_cv)
             print(f"{j}-th fold, current patient: ", np.unique(names_test_cv))
             self.model.fit(X_train_cv, y_train_cv)
