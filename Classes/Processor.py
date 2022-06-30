@@ -1,7 +1,7 @@
 from scipy import interpolate
 import numpy as np
 from itertools import groupby
-import tqdm
+from tqdm import tqdm
 import peakutils
 from sklearn.preprocessing import MinMaxScaler
 from sklearn import preprocessing
@@ -9,6 +9,17 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
 class Processor:
+    """
+    This class represent a processor. This permits to apply the preprocessing steps to one
+    dataset.
+
+    ...
+
+    Attributes:
+    ----------
+    dataset: scikit_raman.Dataset
+        An object of the class Dataset of scikit_raman.
+    """
 
     def __init__(self, dataset):
         self.dataset = dataset
@@ -21,7 +32,17 @@ class Processor:
         return y_new, x_new
 
     def resample_shift(self, start=400, end=1600, points=991):
+        """Calculate the new set of points for the spectras contained the dataset. Apply the
+            shift of the spectra.
 
+            Parameters:
+            start: int
+                Starting point of the x-axis. Default value is 400.
+            end: int
+                Ending point of the x-axis. Default value is 1600.
+            points: int
+                Number of points to take in the x-axis. Default value is 991.
+            """
         x_new = list(np.linspace(start, end, points))
 
         result = []
@@ -34,40 +55,83 @@ class Processor:
         self.dataset.x_axis = [x_new] * len(self.dataset.x_axis)
 
     def delete_uninformative_spectra(self):
-        tot = 0
+        """
+            Delete uninformative spectra from the dataset. Uninformative spectras are defined by:
+            10% of zeros or 10% repeated continuos values.
+        """
+        tot_prima = 0
         df_to_remove = []
         i = 0
         for current_spectra in self.dataset.spectra:
             nz = len(current_spectra) - np.count_nonzero(current_spectra)
             if nz >= (10 * len(current_spectra)) / 100:
                 df_to_remove.append(i)
-                tot += 1
+                tot_prima += 1
             i += 1
         #df.drop(df_to_remove, inplace=True)
+        da_rimuovere = tot_prima
         for el in df_to_remove:
-            self.dataset.spectra.pop(el)
+            removed = tot_prima - da_rimuovere
+            self.dataset.spectra.pop(el - removed)
+            da_rimuovere -= 1
         df_to_remove = []
         i = 0
+        tot_seconda = 0
         for current_spectra in self.dataset.spectra:
             counts = [(k, sum(1 for i in g)) for k, g in groupby(current_spectra)]
             mc = max([c[1] for c in counts])
             if mc >= (10 * len(current_spectra)) / 100:
                 df_to_remove.append(i)
-                tot += 1
+                tot_seconda += 1
             i += 1
+        tot = tot_prima + tot_seconda
         print("Tot = " + str(tot) + " spettri rimossi")
+        da_rimuovere = tot_seconda
         for el in df_to_remove:
-            self.dataset.spectra.pop(el)
-        #df = df.reset_index()
-        #return df
+            removed = tot_seconda - da_rimuovere
+            self.dataset.spectra.pop(el - removed)
+            da_rimuovere -= 1
 
     def modified_z_score(self, intensity):
+        """
+            Function propaedeutics for spike removal function
+
+            Parameters
+            ----------
+            intensity : TYPE
+                DESCRIPTION.
+
+            Returns
+            -------
+            modified_z_scores : TYPE
+                DESCRIPTION.
+
+        """
         median_int = np.median(intensity)
         mad_int = np.median([np.abs(intensity - median_int)])
         modified_z_scores = 0.6745 * (intensity - median_int) / mad_int
         return modified_z_scores
 
     def fixer(self, X, m, index, threshold=3.5):
+        """
+            Function propaedeutics for spike removal function
+
+            Parameters
+            ----------
+            X : TYPE
+                DESCRIPTION.
+            m : TYPE
+                DESCRIPTION.
+            index : TYPE
+                DESCRIPTION.
+            threshold : TYPE, optional
+                DESCRIPTION. The default is 3.5.
+
+            Returns
+            -------
+            X_out : TYPE
+                DESCRIPTION.
+        """
         spikes = abs(np.array(self.modified_z_score(np.diff(X)))) > threshold
         X_out = X.copy()  # So we don’t overwrite y
         ns = 0
@@ -83,14 +147,31 @@ class Processor:
         return X_out
 
     def spike_removal(self):
+        """
+            Removes the spikes from the spectra.
+        """
         X = self.dataset.spectra
         X_c = []
         for x in X:
-            x_fix = self.fixer(x, 5, X.index(x), threshold=3.5)
+            #x_fix = self.fixer(x, 5, X.index(x), threshold=3.5)
+            x_fix = self.fixer(x, 5, np.where(X == x), threshold=3.5)
             X_c.append(x_fix)
         self.dataset.spectra = X_c
 
     def remove_baseline_polynomial(self, deg=6, max_it=100000, tol=pow(10, -11)):
+        """
+        Removes baseline (background noise) from the spectra. It apply the
+        Parameters
+        ----------
+        df : pd.DataFrame
+            A Dataframe formatted according to out policy.
+        deg : int, optional
+            degree of the polynomial. The default is 6.
+        max_it : int, optional
+            maximum number of iterations. The default is 100000.
+        tol : int, optional
+            tolerance value. The default is pow(10, -11).
+        """
         spectra = self.dataset.spectra
         X_out = []
         for i in tqdm(range(len(spectra))):
@@ -101,6 +182,9 @@ class Processor:
         self.dataset.spectra = X_out
 
     def snv_normalization(self):
+        """
+        Apply the normalization with the SNV approach.
+        """
         X = self.dataset.spectra
         data_snv = np.zeros_like(X)
         for i in range(len(X)):
@@ -110,6 +194,9 @@ class Processor:
         self.dataset.spectra = l
 
     def min_max_normalization(self):
+        """
+            Apply the min-max normalization.
+        """
         X = self.dataset.spectra
         norm = X.copy()
         scaler = MinMaxScaler()
@@ -121,11 +208,17 @@ class Processor:
         self.dataset.spectra = norm
 
     def l2_normalization(self):
+        """
+           Apply the l2 - normalization.
+        """
         X = self.dataset.spectra
         X_norm = preprocessing.normalize(X, norm='l2')
         self.dataset.spectra = X_norm
 
     def peak_normalization(self):
+        """
+            Apply the peak - normalization.
+        """
         X = self.dataset.spectra
         X_norm = preprocessing.normalize(X, norm='max')
         self.dataset.spectra = X_norm.tolist()
