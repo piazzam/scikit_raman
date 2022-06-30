@@ -227,3 +227,9 @@ class Dataset:
                 contains unique value of the users.
         """
         return np.unique(np.array(self.user))
+
+    def to_numpy_user(self):
+        self.user = np.array(self.user)
+
+    def to_numpy_labels(self):
+        self.labels = np.array(self.labels)
