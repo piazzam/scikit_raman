@@ -4,7 +4,7 @@ from sklearn.model_selection import GroupKFold, LeaveOneGroupOut
 
 class Dataset:
     """
-    A class to represent a scikit Dataset.
+    A class to represent a scikit-raman Dataset.
 
     ...
 
@@ -26,9 +26,11 @@ class Dataset:
         list of labels in numeric form.
     """
 
-    def __init__(self,spectra, x_axis, raw, user, name, category, labels, label_dictionary = {'cov':0, 'covNeg': 1, 'ctrl':2}):
+    def __init__(self, spectra, x_axis, raw, user, name, category, labels, label_dictionary = {'cov':0, 'covNeg': 1, 'ctrl':2}):
         self.spectra = spectra
+        self.spectra_to_numpy()
         self.x_axis = x_axis
+        self.x_axis_to_numpy()
         self.raw = raw
         self.user = user
         self.name = name
@@ -57,25 +59,25 @@ class Dataset:
             df = pd.read_csv(file_name)
         else:
             print("Error file type not supported")
-        spectra = df['spectra'].tolist()
-        x_axis = df['x-axis'].tolist()
-        raw = df['raw'].tolist()
-        user = df['user'].tolist()
-        name = df['name'].tolist()
-        category = df['category'].tolist()
+        spectra = df['spectra'].to_numpy()
+        x_axis = df['x-axis'].to_numpy()
+        raw = df['raw'].to_numpy()
+        user = df['user'].to_numpy()
+        name = df['name'].to_numpy()
+        category = df['category'].to_numpy()
         if 'label' in df.columns:
-            labels = df['label'].tolist()
+            labels = df['label'].to_numpy()
         else:
-            labels = []
+            labels = np.empty(len(spectra))
         return ds(spectra, x_axis, raw, user, name, category, labels, label_dictionary)
 
     def create_label(self, label_dictionary):
         """
         Create numeric labels for the dataset object.
         """
-        labels = []
+        labels = np.empty(len(self.spectra))
         for el in self.category:
-            labels.append(label_dictionary[el])
+            np.append(labels, label_dictionary[el])
         self.labels = labels
 
     def get_raw_data(self):
@@ -99,7 +101,7 @@ class Dataset:
                 name.append(self.name[i])
                 category.append(self.category[i])
                 labels.append(self.labels[i])
-        ds = Dataset(spectra, x_axis, raw, user, name, category, labels, self.label_dictionary)
+        ds = Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name), np.array(category), np.array(labels))
         return ds
 
     def get_dark_data(self):
@@ -123,7 +125,7 @@ class Dataset:
                 name.append(self.name[i])
                 category.append(self.category[i])
                 labels.append(self.labels[i])
-        ds = Dataset(spectra, x_axis, raw, user, name, category, labels, self.label_dictionary)
+        ds = Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name), np.array(category), np.array(labels))
         return ds
 
     def change_category_name(self, dictionary):
@@ -135,7 +137,7 @@ class Dataset:
         new_category = []
         for el in self.category:
             new_category.append(dictionary[el])
-        self.category = new_category
+        self.category = np.array(new_category)
 
     def change_user_name_string(self, dictionary):
         """
@@ -152,7 +154,7 @@ class Dataset:
                     break
             string_name = l[0] + '_' + l[1]
             new_users.append(string_name)
-        self.user = new_users
+        self.user = np.array(new_users)
 
     def change_category_and_user(self, dictionary):
         """
@@ -210,6 +212,17 @@ class Dataset:
         spectra_list = np.array(spectra_list)
         self.spectra = spectra_list
 
+    def x_axis_to_numpy(self):
+        """
+        Transform the spectra list in numpy.array
+        :return:
+        """
+        x_axis_list = []
+        for el in self.x_axis:
+            x_axis_list.append(np.array(el))
+        x_axis_list = np.array(x_axis_list)
+        self.x_axis = x_axis_list
+
     def get_unique_category(self):
         """
         Get a numpy array with unique category values.
@@ -217,7 +230,7 @@ class Dataset:
             np.array:
                 contains unique value of the categories
         """
-        return np.unique(np.array(self.category))
+        return np.unique(self.category)
 
     def get_unique_user(self):
         """
@@ -226,10 +239,13 @@ class Dataset:
             np.array:
                 contains unique value of the users.
         """
-        return np.unique(np.array(self.user))
+        return np.unique(self.user)
 
-    def to_numpy_user(self):
-        self.user = np.array(self.user)
-
-    def to_numpy_labels(self):
-        self.labels = np.array(self.labels)
+    def remove_elements(self, elements):
+        self.spectra = np.delete(self.spectra, elements, axis = 0)
+        self.x_axis = np.delete(self.x_axis, elements, axis = 0)
+        self.raw = np.delete(self.raw, elements, axis = 0)
+        self.name = np.delete(self.name, elements, axis = 0)
+        self.user = np.delete(self.user, elements, axis = 0)
+        self.category = np.delete(self.category, elements, axis = 0)
+        self.labels = np.delete(self.labels, elements, axis = 0)

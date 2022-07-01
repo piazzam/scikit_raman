@@ -43,54 +43,43 @@ class Processor:
             points: int
                 Number of points to take in the x-axis. Default value is 991.
             """
-        x_new = list(np.linspace(start, end, points))
+        x_new = np.linspace(start, end, points)
 
         result = []
         for y,x in zip(self.dataset.spectra, self.dataset.x_axis):
             fi = interpolate.interp1d(x, y, kind='linear', bounds_error=False,
                                       fill_value='extrapolate')
             y_new = fi(x_new)
-            result.append(list(y_new))
-        self.dataset.spectra = result
-        self.dataset.x_axis = [x_new] * len(self.dataset.x_axis)
+            result.append(y_new)
+        self.dataset.spectra = np.array(result)
+        self.dataset.x_axis = np.array([x_new] * len(self.dataset.x_axis))
 
     def delete_uninformative_spectra(self):
         """
             Delete uninformative spectra from the dataset. Uninformative spectras are defined by:
             10% of zeros or 10% repeated continuos values.
         """
-        tot_prima = 0
+        tot = 0
         df_to_remove = []
         i = 0
         for current_spectra in self.dataset.spectra:
             nz = len(current_spectra) - np.count_nonzero(current_spectra)
             if nz >= (10 * len(current_spectra)) / 100:
                 df_to_remove.append(i)
-                tot_prima += 1
+                tot += 1
             i += 1
-        #df.drop(df_to_remove, inplace=True)
-        da_rimuovere = tot_prima
-        for el in df_to_remove:
-            removed = tot_prima - da_rimuovere
-            self.dataset.spectra.pop(el - removed)
-            da_rimuovere -= 1
+        self.dataset.remove_elements(df_to_remove)
         df_to_remove = []
         i = 0
-        tot_seconda = 0
         for current_spectra in self.dataset.spectra:
             counts = [(k, sum(1 for i in g)) for k, g in groupby(current_spectra)]
             mc = max([c[1] for c in counts])
             if mc >= (10 * len(current_spectra)) / 100:
                 df_to_remove.append(i)
-                tot_seconda += 1
+                tot += 1
             i += 1
-        tot = tot_prima + tot_seconda
         print("Tot = " + str(tot) + " spettri rimossi")
-        da_rimuovere = tot_seconda
-        for el in df_to_remove:
-            removed = tot_seconda - da_rimuovere
-            self.dataset.spectra.pop(el - removed)
-            da_rimuovere -= 1
+        self.dataset.remove_elements(df_to_remove)
 
     def modified_z_score(self, intensity):
         """
@@ -156,7 +145,7 @@ class Processor:
             #x_fix = self.fixer(x, 5, X.index(x), threshold=3.5)
             x_fix = self.fixer(x, 5, np.where(X == x), threshold=3.5)
             X_c.append(x_fix)
-        self.dataset.spectra = X_c
+        self.dataset.spectra = np.array(X_c)
 
     def remove_baseline_polynomial(self, deg=6, max_it=100000, tol=pow(10, -11)):
         """
@@ -179,7 +168,7 @@ class Processor:
                 baseline_values = peakutils.baseline(np.array(spectra[i]), deg=deg, max_it=max_it, tol=tol)
                 z = zip(spectra[i], baseline_values)
                 X_out.append([x[0] - x[1] for x in z])
-        self.dataset.spectra = X_out
+        self.dataset.spectra = np.array(X_out)
 
     def snv_normalization(self):
         """
@@ -190,14 +179,14 @@ class Processor:
         for i in range(len(X)):
             # Apply correction
             data_snv[i, :] = list((X[i] - np.mean(X[i])) / np.std(X[i]))
-        l = data_snv.tolist()
+        l = data_snv
         self.dataset.spectra = l
 
     def min_max_normalization(self):
         """
             Apply the min-max normalization.
         """
-        X = self.dataset.spectra
+        X = self.dataset.spectra.tolist()
         norm = X.copy()
         scaler = MinMaxScaler()
         for i in range(len(X)):
@@ -205,7 +194,7 @@ class Processor:
             x = np.array(X[i])
             norm[i] = scaler.fit_transform(np.reshape(x, (-1, 1)))
             norm[i] = list(norm[i].reshape(991))
-        self.dataset.spectra = norm
+        self.dataset.spectra = np.array(norm)
 
     def l2_normalization(self):
         """
@@ -221,26 +210,54 @@ class Processor:
         """
         X = self.dataset.spectra
         X_norm = preprocessing.normalize(X, norm='max')
-        self.dataset.spectra = X_norm.tolist()
+        self.dataset.spectra = X_norm
 
     def pca_fit_transform(self, n_components=2):
+        """
+        Apply the pca on the spectra data.
+        :param n_components: int, optional. The default value is 2.
+            Number of components of the pca.
+        :return: ndarray
+            Transformed values.
+        """
         pca = PCA(n_components=n_components)
         spectra = self.dataset.spectra
         pca = pca.fit_transform(spectra)
         return pca
 
     def pca_fit(self, n_components=2):
+        """
+        Create the pca object.
+        :param n_components: int
+            Number of components for the pca object.
+        :return: sklearn.PCA object
+            PCA object fitted on the data.
+        """
         pca = PCA(n_components=n_components)
         spectra = self.dataset.spectra
         pca_el = pca.fit(spectra)
         return pca_el
 
     def pca_transform(self, pca):
+        """
+        Transform the data with the pca object.
+        :param pca: sklearn.Decomposition.PCA object
+            PCA object to apply.
+        :return: ndarray
+            The components of the pca.
+        """
         spectra = self.dataset.spectra
         pca_result = pca.transform(spectra)
         return pca_result
 
     def tsne_fit_transform(self, n_components=2):
+        """
+        Apply the t-sne reduction.
+        :param n_components: int
+            Number of components for the t-sne.
+        :return: ndarray
+            The components of the t-sne.
+        """
         tsne = TSNE(n_components=n_components)
         spectra = self.dataset.spectra
         tsne_res = tsne.fit_transform(spectra)
