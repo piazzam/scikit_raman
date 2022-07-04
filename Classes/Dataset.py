@@ -36,7 +36,7 @@ class Dataset:
         self.name = name
         self.category = category
         #self.label_dictionary = label_dictionary
-        if labels != []:
+        if labels.size != 0:
             self.labels = labels
         else:
             self.create_label(label_dictionary)
@@ -68,17 +68,17 @@ class Dataset:
         if 'label' in df.columns:
             labels = df['label'].to_numpy()
         else:
-            labels = np.empty(len(spectra))
+            labels = np.empty(shape = (0,0))
         return ds(spectra, x_axis, raw, user, name, category, labels, label_dictionary)
 
     def create_label(self, label_dictionary):
         """
         Create numeric labels for the dataset object.
         """
-        labels = np.empty(len(self.spectra))
+        labels = []
         for el in self.category:
-            np.append(labels, label_dictionary[el])
-        self.labels = labels
+            labels.append(label_dictionary[el])
+        self.labels = np.array(labels)
 
     def get_raw_data(self):
         """
@@ -231,6 +231,15 @@ class Dataset:
                 contains unique value of the categories
         """
         return np.unique(self.category)
+
+    def get_unique_labels(self):
+        """
+        Get a numpy array with unique labels values.
+        :return:
+            np.array:
+                contains unique value of the labels
+        """
+        return np.unique(self.labels)
 
     def get_unique_user(self):
         """

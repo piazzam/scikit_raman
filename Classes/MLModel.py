@@ -32,13 +32,13 @@ class MLModel:
         tot_pred_list = []
         tot_label_list = []
         tot_name_list = []
-        dataset.spectra_to_numpy()
+        #dataset.spectra_to_numpy()
         for j, (train_idx, test_idx) in enumerate(folds):
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
-            dataset.to_numpy_labels()
+            #dataset.to_numpy_labels()
             y_train_cv = dataset.labels[train_idx]
-            dataset.to_numpy_user()
+            #dataset.to_numpy_user()
             names_train_cv = dataset.user[train_idx]
             y_test_cv = dataset.labels[test_idx]
             names_test_cv = dataset.user[test_idx]
@@ -52,14 +52,14 @@ class MLModel:
 
             tot_pred_list.extend(y_pred)
             tot_label_list.extend(y_test_cv)
-            cm_model = confusion_matrix(y_pred, y_test_cv)
-            report = classification_report(y_pred, y_test_cv)
+            cm_model = confusion_matrix(y_pred, y_test_cv, labels = dataset.get_unique_labels())
+            report = classification_report(y_pred, y_test_cv, labels = dataset.get_unique_labels(), zero_division = 0)
 
             print(cm_model)
             print(report)
-        cm_tot = confusion_matrix(tot_pred_list, tot_label_list)
+        cm_tot = confusion_matrix(tot_pred_list, tot_label_list, labels = dataset.get_unique_labels())
         print(cm_tot)
-        report_tot = classification_report(tot_pred_list, tot_label_list)
+        report_tot = classification_report(tot_pred_list, tot_label_list, labels = dataset.get_unique_labels(), zero_division = 0)
         print(report_tot)
 
     def train_model_leave_one_patient_out(self, dataset):
@@ -73,13 +73,13 @@ class MLModel:
         tot_pred_list = []
         tot_label_list = []
         tot_name_list = []
-        dataset.spectra_to_numpy()
+        #dataset.spectra_to_numpy()
         for j, (train_idx, test_idx) in enumerate(folds):
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
-            dataset.to_numpy_labels()
+            #dataset.to_numpy_labels()
             y_train_cv = dataset.labels[train_idx]
-            dataset.to_numpy_user()
+            #dataset.to_numpy_user()
             names_train_cv = dataset.user[train_idx]
             y_test_cv = dataset.labels[test_idx]
             names_test_cv = dataset.user[test_idx]
@@ -93,14 +93,14 @@ class MLModel:
 
             tot_pred_list.extend(y_pred)
             tot_label_list.extend(y_test_cv)
-            cm_model = confusion_matrix(y_pred, y_test_cv)
-            report = classification_report(y_pred, y_test_cv)
+            cm_model = confusion_matrix(y_pred, y_test_cv, labels = dataset.get_unique_labels())
+            report = classification_report(y_pred, y_test_cv, labels = dataset.get_unique_labels(), zero_division = 0)
 
             print(cm_model)
             print(report)
-        cm_tot = confusion_matrix(tot_pred_list, tot_label_list)
+        cm_tot = confusion_matrix(tot_pred_list, tot_label_list, labels = dataset.get_unique_labels())
         print(cm_tot)
-        report_tot = classification_report(tot_pred_list, tot_label_list)
+        report_tot = classification_report(tot_pred_list, tot_label_list, labels = dataset.get_unique_labels(), zero_division = 0)
         print(report_tot)
 
     def fit_model(self, X_train, y_train):
