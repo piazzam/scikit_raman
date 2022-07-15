@@ -202,28 +202,6 @@ class Dataset:
             folds = list(LeaveOneGroupOut().split(x_train, y_train, groups=groups))
             return folds
 
-    def spectra_to_numpy(self):
-        """
-        Transform the spectra list in numpy.array
-        :return:
-        """
-        spectra_list = []
-        for el in self.spectra:
-            spectra_list.append(np.array(el))
-        spectra_list = np.array(spectra_list)
-        self.spectra = spectra_list
-
-    def x_axis_to_numpy(self):
-        """
-        Transform the spectra list in numpy.array
-        :return:
-        """
-        x_axis_list = []
-        for el in self.x_axis:
-            x_axis_list.append(np.array(el))
-        x_axis_list = np.array(x_axis_list)
-        self.x_axis = x_axis_list
-
     def get_unique_category(self):
         """
         Get a numpy array with unique category values.
@@ -261,6 +239,15 @@ class Dataset:
         self.labels = np.delete(self.labels, elements, axis = 0)
 
     def dataaugment(self, betashift, slopeshift, multishift):
+        """
+        Function propaedeutic to data augmentation.
+            :param betashift:
+            :param slopeshift:
+            :param multishift:
+            :return
+                np.array:
+                    an array containing augmented signals.
+        """
         # baseline shift
         signal = self.spectra
         beta = np.random.random(size=(signal.shape[0], 1)) * 2 * betashift - betashift
@@ -277,11 +264,27 @@ class Dataset:
         return augmented_signal
 
     def augment_signals(self, times, keep_original=True, betashift=0.0005, slopeshift=0.002, multishift=0.005):
+        """
+        It apply data augmentation strategy. Augment the all dataset many times as specified by times.
+        :param times:
+            int
+                number of reply of replicas of the dataset.
+        :param keep_original:
+            bool
+                keep original dataset or not in the augmented dataset.
+        :param betashift:
+        :param slopeshift:
+        :param multishift:
+        """
         if keep_original:
             aug_list = copy.copy(self.spectra)
             y_list = copy.copy(self.labels)
         else:
             y_list = np.array([])
+            raw_list = np.array([])
+            user_list = np.array([])
+            name_list = np.array([])
+            category_list = np.array([])
         for i in range(times):
             if keep_original==False and i == 0:
                 aug_list = self.dataaugment(betashift = betashift, slopeshift=slopeshift, multishift=multishift)
@@ -289,8 +292,16 @@ class Dataset:
                 aug_list = np.concatenate((aug_list, self.dataaugment(betashift = betashift, slopeshift=slopeshift, multishift=multishift)))
         for i in range(times):
             y_list = np.concatenate((y_list, self.labels), axis=0)
+            raw_list = np.concatenate((raw_list, self.raw), axis=0)
+            user_list = np.concatenate((user_list, self.user), axis = 0)
+            name_list = np.concatenate((name_list, self.name), axis = 0)
+            category_list = np.concatenate((category_list, self.category), axis = 0)
         self.spectra = aug_list
         self.labels = y_list
+        self.raw = raw_list
+        self.user = user_list
+        self.name = name_list
+        self.category = category_list
 
 
 
