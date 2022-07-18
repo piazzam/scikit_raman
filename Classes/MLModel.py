@@ -19,7 +19,7 @@ class MLModel:
     def __init__(self, model):
         self.model = model
 
-    def train_model_cv(self, dataset, k = 10):
+    def train_model_cv(self, dataset, k = 10, fold_level = True, get_patient_prediction = True):
         """
         Train a model with k-fold cross validation. Print the confusion matrix and the performances
         at every fold and after all folds.
@@ -31,38 +31,63 @@ class MLModel:
         folds = dataset.k_fold(k)
         tot_pred_list = []
         tot_label_list = []
-        tot_name_list = []
-        #dataset.spectra_to_numpy()
+        tot_names_list = []
+        fold_pred_list = []
+        fold_label_list = []
+        fold_names_list = []
+        names_list = []
         for j, (train_idx, test_idx) in enumerate(folds):
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
-            #dataset.to_numpy_labels()
             y_train_cv = dataset.labels[train_idx]
-            #dataset.to_numpy_user()
             names_train_cv = dataset.user[train_idx]
             y_test_cv = dataset.labels[test_idx]
             names_test_cv = dataset.user[test_idx]
-            tot_name_list.append(names_test_cv)
-            print(f"{j}-th fold, current patient: ", np.unique(names_test_cv))
+            names_list.append(np.unique(names_test_cv))
+
             self.model.fit(X_train_cv, y_train_cv)
 
             y_pred = self.model.predict(X_test_cv)
-            print(y_pred)
-            print(y_test_cv)
 
-            tot_pred_list.extend(y_pred)
-            tot_label_list.extend(y_test_cv)
-            cm_model = confusion_matrix(y_pred, y_test_cv, labels = dataset.get_unique_labels())
-            report = classification_report(y_pred, y_test_cv, labels = dataset.get_unique_labels(), zero_division = 0)
+            if get_patient_prediction:
+                tot_pred_list.extend(y_pred)
+                tot_label_list.extend(y_test_cv)
+                tot_names_list.extend(names_test_cv)
+            if fold_level:
+                labels = []
+                list_pred = []
+                for el in np.unique(names_test_cv):
+                    l = []
+                    l_v = []
+                    for i in range(len(names_test_cv)):
+                        if names_test_cv[i] == el:
+                            l_v.append(y_test_cv[i])
+                            l.append(y_pred[i])
+                    list_pred.append(l)
+                    labels.append(l_v)
 
-            print(cm_model)
-            print(report)
-        cm_tot = confusion_matrix(tot_pred_list, tot_label_list, labels = dataset.get_unique_labels())
-        print(cm_tot)
-        report_tot = classification_report(tot_pred_list, tot_label_list, labels = dataset.get_unique_labels(), zero_division = 0)
-        print(report_tot)
+                patient_level = []
+                for el in list_pred:
+                    counts = np.bincount(el)
+                    patient_level.append(np.argmax(counts))
+                labels_patient_level = []
+                for el in labels:
+                    counts = np.bincount(el)
+                    labels_patient_level.append(np.argmax(counts))
+                fold_pred_list.append(patient_level)
+                fold_label_list.append(labels_patient_level)
+                fold_names_list.append(np.unique(names_test_cv))
+        dictionary = {}
+        if fold_level:
+            nested_dictionary = {'pred_list': fold_pred_list, 'label_list': fold_label_list,
+                                 'names_list': fold_names_list}
+            dictionary['fold_level'] = nested_dictionary
+        if get_patient_prediction:
+            nested_dictionary = {'pred_list': tot_pred_list, 'label_list': tot_label_list, 'names_list': tot_names_list}
+            dictionary['total_prediction'] = nested_dictionary
+        return dictionary
 
-    def train_model_leave_one_patient_out(self, dataset):
+    def train_model_leave_one_patient_out(self, dataset, get_patient_prediction = True, patient_level = True):
         """
         Train the model with leave_one_patient_out cross validation. Print the confusion matrix
         and the performances at every fold and after all folds.
@@ -72,36 +97,41 @@ class MLModel:
         folds = dataset.leave_one_patient_cv()
         tot_pred_list = []
         tot_label_list = []
-        tot_name_list = []
-        #dataset.spectra_to_numpy()
+        tot_names_list = []
+        pat_pred_list = []
+        pat_label_list = []
+        pat_names_list = []
+        names_list = []
         for j, (train_idx, test_idx) in enumerate(folds):
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
-            #dataset.to_numpy_labels()
             y_train_cv = dataset.labels[train_idx]
-            #dataset.to_numpy_user()
             names_train_cv = dataset.user[train_idx]
             y_test_cv = dataset.labels[test_idx]
             names_test_cv = dataset.user[test_idx]
-            tot_name_list.append(names_test_cv)
-            print(f"{j}-th fold, current patient: ", np.unique(names_test_cv))
+            names_list.append(names_test_cv)
+
             self.model.fit(X_train_cv, y_train_cv)
 
             y_pred = self.model.predict(X_test_cv)
-            print(y_pred)
-            print(y_test_cv)
 
-            tot_pred_list.extend(y_pred)
-            tot_label_list.extend(y_test_cv)
-            cm_model = confusion_matrix(y_pred, y_test_cv, labels = dataset.get_unique_labels())
-            report = classification_report(y_pred, y_test_cv, labels = dataset.get_unique_labels(), zero_division = 0)
-
-            print(cm_model)
-            print(report)
-        cm_tot = confusion_matrix(tot_pred_list, tot_label_list, labels = dataset.get_unique_labels())
-        print(cm_tot)
-        report_tot = classification_report(tot_pred_list, tot_label_list, labels = dataset.get_unique_labels(), zero_division = 0)
-        print(report_tot)
+            if get_patient_prediction:
+                tot_pred_list.extend(y_pred)
+                tot_label_list.extend(y_test_cv)
+                tot_names_list.extend(names_test_cv)
+            if patient_level:
+                counts = np.bincount(y_pred)
+                pat_pred_list.extend(np.argmax(counts))
+                pat_label_list.extend(y_test_cv[0])
+                pat_names_list.extend(np.unique(names_test_cv))
+        dictionary = {}
+        if patient_level:
+            nested_dictionary = {'pred_list': pat_pred_list, 'label_list': pat_label_list, 'names_list': pat_names_list}
+            dictionary['patient_level'] = nested_dictionary
+        if get_patient_prediction:
+            nested_dictionary = {'pred_list': tot_pred_list, 'label_list': tot_label_list, 'names_list': tot_names_list}
+            dictionary['total_prediction'] = nested_dictionary
+        return dictionary
 
     def fit_model(self, X_train, y_train):
         """

@@ -18,6 +18,18 @@ class DLModelKeras:
         self.callbacks = callbacks
 
     def load_model_benchmark(self,  n_dims, multi_gpu = False):
+        """
+        Load the benchmark model.
+        :param n_dims:
+                int
+                    input dimension of the data
+        :param multi_gpu:
+                bool
+                    if True multi_gpu model is used.
+        :return:
+                DLModelKers
+                    Returns a new DLModelKeras.
+        """
 
         loss = 'categorical_crossentropy'
         metrics = ['categorical_accuracy']
@@ -83,9 +95,30 @@ class DLModelKeras:
         lr = ReduceLROnPlateau(monitor="val_categorical_accuracy", factor=0.5, verbose=4, patience=80,
                                                cooldown=10)
         callbacks = [es, lr]
-        self.__init__(model, batch_size, epochs, callbacks)
+        return self.__init__(model, batch_size, epochs, callbacks)
 
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True, return_history = True):
+        """
+        Train the model with Leave One Patient Out Cross Validation
+        :param dataset:
+                Dataset
+                    A Dataset object on which train the model.
+        :param number_classes:
+                int
+                    A integer that represent the number of classes of the problem.
+        :param patient_level:
+                bool
+                    If true the results are returned at patient level granularity
+        :param get_patient_prediction:
+                bool
+                    If true every prediction of the patient is returned.
+        :param return_history:
+                bool
+                    if true the histories of the training is returned.
+        :return:
+                dict
+                    Returns a dictionary that is different based on the choiches.
+        """
         folds = dataset.leave_one_patient_cv()
         tot_pred_list = []
         tot_label_list = []
@@ -136,6 +169,27 @@ class DLModelKeras:
         return dictionary
 
     def train_model_cv(self, dataset, number_classes, k = 10, fold_level = True, get_patient_prediction = True, return_history = True):
+        """
+                Train the model with Leave One Patient Out Cross Validation
+                :param dataset:
+                        Dataset
+                            A Dataset object on which train the model.
+                :param number_classes:
+                        int
+                            A integer that represent the number of classes of the problem.
+                :param patient_level:
+                        bool
+                            If true the results are returned at patient level granularity
+                :param get_patient_prediction:
+                        bool
+                            If true every prediction of the patient is returned.
+                :param return_history:
+                        bool
+                            if true the histories of the training is returned.
+                :return:
+                        dict
+                            Returns a dictionary that is different based on the choiches.
+                """
         folds = dataset.k_fold(k)
         tot_pred_list = []
         tot_label_list = []
@@ -204,16 +258,44 @@ class DLModelKeras:
             dictionary['history'] = nested_dictionary
         return dictionary
 
-    def fit_model(self, X_train, y_train, X_val, y_val, history = True):
+    def fit_model(self, X_train, y_train, X_val, y_val, return_history = True):
+        """
+        Train a model.
+        :param X_train:
+                np.array
+                    The trainset.
+        :param y_train:
+                np.array
+                    The labels. Must be in categorical way.
+        :param X_val:
+                np.array
+                    The validation set.
+        :param y_val:
+                np.array
+                    The validation labels. Must be in categorical way.
+        :param return_history:
+                bool
+                    If true history of the training is returned.
+        :return:
+        """
         history = self.model.fit(X_train, y_train,
                                  epochs=self.epochs,
                                  validation_data=(X_val, y_val),
                                  batch_size=self.batch_size, verbose=1,
                                  callbacks=self.callbacks)
-        if history:
+        if return_history:
             return history
 
-    def test_model(self, X_test, get_patient_prediction):
+    def test_model(self, X_test):
+        """
+        Test a model and return the prediction.
+        :param X_test:
+                np.array
+                    The test set.
+        :return:
+                np.array
+                    The prediction.
+        """
         pred = self.model.predict(X_test)
         y_pred = np.argmax(pred, axis=-1)
         return y_pred
