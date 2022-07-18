@@ -17,7 +17,8 @@ class DLModelKeras:
         self.epochs = epochs
         self.callbacks = callbacks
 
-    def load_model_benchmark(self,  n_dims, multi_gpu = False):
+    @classmethod
+    def load_model_benchmark(dlm,  n_dims, multi_gpu = False):
         """
         Load the benchmark model.
         :param n_dims:
@@ -95,9 +96,9 @@ class DLModelKeras:
         lr = ReduceLROnPlateau(monitor="val_categorical_accuracy", factor=0.5, verbose=4, patience=80,
                                                cooldown=10)
         callbacks = [es, lr]
-        return self.__init__(model, batch_size, epochs, callbacks)
+        return dlm(model, batch_size, epochs, callbacks)
 
-    def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True, return_history = True):
+    def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True, return_history = True, test_size = 0.1):
         """
         Train the model with Leave One Patient Out Cross Validation
         :param dataset:
@@ -135,7 +136,7 @@ class DLModelKeras:
             y_test_cv = dataset.labels[test_idx]
             names_test_cv = dataset.user[test_idx]
             y_train_cv_cat = to_categorical(y_train_cv, number_classes)
-            X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv_cat, test_size=.1,
+            X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv_cat, test_size=test_size,
                                                                     # random_state = 42,
                                                                     stratify=y_train_cv)
             history = self.model.fit(X_train_cv, y_train_cv,
@@ -153,9 +154,9 @@ class DLModelKeras:
                 tot_names_list.extend(names_test_cv)
             if patient_level:
                 counts = np.bincount(y_pred)
-                pat_pred_list.extend(np.argmax(counts))
-                pat_label_list.extend(y_test_cv[0])
-                pat_names_list.extend(np.unique(names_test_cv))
+                pat_pred_list.append(np.argmax(counts))
+                pat_label_list.append(y_test_cv[0])
+                pat_names_list.append(np.unique(names_test_cv))
         dictionary = {}
         if patient_level:
             nested_dictionary = {'pred_list': pat_pred_list, 'label_list':pat_label_list, 'names_list':pat_names_list}
