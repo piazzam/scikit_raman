@@ -238,6 +238,28 @@ class Dataset:
         self.category = np.delete(self.category, elements, axis = 0)
         self.labels = np.delete(self.labels, elements, axis = 0)
 
+    def spectra_to_numpy(self):
+        """
+        Transform the spectra list in numpy.array
+        :return:
+        """
+        spectra_list = []
+        for el in self.spectra:
+            spectra_list.append(np.array(el))
+        spectra_list = np.array(spectra_list)
+        self.spectra = spectra_list
+
+    def x_axis_to_numpy(self):
+        """
+        Transform the spectra list in numpy.array
+        :return:
+        """
+        x_axis_list = []
+        for el in self.x_axis:
+            x_axis_list.append(np.array(el))
+        x_axis_list = np.array(x_axis_list)
+        self.x_axis = x_axis_list
+
     def dataaugment(self, betashift, slopeshift, multishift):
         """
         Function propaedeutic to data augmentation.

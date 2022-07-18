@@ -121,9 +121,9 @@ class MLModel:
                 tot_names_list.extend(names_test_cv)
             if patient_level:
                 counts = np.bincount(y_pred)
-                pat_pred_list.extend(np.argmax(counts))
-                pat_label_list.extend(y_test_cv[0])
-                pat_names_list.extend(np.unique(names_test_cv))
+                pat_pred_list.append(np.argmax(counts))
+                pat_label_list.append(y_test_cv[0])
+                pat_names_list.append(np.unique(names_test_cv)[0])
         dictionary = {}
         if patient_level:
             nested_dictionary = {'pred_list': pat_pred_list, 'label_list': pat_label_list, 'names_list': pat_names_list}
