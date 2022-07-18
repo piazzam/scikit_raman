@@ -130,6 +130,7 @@ class DLModelKeras:
         histories = []
         names_list = []
         for j, (train_idx, test_idx) in enumerate(folds):
+            trained_model = self.model
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
@@ -139,14 +140,14 @@ class DLModelKeras:
             X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv_cat, test_size=test_size,
                                                                     # random_state = 42,
                                                                     stratify=y_train_cv)
-            history = self.model.fit(X_train_cv, y_train_cv,
+            history = trained_model.fit(X_train_cv, y_train_cv,
                                 epochs=self.epochs,
                                 validation_data=(X_val, y_val),
                                 batch_size=self.batch_size, verbose=1,
                                 callbacks=self.callbacks)
             histories.append(history)
             names_list.append(np.unique(names_test_cv))
-            pred = self.model.predict(X_test_cv)
+            pred = trained_model.predict(X_test_cv)
             y_pred = np.argmax(pred, axis=-1)
             if get_patient_prediction:
                 tot_pred_list.extend(y_pred)
@@ -201,6 +202,7 @@ class DLModelKeras:
         histories = []
         names_list = []
         for j, (train_idx, test_idx) in enumerate(folds):
+            trained_model = self.model
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
@@ -210,14 +212,14 @@ class DLModelKeras:
             X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv_cat, test_size=.1,
                                                                     # random_state = 42,
                                                                     stratify=y_train_cv)
-            history = self.model.fit(X_train_cv, y_train_cv,
+            history = trained_model.fit(X_train_cv, y_train_cv,
                                 epochs=self.epochs,
                                 validation_data=(X_val, y_val),
                                 batch_size=self.batch_size, verbose=1,
                                 callbacks=self.callbacks)
             histories.append(history)
             names_list.append(np.unique(names_test_cv))
-            pred = self.model.predict(X_test_cv)
+            pred = trained_model.predict(X_test_cv)
             y_pred = np.argmax(pred, axis=-1)
             if get_patient_prediction:
                 tot_pred_list.extend(y_pred)
