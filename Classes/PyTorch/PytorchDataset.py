@@ -1,6 +1,7 @@
 import torch
+from torch.utils.data import Dataset
 
-class PytorchDataset:
+class PytorchDataset(Dataset):
     def __init__(self, x, y, user):
         super(PytorchDataset).__init__()
         self.x = torch.from_numpy(x)

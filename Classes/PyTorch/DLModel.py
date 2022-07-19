@@ -11,7 +11,6 @@ import torch.nn as nn
 class DLModel:
 
     def __init__(self, model, batch_size, epochs, loss, optimizer, gpu_ids):
-        self.model = model
         self.batch_size = batch_size
         self.epochs = epochs
         self.loss = loss
@@ -22,32 +21,11 @@ class DLModel:
                 model = nn.DataParallel(model, device_ids=gpu_ids)
             loss.cuda()
         self.device = torch.device(cuda if torch.cuda.is_available() else 'cpu')
+        self.model = model
         self.model.to(self.device)
 
-    def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True, return_history = True, test_size = 0.1):
-        """
-        Train the model with Leave One Patient Out Cross Validation
-        :param dataset:
-                Dataset
-                    A Dataset object on which train the model.
-        :param number_classes:
-                int
-                    A integer that represent the number of classes of the problem.
-        :param patient_level:
-                bool
-                    If true the results are returned at patient level granularity
-        :param get_patient_prediction:
-                bool
-                    If true every prediction of the patient is returned.
-        :param return_history:
-                bool
-                    if true the histories of the training is returned.
-        :return:
-                dict
-                    Returns a dictionary that is different based on the choiches.
-        """
-
-        train_dataset, validation_dataset, test_dataset = self.create_dataset_pytorch(dataset)
+    def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True, return_history = True, val_size = 0.1):
+        train_dataset, validation_dataset, test_dataset = self.create_dataset_pytorch(dataset, val_size)
         tot_pred_list = []
         tot_label_list = []
         tot_names_list = []
@@ -63,7 +41,7 @@ class DLModel:
         for i in range(len(train_dataset)):
             trained_model = copy.deepcopy(self.model)
             optim = copy.deepcopy(self.optimizer)
-            train_loss, val_loss, train_acc, val_acc = self.train_function(trained_model, optim, train_dataset[i], validation_dataset[i], test_dataset[i])
+            train_loss, val_loss, train_acc, val_acc = self.train_function(trained_model, optim, train_dataset[i], validation_dataset[i])
             history = {'loss':train_loss, 'val_loss':val_loss, 'accuracy':train_acc, 'val_accuracy':val_acc}
             histories.append(history)
             loss_train_list.append(train_loss)
@@ -92,7 +70,7 @@ class DLModel:
             dictionary['history'] = nested_dictionary
         return dictionary
 
-    def create_dataset_pytorch(self, dataset, folds):
+    def create_dataset_pytorch(self, dataset, val_size):
         folds = dataset.leave_one_patient_cv()
         train_set = []
         validation_set = []
@@ -106,7 +84,7 @@ class DLModel:
             Y_test_tmp = dataset.labels[test_idx]
             user_test_tmp = dataset.user[test_idx]
 
-            X_train_tmp, X_val_tmp, Y_train_tmp, Y_val_tmp, user_train_tmp, user_val_tmp = train_test_split(X_train_tmp, Y_train_tmp, user_train_tmp, test_size=.1,
+            X_train_tmp, X_val_tmp, Y_train_tmp, Y_val_tmp, user_train_tmp, user_val_tmp = train_test_split(X_train_tmp, Y_train_tmp, user_train_tmp, test_size=val_size,
                                                                               stratify=Y_train_tmp)
             train_set_tmp = PytorchDataset(X_train_tmp, Y_train_tmp, user_train_tmp)
             train_set.append(train_set_tmp)
