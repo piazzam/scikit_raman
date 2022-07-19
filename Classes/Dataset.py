@@ -36,11 +36,18 @@ class Dataset:
         self.user = user
         self.name = name
         self.category = category
+        self.n_elements = len(spectra)
         #self.label_dictionary = label_dictionary
         if labels.size != 0:
             self.labels = labels
         else:
             self.create_label(label_dictionary)
+
+    def __getitem__(self, items):
+        return self.spectra[items], self.x_axis[items], self.raw[items], self.user[items], self.name[items], self.category[items]
+
+    def __len__(self):
+        return self.n_elements
 
 
     @classmethod
@@ -237,6 +244,7 @@ class Dataset:
         self.user = np.delete(self.user, elements, axis = 0)
         self.category = np.delete(self.category, elements, axis = 0)
         self.labels = np.delete(self.labels, elements, axis = 0)
+        self.n_elements -= len(elements)
 
     def spectra_to_numpy(self):
         """
@@ -300,6 +308,10 @@ class Dataset:
         """
         if keep_original:
             aug_list = copy.copy(self.spectra)
+            raw_list = copy.copy(self.raw)
+            user_list = copy.copy(self.user)
+            name_list = copy.copy(self.name)
+            category_list = copy.copy(self.category)
             y_list = copy.copy(self.labels)
         else:
             y_list = np.array([])
