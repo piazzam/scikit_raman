@@ -1,5 +1,6 @@
 from sklearn.model_selection import train_test_split
 from scikit_raman.Classes.PyTorch.PytorchDataset import PytorchDataset
+from scikit_raman.Classes.PyTorch.BenchmarkModel import BenchmarkModel
 import copy
 from torch.utils.data import DataLoader
 import torch
@@ -7,21 +8,23 @@ from sklearn.metrics import accuracy_score
 from statistics import mean
 import numpy as np
 import torch.nn as nn
+from torch.optim import Adam
 
 class DLModel:
 
-    def __init__(self, model, batch_size, epochs, loss, optimizer, gpu_ids):
+    def __init__(self, model, batch_size, epochs, loss, optimizer, learning_rate, gpu_ids):
         self.batch_size = batch_size
         self.epochs = epochs
         self.loss = loss
         self.optimizer = optimizer
+        self.learning_rate = learning_rate
         if torch.cuda.is_available():
             cuda = 'cuda:' + str(gpu_ids[0])
             if isinstance(model, nn.DataParallel) == False:
                 model = nn.DataParallel(model, device_ids=gpu_ids)
             loss.cuda()
         self.device = torch.device(cuda if torch.cuda.is_available() else 'cpu')
-        self.model = model
+        self.model = model.double()
         self.model.to(self.device)
 
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True, return_history = True, val_size = 0.1):
@@ -102,12 +105,12 @@ class DLModel:
         val_acc = []
         training_generator = DataLoader(train_set, batch_size=self.batch_size)
         validation_generator = DataLoader(validation_set, batch_size=self.batch_size)
-        #model = copy.deepcopy(self.model)
-        #optim = copy.deepcopy(self.optimizer)
-        for epoch in self.epochs:
+        for epoch in range(self.epochs):
             loss_train_epoch = []
             acc_train_epoch = []
-            for i, (ramanSpectraTrain, labelTrain) in enumerate(training_generator):
+
+            for i, (ramanSpectraTrain, labelTrain, user) in enumerate(training_generator):
+
                 ramanSpectraTrain = ramanSpectraTrain.to(self.device)
                 labelTrain = labelTrain.to(self.device)
 
@@ -132,7 +135,7 @@ class DLModel:
             with torch.no_grad():
                 loss_val_epoch = []
                 acc_val_epoch = []
-                for j, (ramanSpectraVal, labelVal) in enumerate(validation_generator):
+                for j, (ramanSpectraVal, labelVal, user) in enumerate(validation_generator):
                     ramanSpectraVal = ramanSpectraVal.to(self.device)
                     labelVal = labelVal.to(self.device)
 
@@ -163,6 +166,16 @@ class DLModel:
                 labels.append(labelVal)
                 predicted_labels.append(test_label)
         return labels, predicted_labels
+
+    @classmethod
+    def load_model_benchmark(dlm, gpu_ids):
+        model = BenchmarkModel()
+        batch_size = 338
+        epochs = 273
+        loss = nn.CrossEntropyLoss()
+        lr = 0.00020441990333108206
+        optimizer = Adam(model.parameters(), lr=lr)
+        return dlm(model, batch_size, epochs, loss, optimizer, lr, gpu_ids)
 
 
 

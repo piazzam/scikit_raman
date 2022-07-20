@@ -22,7 +22,8 @@ class BenchmarkModel(nn.Module):
 
         self.dense_layers = nn.Sequential(
             nn.Dropout(p=0.1),
-            nn.Linear(750, 732),
+            #nn.Linear(750, 732),
+            nn.Linear(325, 732), #non capisco perchè 325
             nn.LeakyReLU(),
             nn.Dropout(p=0.7000000000000001),
             nn.Linear(732, 152),
@@ -42,6 +43,3 @@ class BenchmarkModel(nn.Module):
         x = torch.flatten(x, 1)
         x = self.dense_layers(x)
         return x
-
-
-
