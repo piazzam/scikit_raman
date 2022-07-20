@@ -27,8 +27,9 @@ class DLModel:
         self.model = model.double()
         self.model.to(self.device)
 
-    def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True, return_history = True, val_size = 0.1):
-        train_dataset, validation_dataset, test_dataset = self.create_dataset_pytorch(dataset, val_size)
+    def train_model_leave_one_patient_out(self, dataset, early_stopping = True, patience = 100, scheduler = None, patient_level = True, get_patient_prediction = True, return_history = True, val_size = 0.1):
+        folds = dataset.leave_one_patient_cv()
+        train_dataset, validation_dataset, test_dataset = self.create_dataset_pytorch(dataset, val_size, folds)
         tot_pred_list = []
         tot_label_list = []
         tot_names_list = []
@@ -44,7 +45,7 @@ class DLModel:
         for i in range(len(train_dataset)):
             trained_model = copy.deepcopy(self.model)
             optim = copy.deepcopy(self.optimizer)
-            train_loss, val_loss, train_acc, val_acc = self.train_function(trained_model, optim, train_dataset[i], validation_dataset[i])
+            train_loss, val_loss, train_acc, val_acc = self.train_function(trained_model, optim, train_dataset[i], validation_dataset[i], early_stopping, patience, scheduler)
             history = {'loss':train_loss, 'val_loss':val_loss, 'accuracy':train_acc, 'val_accuracy':val_acc}
             histories.append(history)
             loss_train_list.append(train_loss)
@@ -73,8 +74,8 @@ class DLModel:
             dictionary['history'] = nested_dictionary
         return dictionary
 
-    def create_dataset_pytorch(self, dataset, val_size):
-        folds = dataset.leave_one_patient_cv()
+    def create_dataset_pytorch(self, dataset, val_size, folds):
+        #folds = dataset.leave_one_patient_cv()
         train_set = []
         validation_set = []
         test_set = []
@@ -98,11 +99,13 @@ class DLModel:
 
             return train_set, validation_set, test_set
 
-    def train_function(self, model, optim, train_set, validation_set):
+    def train_function(self, model, optim, train_set, validation_set, early_stopping = True, patience = 100, scheduler = None):
         train_losses = []
         val_losses = []
         train_acc = []
         val_acc = []
+        epochs_no_improve_loss = 0
+        min_val_loss = np.Inf
         training_generator = DataLoader(train_set, batch_size=self.batch_size)
         validation_generator = DataLoader(validation_set, batch_size=self.batch_size)
         for epoch in range(self.epochs):
@@ -151,6 +154,17 @@ class DLModel:
                 acc_val = mean(acc_val_epoch)
             val_losses.append(loss_val)
             val_acc.append(acc_val)
+            if scheduler != None:
+                scheduler.step(val_acc)
+            #early - stopping
+            if early_stopping:
+                if loss_val < min_val_loss:
+                    epochs_no_improve_loss = 0
+                    min_val_loss = loss_val
+                else:
+                    epochs_no_improve_loss += 1
+                if epochs_no_improve_loss == patience:
+                    break
         return train_losses, val_losses, train_acc, val_acc
 
     def predict_function(self, model, test_set):
@@ -158,7 +172,7 @@ class DLModel:
         labels = []
         predicted_labels = []
         with torch.no_grad():
-            for j, (ramanSpectraVal, labelVal) in enumerate(validation_generator):
+            for j, (ramanSpectraVal, labelVal, user) in enumerate(test_set):
                 ramanSpectraVal = ramanSpectraVal.to(self.device)
                 labelVal = labelVal.to(self.device)
                 output_val = model(ramanSpectraVal)
@@ -176,6 +190,73 @@ class DLModel:
         lr = 0.00020441990333108206
         optimizer = Adam(model.parameters(), lr=lr)
         return dlm(model, batch_size, epochs, loss, optimizer, lr, gpu_ids)
+
+    def train_model_cv(self, dataset, k = 10, early_stopping = True, patience = 100, scheduler = None, fold_level = True, get_patient_prediction = True, return_history = True, val_size = 0.1):
+        folds = dataset.k_fold(k)
+        train_dataset, validation_dataset, test_dataset = self.create_dataset_pytorch(dataset, val_size, folds)
+        tot_pred_list = []
+        tot_label_list = []
+        tot_names_list = []
+        fold_pred_list = []
+        fold_label_list = []
+        fold_names_list = []
+        histories = []
+        names_list = []
+        loss_train_list = []
+        loss_val_list = []
+        acc_train_list = []
+        acc_val_list = []
+        for i in range(len(train_dataset)):
+            trained_model = copy.deepcopy(self.model)
+            optim = copy.deepcopy(self.optimizer)
+            train_loss, val_loss, train_acc, val_acc = self.train_function(trained_model, optim, train_dataset[i], validation_dataset[i], early_stopping, patience, scheduler)
+            history = {'loss':train_loss, 'val_loss':val_loss, 'accuracy':train_acc, 'val_accuracy':val_acc}
+            histories.append(history)
+            loss_train_list.append(train_loss)
+            loss_val_list.append(val_loss)
+            acc_train_list.append(train_acc)
+            acc_val_list.append(val_acc)
+            labels, predicted_values = self.predict_function(trained_model, test_dataset)
+            if get_patient_prediction:
+                tot_pred_list.extend(predicted_values)
+                tot_label_list.extend(labels)
+                tot_label_list.extend(train_dataset[i][2])
+            if fold_level:
+                labels = []
+                list_pred = []
+                for el in np.unique(train_dataset[i][2]):
+                    l = []
+                    l_v = []
+                    for j in range(len(train_dataset[i][2])):
+                        if train_dataset[i][2][j] == el:
+                            l_v.append(labels[j])
+                            l.append(predicted_values[j])
+                    list_pred.append(l)
+                    labels.append(l_v)
+
+                patient_level = []
+                for el in list_pred:
+                    counts = np.bincount(el)
+                    patient_level.append(np.argmax(counts))
+                labels_patient_level = []
+                for el in labels:
+                    counts = np.bincount(el)
+                    labels_patient_level.append(np.argmax(counts))
+                fold_pred_list.append(patient_level)
+                fold_label_list.append(labels_patient_level)
+                fold_names_list.append(np.unique(train_dataset[i][2]))
+        dictionary = {}
+        if fold_level:
+            nested_dictionary = {'pred_list': fold_pred_list, 'label_list': fold_label_list,
+                                 'names_list': fold_names_list}
+            dictionary['fold_level'] = nested_dictionary
+        if get_patient_prediction:
+            nested_dictionary = {'pred_list': tot_pred_list, 'label_list': tot_label_list, 'names_list': tot_names_list}
+            dictionary['total_prediction'] = nested_dictionary
+        if return_history:
+            nested_dictionary = {'histories': histories, 'patients': names_list}
+            dictionary['history'] = nested_dictionary
+        return dictionary
 
 
 
