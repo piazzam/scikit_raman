@@ -42,6 +42,7 @@ class Dataset:
             self.labels = labels
         else:
             self.create_label(label_dictionary)
+        self.n_dims = self.spectra.shape[1]
 
     def __getitem__(self, items):
         return self.spectra[items], self.x_axis[items], self.raw[items], self.user[items], self.name[items], self.category[items]
