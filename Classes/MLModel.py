@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
 class MLModel:
     """
@@ -188,6 +188,38 @@ class MLModel:
         else:
             folds = dataset.leave_one_patient_cv()
         search = GridSearchCV(self.model, space, scoring=scoring, n_jobs=n_jobs, cv=folds, verbose=3)
+        result = search.fit(dataset.spectra, dataset.labels)
+        print('Best score: ', result.best_score_)
+        print('Best params: ' + str(result.best_params_))
+        return result.best_score_, result.best_params_
+
+    def random_search_parameters(self, dataset, space, k_fold = True, k = 10, scoring = 'accuracy', n_jobs = 1):
+        """
+        Apply the random search strategy to optimize the hyperparameters of the Machine Learning models.
+        :param dataset: scikit_raman.Dataset
+            Dataset on which apply the search.
+        :param space: dict
+            For every parameter to optimize the possible value on which apply the search.
+        :param k_fold: Bool
+            If true a k-fold cross validation strategy is applied. Otherwise a leave one patient out
+            cross validation is applied. Default value is True.
+        :param k: int
+            Number of folds for the k-fold cross validation. Default value is 10.
+        :param scoring: str
+            Metrics on which optimize the hyperparameters. Default value is 'accuracy'
+        :param n_jobs: int
+            N° oj jobs to run in parallel. See sklearn docs for further information.
+        :return:
+            result.best_score: double
+                Best score obtained by the model.
+            result.best_params: dict
+                Best params found by the random search.
+        """
+        if k_fold:
+            folds = dataset.k_fold(k)
+        else:
+            folds = dataset.leave_one_patient_cv()
+        search = RandomizedSearchCV(self.model, space, scoring=scoring, n_jobs=n_jobs, cv=folds, verbose=3)
         result = search.fit(dataset.spectra, dataset.labels)
         print('Best score: ', result.best_score_)
         print('Best params: ' + str(result.best_params_))
