@@ -1,0 +1,87 @@
+from sklearn.metrics import classification_report
+from sklearn.metrics import confusion_matrix
+import pandas as pd
+import seaborn as sn
+import matplotlib.pyplot as plt
+import numpy as np
+
+class Evaluator:
+
+    def __init__(self, results, classes):
+        self.results = results
+        self.classes = classes
+
+    def total_result_patient(self, show = True, save = True, folder_path = "results/"):
+        cm_patient_level = confusion_matrix(self.results['patient_level']['pred_list'],
+                                            self.results['patient_level']['label_list'])
+        report_patient_level = classification_report(self.results['patient_level']['pred_list'],
+                                                     self.results['patient_level']['label_list'], output_dict=True,
+                                                     labels=self.classes)
+        df_patient_level = pd.DataFrame(cm_patient_level, index=self.classes, columns=self.classes)
+        df_report = pd.DataFrame(report_patient_level)
+        plt.figure(figsize=(10, 7))
+        cm_plot = sn.heatmap(df_patient_level, annot=True, fmt='d', annot_kws={"fontsize":8})
+        if save:
+            df_patient_level.to_csv(folder_path + "cm_total_patient.csv")
+            df_report.to_csv(folder_path + "report_total_patient.csv")
+            cm_plot.figure.savefig(folder_path + "cm_total_patient.png")
+        if show:
+            cm_plot.figure.show()
+            print(classification_report(self.results['patient_level']['pred_list'],
+                                                     self.results['patient_level']['label_list'], output_dict=False,
+                                                     labels=self.classes))
+            print(cm_patient_level)
+        return cm_patient_level, report_patient_level
+
+    def total_result(self, show = True, save = True, folder_path = "/result"):
+        cm_total = confusion_matrix(self.results['total_prediction']['pred_list'],
+                                            self.results['total_prediction']['label_list'])
+        report_total = classification_report(self.results['total_prediction']['pred_list'],
+                                                     self.results['total_prediction']['label_list'], output_dict=True,
+                                                     labels=self.classes)
+        df_total = pd.DataFrame(cm_total, index=self.classes, columns=self.classes)
+        df_report = pd.DataFrame(report_total)
+        plt.figure(figsize=(10, 7))
+        cm_plot = sn.heatmap(df_total, annot=True, fmt='d', annot_kws={"fontsize":8})
+        if save:
+            df_total.to_csv(folder_path + "cm_total.csv")
+            df_report.to_csv(folder_path + "report_total.csv")
+            cm_plot.figure.savefig(folder_path + "cm_total.png")
+        if show:
+            cm_plot.figure.show()
+            print(classification_report(self.results['total_prediction']['pred_list'],
+                                        self.results['total_prediction']['label_list'], output_dict=False,
+                                        labels=self.classes))
+            print(cm_total)
+        return cm_total, report_total
+
+    def results_every_patient(self, show = True, save = True, folder_path = "/result"):
+        total_names_list = self.results['total_prediction']['names_list']
+        i = 0
+        k = 0
+        for el in np.unique(total_names_list):
+            labels = []
+            prediction = []
+            for j in range(i, len(total_names_list)):
+                if el == total_names_list[j]:
+                    labels.append(self.results['total_prediction']['label_list'][j])
+                    prediction.append(self.results['total_prediction']['pred_list'][j])
+                k = j
+            i = k
+            cm_model = confusion_matrix(prediction, labels)
+            report_model = classification_report(prediction, labels, output_dict=True, labels=self.classes)
+            df_cm_model = pd.DataFrame(cm_model, index=self.classes, columns=self.classes)
+            df_report_model = pd.DataFrame(report_model)
+            plt.figure(figsize=(10, 7))
+            cm_plot = sn.heatmap(df_cm_model, annot=True, fmt='d', annot_kws={"fontsize":8})
+            if save:
+                df_cm_model.to_csv(folder_path + str(el) + ".csv")
+                cm_plot.figure.savefig(folder_path + str(el) + ".png")
+                df_report_model.to_csv(folder_path + str(el) + ".csv")
+            if show:
+                print("Result of patient {}" + str(el))
+                print(cm_model)
+                print(classification_report(prediction, labels, output_dict=False, labels=self.classes))
+                cm_plot.figure.show()
+
+

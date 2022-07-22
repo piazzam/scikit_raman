@@ -320,6 +320,20 @@ class DLModelKeras:
         y_pred = np.argmax(pred, axis=-1)
         return y_pred
 
+    #@staticmethod
+    #def objective(trial, dictionary):
+    #    if dictionary['epochs']:
+    #        epochs = trial.suggest_int(name='epochs', low=dictionary['epochs_value']['low'], high=dictionary['epochs_value']['high'])
+    #    else:
+    #        epochs = dictionary['epochs_value']
+    #    if dictionary['batch_size']:
+    #        batch_size = trial.suggest_int(name = 'batch_size', low = dictionary['batch_size_value']['low'], high = dictionary['batch_size_value']['high'])
+
+    #def optimize_model(self, dataset, loss, metrics, dictionary_values):
+    #    model_list = []
+
+
+
 
 
 
