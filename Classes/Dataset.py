@@ -238,6 +238,12 @@ class Dataset:
         return np.unique(self.user)
 
     def remove_elements(self, elements):
+        """
+        Remove elements from the dataset.
+        :param elements:
+                list
+                    list of the elements to remove.
+        """
         self.spectra = np.delete(self.spectra, elements, axis = 0)
         self.x_axis = np.delete(self.x_axis, elements, axis = 0)
         self.raw = np.delete(self.raw, elements, axis = 0)
@@ -268,75 +274,6 @@ class Dataset:
             x_axis_list.append(np.array(el))
         x_axis_list = np.array(x_axis_list)
         self.x_axis = x_axis_list
-
-    def dataaugment(self, betashift, slopeshift, multishift):
-        """
-        Function propaedeutic to data augmentation.
-            :param betashift:
-            :param slopeshift:
-            :param multishift:
-            :return
-                np.array:
-                    an array containing augmented signals.
-        """
-        # baseline shift
-        signal = self.spectra
-        beta = np.random.random(size=(signal.shape[0], 1)) * 2 * betashift - betashift
-        slope = np.random.random(size=(signal.shape[0], 1)) * 2 * slopeshift - slopeshift + 1
-        # relative positions
-        axis = np.array(range(signal.shape[1])) / float(signal.shape[1])
-        # offset
-        offset = slope * (axis) + beta - axis - slope / 2. + 0.5
-
-        # multiplicative coefficient
-        multi = np.random.random(size=(signal.shape[0], 1)) * 2 * multishift - multishift + 1
-        augmented_signal = multi * signal + offset
-
-        return augmented_signal
-
-    def augment_signals(self, times, keep_original=True, betashift=0.0005, slopeshift=0.002, multishift=0.005):
-        """
-        It apply data augmentation strategy. Augment the all dataset many times as specified by times.
-        :param times:
-            int
-                number of reply of replicas of the dataset.
-        :param keep_original:
-            bool
-                keep original dataset or not in the augmented dataset.
-        :param betashift:
-        :param slopeshift:
-        :param multishift:
-        """
-        if keep_original:
-            aug_list = copy.copy(self.spectra)
-            raw_list = copy.copy(self.raw)
-            user_list = copy.copy(self.user)
-            name_list = copy.copy(self.name)
-            category_list = copy.copy(self.category)
-            y_list = copy.copy(self.labels)
-        else:
-            y_list = np.array([])
-            raw_list = np.array([])
-            user_list = np.array([])
-            name_list = np.array([])
-            category_list = np.array([])
-        for i in range(times):
-            if keep_original==False and i == 0:
-                aug_list = self.dataaugment(betashift = betashift, slopeshift=slopeshift, multishift=multishift)
-            else:
-                aug_list = np.concatenate((aug_list, self.dataaugment(betashift = betashift, slopeshift=slopeshift, multishift=multishift)))
-        for i in range(times):
-            y_list = np.concatenate((y_list, self.labels), axis=0)
-            raw_list = np.concatenate((raw_list, self.raw), axis=0)
-            user_list = np.concatenate((user_list, self.user), axis = 0)
-            name_list = np.concatenate((name_list, self.name), axis = 0)
-            category_list = np.concatenate((category_list, self.category), axis = 0)
-        self.spectra = aug_list
-        self.labels = y_list
-        self.raw = raw_list
-        self.user = user_list
-        self.name = name_list
-        self.category = category_list
 
 
 

@@ -11,6 +11,27 @@ import torch.nn as nn
 from torch.optim import Adam
 
 class DLModel:
+    """
+        A class to represent a DLModel object in pytorch.
+        ...
+
+        Attributes
+        ----------
+        model : torch.nn.Module
+            model to train e test.
+        batch_size: int
+            dimension of the batch size.
+        epochs: int
+            number of epochs.
+        loss: torch.nn
+            loss function to optimize during training.
+        optimizer: torch.nn
+            optimizer for the model.
+        learning_rate: double
+            value of the learning rate.
+        gpu_ids: list
+            list of the available gpu_ids on the machine.
+        """
 
     def __init__(self, model, batch_size, epochs, loss, optimizer, learning_rate, gpu_ids):
         self.batch_size = batch_size
@@ -28,6 +49,27 @@ class DLModel:
         self.model.to(self.device)
 
     def train_model_leave_one_patient_out(self, dataset, early_stopping = True, patience = 100, scheduler = None, patient_level = True, get_patient_prediction = True, return_history = True, val_size = 0.1):
+        """
+        Train the model with Leave One Patient Out Cross Validation.
+        :param dataset: scikit_raman.Dataset
+            a Dataset object on which train the model.
+        :param early_stopping: bool
+            if true early stopping during train is applied.
+        :param patience: int
+            value of patience for the early stopping.
+        :param scheduler: torch.optim
+            scheduler to apply in order to optimize the training.
+        :param patient_level: bool
+            if true the prediction based on patients are returned.
+        :param get_patient_prediction: bool
+            if true every prediction is returned.
+        :param return_history:
+            if true the history (loss and accuracy) of training and validation are returned.
+        :param val_size: float
+            determines the dimension of the validation set.
+        :return: dict
+            returns a dictionary with the results based on the different choiches.
+        """
         folds = dataset.leave_one_patient_cv()
         train_dataset, validation_dataset, test_dataset = self.create_dataset_pytorch(dataset, val_size, folds)
         tot_pred_list = []
@@ -75,6 +117,17 @@ class DLModel:
         return dictionary
 
     def create_dataset_pytorch(self, dataset, val_size, folds):
+        """
+        Create the dataset object for the training, validation and test set.
+        :param dataset: scikit_raman.Dataset
+            a dataset to divide and create pytorch dataset.
+        :param val_size: float
+            determines the dimension of the validation set.
+        :param folds: list
+            folds of the cross validation strategy.
+        :return: list
+            training set, validation set and test set as pytorch dataset.
+        """
         #folds = dataset.leave_one_patient_cv()
         train_set = []
         validation_set = []
@@ -100,6 +153,25 @@ class DLModel:
             return train_set, validation_set, test_set
 
     def train_function(self, model, optim, train_set, validation_set, early_stopping = True, patience = 100, scheduler = None):
+        """
+        It execute a train step.
+        :param model: torch.nn.Module
+            model to train.
+        :param optim: torch.nn
+            optimizer to train.
+        :param train_set: scikit_raman.PytorchDataset
+            Dataset on which execute training function.
+        :param validation_set: scikit_raman.PytorchDataset
+            Validation on which validate the model.
+        :param early_stopping: bool
+            if true early stopping is applied
+        :param patience: int
+            patience value for the early stopping
+        :param scheduler: torch.optim
+            scheduler to apply in order to optimize the training.
+        :return: list
+            value of loss and accuracy for both training and test.
+        """
         train_losses = []
         val_losses = []
         train_acc = []
@@ -183,6 +255,13 @@ class DLModel:
 
     @classmethod
     def load_model_benchmark(dlm, gpu_ids):
+        """
+        Load the benchmark model.
+        :param gpu_ids: list
+            list of available gpus.
+        :return: DLModel
+            return an object of the class DLModel with the benchmark data.
+        """
         model = BenchmarkModel()
         batch_size = 338
         epochs = 273
@@ -192,6 +271,29 @@ class DLModel:
         return dlm(model, batch_size, epochs, loss, optimizer, lr, gpu_ids)
 
     def train_model_cv(self, dataset, k = 10, early_stopping = True, patience = 100, scheduler = None, fold_level = True, get_patient_prediction = True, return_history = True, val_size = 0.1):
+        """
+        Train the model with K-Fold Cross Validation.
+        :param dataset: scikit_raman.Dataset
+            Dataset on which train the model.
+        :param k: int
+            number of folds for the k-fold approach.
+        :param early_stopping: bool
+            if true early stopping is applied.
+        :param patience: int
+            value of the patience for the early stopping.
+        :param scheduler: torch.optim
+            scheduler to apply in order to optimize the training.
+        :param fold_level: bool
+            if true prediction for every patient of every fold is returned.
+        :param get_patient_prediction: bool
+            if true all prediction are returned.
+        :param return_history: bool
+            if true history of the training is returned.
+        :param val_size: float
+            dimension of the validation set.
+        :return: dict
+            returns a dictionary with the results based on the choiches.
+        """
         folds = dataset.k_fold(k)
         train_dataset, validation_dataset, test_dataset = self.create_dataset_pytorch(dataset, val_size, folds)
         tot_pred_list = []

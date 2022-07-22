@@ -11,6 +11,21 @@ import numpy as np
 import copy
 
 class DLModelKeras:
+    """
+    A class to represent a DLModel object in keras.
+    ...
+
+    Attributes
+    ----------
+    model : tf.Keras.Model
+        model to train e test.
+    batch_size: int
+        dimension of the batch size
+    epochs: int
+        number of epochs
+    callbacks: tf.keras.callbacks
+        callbacks to apply in the fitting fase.
+    """
 
     def __init__(self, model, batch_size, epochs, callbacks):
         self.model = model
@@ -119,7 +134,7 @@ class DLModelKeras:
                     if true the histories of the training is returned.
         :return:
                 dict
-                    Returns a dictionary that is different based on the choiches.
+                    Returns a dictionary with the results based on the different choiches.
         """
         folds = dataset.leave_one_patient_cv()
         tot_pred_list = []

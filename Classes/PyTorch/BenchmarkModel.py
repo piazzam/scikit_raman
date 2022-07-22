@@ -2,6 +2,18 @@ import torch
 import torch.nn as nn
 
 class BenchmarkModel(nn.Module):
+    """
+    A class that represent Benchmark Model in Pytorch.
+    ...
+
+    Attributes
+    ----------
+    cnn_layers : torch.nn
+        sequence of cnn layers of the model.
+    dense_layers: torch.nn
+        sequence of dense lauers of the model.
+    """
+
     def __init__(self):
         super(BenchmarkModel, self).__init__()
         self.cnn_layers = nn.Sequential(
