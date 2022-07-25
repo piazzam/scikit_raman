@@ -262,3 +262,12 @@ class Processor:
         spectra = self.dataset.spectra
         tsne_res = tsne.fit_transform(spectra)
         return tsne_res
+
+    def remove_alluminium(self, alluminium):
+        allu = alluminium.spectra
+        for i in range(len(self.dataset)):
+            current_spectra = self.dataset[i][0]
+            new_spectra = []
+            for s, al in zip(current_spectra, allu):
+                new_spectra.append(s - al)
+            self.dataset.spectra[i] = np.array(new_spectra)
