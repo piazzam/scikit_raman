@@ -4,6 +4,8 @@ import pandas as pd
 import seaborn as sn
 import matplotlib.pyplot as plt
 import numpy as np
+import os
+
 
 class Evaluator:
     """
@@ -44,6 +46,7 @@ class Evaluator:
         plt.figure(figsize=(10, 7))
         cm_plot = sn.heatmap(df_patient_level, annot=True, fmt='d', annot_kws={"fontsize":24})
         if save:
+            os.makedirs(os.path.dirname(folder_path), exist_ok=True)
             df_patient_level.to_csv(folder_path + "cm_total_patient.csv")
             df_report.to_csv(folder_path + "report_total_patient.csv")
             cm_plot.figure.savefig(folder_path + "cm_total_patient.png")
@@ -77,6 +80,7 @@ class Evaluator:
         plt.figure(figsize=(10, 7))
         cm_plot = sn.heatmap(df_total, annot=True, fmt='d', annot_kws={"fontsize":24})
         if save:
+            os.makedirs(os.path.dirname(folder_path), exist_ok=True)
             df_total.to_csv(folder_path + "cm_total.csv")
             df_report.to_csv(folder_path + "report_total.csv")
             cm_plot.figure.savefig(folder_path + "cm_total.png")
@@ -119,6 +123,7 @@ class Evaluator:
             plt.figure(figsize=(10, 7))
             cm_plot = sn.heatmap(df_cm_model, annot=True, fmt='d', annot_kws={"fontsize":24})
             if save:
+                os.makedirs(os.path.dirname(folder_path), exist_ok=True)
                 df_cm_model.to_csv(folder_path + str(el) + ".csv")
                 cm_plot.figure.savefig(folder_path + str(el) + ".png")
                 df_report_model.to_csv(folder_path + str(el) + ".csv")
@@ -134,6 +139,7 @@ class Evaluator:
         :param folder_path: str
             Path on which save the csv files.
         """
+        os.makedirs(os.path.dirname(folder_path), exist_ok=True)
         for el in self.results:
             df = pd.DataFrame.from_dict(self.results[el])
             df.to_csv(folder_path+str(el)+'csv')
