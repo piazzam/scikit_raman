@@ -84,4 +84,9 @@ class Evaluator:
                 print(classification_report(prediction, labels, output_dict=False, labels=self.classes))
                 cm_plot.figure.show()
 
+    def save_prediction_csv(self, folder_path = "results/"):
+        for el in self.results:
+            df = pd.DataFrame.from_dict(self.results[el])
+            df.to_csv(folder_path+str(el)+'csv')
+
 
