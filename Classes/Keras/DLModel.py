@@ -1,13 +1,15 @@
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization, InputLayer, Conv1D,MaxPooling1D, Reshape
-from tensorflow.keras.layers import LeakyReLU
-from tensorflow.keras.optimizers import Adam
-from tensorflow.python.keras.utils.multi_gpu_utils import multi_gpu_model
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
-from tensorflow.keras.models import clone_model
 from sklearn.model_selection import train_test_split
-import numpy as np
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization, InputLayer, Conv1D, MaxPooling1D, \
+    Reshape
+from tensorflow.keras.layers import LeakyReLU
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import clone_model
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.utils import to_categorical
+from tensorflow.python.keras.utils.multi_gpu_utils import multi_gpu_model
+from scikit_raman.Classes.DataAugmentation.EMSC import *
+
 
 class DLModelKeras:
     """
@@ -36,7 +38,7 @@ class DLModelKeras:
         self.metrics = metrics
 
     @classmethod
-    def load_model_benchmark(dlm,  n_dims, multi_gpu = False):
+    def load_model_benchmark(dlm,  n_dims, multi_gpu = False, data_augmentation = False):
         """
         Load the benchmark model.
         :param n_dims:
@@ -53,9 +55,12 @@ class DLModelKeras:
         loss = 'categorical_crossentropy'
         metrics = ['categorical_accuracy']
         optimizer = Adam(lr=0.00020441990333108206)
+        times = 30
 
         # ----- init model
         model = Sequential()
+        if data_augmentation:
+            model.add(EMSC(times))
         model.add(InputLayer(input_shape=(n_dims,)))
         model.add(Reshape((n_dims, 1)))
 
@@ -148,8 +153,6 @@ class DLModelKeras:
         histories = []
         names_list = []
         for j, (train_idx, test_idx) in enumerate(folds):
-            #trained_model = self.model
-            #trained_model = copy.deepcopy(self.model)
             trained_model = clone_model(self.model)
             trained_model.compile(optimizer=self.optimizer, loss = self.loss, metrics = self.metrics)
             X_train_cv = dataset.spectra[train_idx]
@@ -161,7 +164,6 @@ class DLModelKeras:
             X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv_cat, test_size=test_size,
                                                                     # random_state = 42,
                                                                     stratify=y_train_cv)
-
             history = trained_model.fit(X_train_cv, y_train_cv,
                                 epochs=self.epochs,
                                 validation_data=(X_val, y_val),
