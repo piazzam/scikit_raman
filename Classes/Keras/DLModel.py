@@ -8,11 +8,10 @@ from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.models import clone_model
 from sklearn.model_selection import train_test_split
 import numpy as np
-import copy
 
 class DLModelKeras:
     """
-    A class to represent a DLModel object in keras.
+    A class that represents a DLModel object in keras.
     ...
 
     Attributes

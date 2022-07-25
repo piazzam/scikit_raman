@@ -6,12 +6,34 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 class Evaluator:
+    """
+        A class that represents an Evaluator object for MlModel and DLModel of scikit_raman.
+        ...
+
+        Attributes
+        ----------
+        results : dict
+            dictionary returned by evaluation function of scikit_raman classes.
+        classes : list
+            list of the classes.
+        """
 
     def __init__(self, results, classes):
         self.results = results
         self.classes = classes
 
     def total_result_patient(self, show = True, save = True, folder_path = "results/"):
+        """
+        Creates the total results at patient level.
+        :param show: bool
+            If true the results are shown.
+        :param save: bool
+            If true the results are save.
+        :param folder_path: str
+            If save parameter is true folder path on which save the results.
+        :return: list
+            Returns the confusion matrix and the report.
+        """
         cm_patient_level = confusion_matrix(self.results['patient_level']['pred_list'],
                                             self.results['patient_level']['label_list'])
         report_patient_level = classification_report(self.results['patient_level']['pred_list'],
@@ -34,6 +56,17 @@ class Evaluator:
         return cm_patient_level, report_patient_level
 
     def total_result(self, show = True, save = True, folder_path = "/result"):
+        """
+        Creates the total results.
+        :param show: bool
+            If true the results are shown.
+        :param save: bool
+            If true the results are save.
+        :param folder_path: str
+            If save parameter is true folder path on which save the results.
+        :return: list
+            Returns the confusion matrix and the report.
+        """
         cm_total = confusion_matrix(self.results['total_prediction']['pred_list'],
                                             self.results['total_prediction']['label_list'])
         report_total = classification_report(self.results['total_prediction']['pred_list'],
@@ -56,6 +89,17 @@ class Evaluator:
         return cm_total, report_total
 
     def results_every_patient(self, show = True, save = True, folder_path = "/result"):
+        """
+        Create the results for every patient.
+        :param show: bool
+            If true the results are shown.
+        :param save: bool
+            If true the results are save.
+        :param folder_path: str
+            If save parameter is true the results are save in this folder.
+        :return: list
+            Return the confusion matrix and the reports.
+        """
         total_names_list = self.results['total_prediction']['names_list']
         i = 0
         k = 0
@@ -85,6 +129,11 @@ class Evaluator:
                 cm_plot.figure.show()
 
     def save_prediction_csv(self, folder_path = "results/"):
+        """
+        Save every prediction (in any format) to csv file.
+        :param folder_path: str
+            Path on which save the csv files.
+        """
         for el in self.results:
             df = pd.DataFrame.from_dict(self.results[el])
             df.to_csv(folder_path+str(el)+'csv')
