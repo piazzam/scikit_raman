@@ -1,11 +1,11 @@
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization, InputLayer, Conv1D, \
-    MaxPooling1D, Reshape
+from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization, InputLayer, Conv1D,MaxPooling1D, Reshape
 from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.optimizers import Adam
 from tensorflow.python.keras.utils.multi_gpu_utils import multi_gpu_model
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from tensorflow.keras.models import clone_model
 from sklearn.model_selection import train_test_split
 import numpy as np
 import copy
@@ -27,11 +27,14 @@ class DLModelKeras:
         callbacks to apply in the fitting fase.
     """
 
-    def __init__(self, model, batch_size, epochs, callbacks):
+    def __init__(self, model, batch_size, epochs, callbacks, optimizer, loss, metrics):
         self.model = model
         self.batch_size = batch_size
         self.epochs = epochs
         self.callbacks = callbacks
+        self.optimizer = optimizer
+        self.loss = loss
+        self.metrics = metrics
 
     @classmethod
     def load_model_benchmark(dlm,  n_dims, multi_gpu = False):
@@ -112,7 +115,7 @@ class DLModelKeras:
         lr = ReduceLROnPlateau(monitor="val_categorical_accuracy", factor=0.5, verbose=4, patience=80,
                                                cooldown=10)
         callbacks = [es, lr]
-        return dlm(model, batch_size, epochs, callbacks)
+        return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
 
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True, return_history = True, test_size = 0.1):
         """
@@ -147,7 +150,9 @@ class DLModelKeras:
         names_list = []
         for j, (train_idx, test_idx) in enumerate(folds):
             #trained_model = self.model
-            trained_model = copy.deepcopy(self.model)
+            #trained_model = copy.deepcopy(self.model)
+            trained_model = clone_model(self.model)
+            trained_model.compile(optimizer=self.optimizer, loss = self.loss, metrics = self.metrics)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
@@ -157,6 +162,7 @@ class DLModelKeras:
             X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv_cat, test_size=test_size,
                                                                     # random_state = 42,
                                                                     stratify=y_train_cv)
+
             history = trained_model.fit(X_train_cv, y_train_cv,
                                 epochs=self.epochs,
                                 validation_data=(X_val, y_val),
@@ -219,7 +225,8 @@ class DLModelKeras:
         histories = []
         names_list = []
         for j, (train_idx, test_idx) in enumerate(folds):
-            trained_model = copy.deepcopy(self.model)
+            trained_model = clone_model(self.model)
+            trained_model.compile(optimizer=self.optimizer, loss=self.loss, metrics=self.metrics)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
