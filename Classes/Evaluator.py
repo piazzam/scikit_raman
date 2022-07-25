@@ -20,7 +20,7 @@ class Evaluator:
         df_patient_level = pd.DataFrame(cm_patient_level, index=self.classes, columns=self.classes)
         df_report = pd.DataFrame(report_patient_level)
         plt.figure(figsize=(10, 7))
-        cm_plot = sn.heatmap(df_patient_level, annot=True, fmt='d', annot_kws={"fontsize":8})
+        cm_plot = sn.heatmap(df_patient_level, annot=True, fmt='d', annot_kws={"fontsize":24})
         if save:
             df_patient_level.to_csv(folder_path + "cm_total_patient.csv")
             df_report.to_csv(folder_path + "report_total_patient.csv")
@@ -42,7 +42,7 @@ class Evaluator:
         df_total = pd.DataFrame(cm_total, index=self.classes, columns=self.classes)
         df_report = pd.DataFrame(report_total)
         plt.figure(figsize=(10, 7))
-        cm_plot = sn.heatmap(df_total, annot=True, fmt='d', annot_kws={"fontsize":8})
+        cm_plot = sn.heatmap(df_total, annot=True, fmt='d', annot_kws={"fontsize":24})
         if save:
             df_total.to_csv(folder_path + "cm_total.csv")
             df_report.to_csv(folder_path + "report_total.csv")
@@ -73,7 +73,7 @@ class Evaluator:
             df_cm_model = pd.DataFrame(cm_model, index=self.classes, columns=self.classes)
             df_report_model = pd.DataFrame(report_model)
             plt.figure(figsize=(10, 7))
-            cm_plot = sn.heatmap(df_cm_model, annot=True, fmt='d', annot_kws={"fontsize":8})
+            cm_plot = sn.heatmap(df_cm_model, annot=True, fmt='d', annot_kws={"fontsize":24})
             if save:
                 df_cm_model.to_csv(folder_path + str(el) + ".csv")
                 cm_plot.figure.savefig(folder_path + str(el) + ".png")
