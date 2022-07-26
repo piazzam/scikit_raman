@@ -142,6 +142,6 @@ class Evaluator:
         os.makedirs(os.path.dirname(folder_path), exist_ok=True)
         for el in self.results:
             df = pd.DataFrame.from_dict(self.results[el])
-            df.to_csv(folder_path+str(el)+'csv')
+            df.to_csv(folder_path+str(el)+'.csv')
 
 
