@@ -72,6 +72,12 @@ class DataAugmenter:
         self.labels = y_list
 
     def emsc(self, params):
+        """
+        Apply emsc data augmentation.
+        :param params: dict
+            Parameters on which apply the emsc function.
+        :return:
+        """
         if 'keep_original' in params:
             keep_original = params['keep_original']
         else:

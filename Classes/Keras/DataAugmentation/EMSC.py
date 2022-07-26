@@ -4,6 +4,23 @@ import copy
 
 
 class EMSC(tf.keras.layers.Layer):
+    """
+    A class to apply EMSC data augmentation approach on the fly with Keras.
+    ...
+
+    Attributes
+    ----------
+    times : int
+        number of times to replicate the data.
+    keep_original: bool
+        if True the original dataset is kept in the dataset.
+    slopeshift: float
+        parameter to smooth the emsc function.
+    betashift: float
+        parameter to smooth the emsc function.
+    multishift: float
+        parameter to smooth the emsc function.
+    """
 
     def __init__(self, times, keep_original=True, betashift=0.0005, slopeshift=0.002, multishift=0.005, **kwargs):
         super(EMSC, self).__init__(**kwargs)
@@ -14,6 +31,14 @@ class EMSC(tf.keras.layers.Layer):
         self.multishift = multishift
 
     def call(self, spectra, training=None):
+        """
+        Function called when this layer is activated.
+        :param spectra: Tensor
+            Tensor of input spectra.
+        :param training: bool
+            modality on which model is apply.
+        :return:
+        """
         if self.keep_original:
             aug_list = copy.copy(spectra)
             #y_list = copy.copy(labels)
