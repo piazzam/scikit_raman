@@ -9,6 +9,7 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 from tensorflow.python.keras.utils.multi_gpu_utils import multi_gpu_model
 from scikit_raman.Classes.Keras.DataAugmentation.EMSC import *
+from scikit_raman.Classes.DataAugmenter import *
 
 
 class DLModelKeras:
@@ -124,7 +125,7 @@ class DLModelKeras:
         callbacks = [es, lr]
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
 
-    def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True, return_history = True, test_size = 0.1):
+    def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True, return_history = True, test_size = 0.1, data_augmentation = False, f_name = 'emsc', f_params = None):
         """
         Train the model with Leave One Patient Out Cross Validation
         :param dataset:
@@ -167,6 +168,12 @@ class DLModelKeras:
             X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv_cat, test_size=test_size,
                                                                     # random_state = 42,
                                                                     stratify=y_train_cv)
+            if data_augmentation:
+                da = DataAugmenter(X_train_cv, y_train_cv)
+                func = getattr(da, f_name)
+                func(f_params)
+                X_train_cv = da.spectra
+                y_train_cv = da.labels
             history = trained_model.fit(X_train_cv, y_train_cv,
                                 epochs=self.epochs,
                                 validation_data=(X_val, y_val),
@@ -197,7 +204,7 @@ class DLModelKeras:
             dictionary['history'] = nested_dictionary
         return dictionary
 
-    def train_model_cv(self, dataset, number_classes, k = 10, fold_level = True, get_patient_prediction = True, return_history = True):
+    def train_model_cv(self, dataset, number_classes, k = 10, fold_level = True, get_patient_prediction = True, return_history = True, data_augmentation = False, f_name = 'emsc', f_params = None):
         """
                 Train the model with Leave One Patient Out Cross Validation
                 :param dataset:
@@ -240,6 +247,12 @@ class DLModelKeras:
             X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv_cat, test_size=.1,
                                                                     # random_state = 42,
                                                                     stratify=y_train_cv)
+            if data_augmentation:
+                da = DataAugmenter(X_train_cv, y_train_cv)
+                func = getattr(da, f_name)
+                func(f_params)
+                X_train_cv = da.spectra
+                y_train_cv = da.labels
             history = trained_model.fit(X_train_cv, y_train_cv,
                                 epochs=self.epochs,
                                 validation_data=(X_val, y_val),
