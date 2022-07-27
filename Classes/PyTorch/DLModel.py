@@ -1,6 +1,7 @@
 from sklearn.model_selection import train_test_split
 from scikit_raman.Classes.PyTorch.PytorchDataset import PytorchDataset
 from scikit_raman.Classes.PyTorch.BenchmarkModel import BenchmarkModel
+from scikit_raman.Classes.DataAugmenter import *
 import copy
 from torch.utils.data import DataLoader
 import torch
@@ -48,7 +49,7 @@ class DLModel:
         self.model = model.double()
         self.model.to(self.device)
 
-    def train_model_leave_one_patient_out(self, dataset, early_stopping = True, patience = 100, scheduler = None, patient_level = True, get_patient_prediction = True, return_history = True, val_size = 0.1):
+    def train_model_leave_one_patient_out(self, dataset, early_stopping = True, patience = 100, scheduler = None, patient_level = True, get_patient_prediction = True, return_history = True, val_size = 0.1, data_augmentation_online = True, data_augmentation_offline = True, f_name = "emsc", f_params = None):
         """
         Train the model with Leave One Patient Out Cross Validation.
         :param dataset: scikit_raman.Dataset
@@ -67,6 +68,14 @@ class DLModel:
             if true the history (loss and accuracy) of training and validation are returned.
         :param val_size: float
             determines the dimension of the validation set.
+        :param data_augmentation_online: bool
+            if true data augmentation with online approach is applied.
+        :param data_augmentation_offline: bool
+            if true data augmentation with offline approach is applied.
+        :param f_name: str
+            name from DataAugmenter class to apply for data augmentation.
+        :param f_params: dict
+            parameters for the data augmentation function.
         :return: dict
             returns a dictionary with the results based on the different choiches.
         """
@@ -87,7 +96,11 @@ class DLModel:
         for i in range(len(train_dataset)):
             trained_model = copy.deepcopy(self.model)
             optim = copy.deepcopy(self.optimizer)
-            train_loss, val_loss, train_acc, val_acc = self.train_function(trained_model, optim, train_dataset[i], validation_dataset[i], early_stopping, patience, scheduler)
+            if data_augmentation_offline:
+                da = DataAugmenter(train_dataset[i].x, train_dataset[i].y)
+                func = getattr(da, f_name)
+                train_dataset[i].x, train_dataset[i].y = func(f_params)
+            train_loss, val_loss, train_acc, val_acc = self.train_function(trained_model, optim, train_dataset[i], validation_dataset[i], early_stopping, patience, scheduler, data_augmentation_online, f_name, f_params)
             history = {'loss':train_loss, 'val_loss':val_loss, 'accuracy':train_acc, 'val_accuracy':val_acc}
             histories.append(history)
             loss_train_list.append(train_loss)
@@ -152,7 +165,7 @@ class DLModel:
 
             return train_set, validation_set, test_set
 
-    def train_function(self, model, optim, train_set, validation_set, early_stopping = True, patience = 100, scheduler = None):
+    def train_function(self, model, optim, train_set, validation_set, early_stopping = True, patience = 100, scheduler = None, data_augmentation_online = False, f_name = "emsc", f_params = None):
         """
         It execute a train step.
         :param model: torch.nn.Module
@@ -169,6 +182,12 @@ class DLModel:
             patience value for the early stopping
         :param scheduler: torch.optim
             scheduler to apply in order to optimize the training.
+        :param data_augmentation_online: bool
+            if true data augmentation with online approach is applied.
+        :param f_name: str
+            name from DataAugmenter class to apply for data augmentation.
+        :param f_params: dict
+            parameters for the data augmentation function.
         :return: list
             value of loss and accuracy for both training and test.
         """
@@ -185,6 +204,11 @@ class DLModel:
             acc_train_epoch = []
 
             for i, (ramanSpectraTrain, labelTrain, user) in enumerate(training_generator):
+
+                if data_augmentation_online:
+                    da = DataAugmenter(ramanSpectraTrain, labelTrain)
+                    func = getattr(da, f_name)
+                    ramanSpectraTrain, labelTrain = func(f_params)
 
                 ramanSpectraTrain = ramanSpectraTrain.to(self.device)
                 labelTrain = labelTrain.to(self.device)
@@ -270,7 +294,7 @@ class DLModel:
         optimizer = Adam(model.parameters(), lr=lr)
         return dlm(model, batch_size, epochs, loss, optimizer, lr, gpu_ids)
 
-    def train_model_cv(self, dataset, k = 10, early_stopping = True, patience = 100, scheduler = None, fold_level = True, get_patient_prediction = True, return_history = True, val_size = 0.1):
+    def train_model_cv(self, dataset, k = 10, early_stopping = True, patience = 100, scheduler = None, fold_level = True, get_patient_prediction = True, return_history = True, val_size = 0.1, data_augmentation_online = True, data_augmentation_offline = True, f_name = "emsc", f_params = None):
         """
         Train the model with K-Fold Cross Validation.
         :param dataset: scikit_raman.Dataset
@@ -291,6 +315,14 @@ class DLModel:
             if true history of the training is returned.
         :param val_size: float
             dimension of the validation set.
+        :param data_augmentation_online: bool
+            if true data augmentation with online approach is applied.
+        :param data_augmentation_offline: bool
+            if true data augmentation with offline approach is applied.
+        :param f_name: str
+            name from DataAugmenter class to apply for data augmentation.
+        :param f_params: dict
+            parameters for the data augmentation function.
         :return: dict
             returns a dictionary with the results based on the choiches.
         """
@@ -311,7 +343,11 @@ class DLModel:
         for i in range(len(train_dataset)):
             trained_model = copy.deepcopy(self.model)
             optim = copy.deepcopy(self.optimizer)
-            train_loss, val_loss, train_acc, val_acc = self.train_function(trained_model, optim, train_dataset[i], validation_dataset[i], early_stopping, patience, scheduler)
+            if data_augmentation_offline:
+                da = DataAugmenter(train_dataset[i].x, train_dataset[i].y)
+                func = getattr(da, f_name)
+                train_dataset[i].x, train_dataset[i].y = func(f_params)
+            train_loss, val_loss, train_acc, val_acc = self.train_function(trained_model, optim, train_dataset[i], validation_dataset[i], early_stopping, patience, scheduler, data_augmentation_online, f_name, f_params)
             history = {'loss':train_loss, 'val_loss':val_loss, 'accuracy':train_acc, 'val_accuracy':val_acc}
             histories.append(history)
             loss_train_list.append(train_loss)

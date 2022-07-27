@@ -78,26 +78,33 @@ class DataAugmenter:
             Parameters on which apply the emsc function.
         :return:
         """
-        if 'keep_original' in params:
-            keep_original = params['keep_original']
-        else:
+        if params == None:
             keep_original = True
-        if 'times' in params:
-            times = params['times']
-        else:
             times = 30
-        if 'betashift' in params:
-            betashift = params['betashift']
-        else:
-            betashift=0.0005
-        if 'slopeshift' in params:
-            slopeshift = params['slopeshift']
-        else:
+            betashift = 0.005
             slopeshift = 0.002
-        if 'multishift' in params:
-            multishift = params['multishift']
-        else:
             multishift = 0.05
+        else:
+            if 'keep_original' in params:
+                keep_original = params['keep_original']
+            else:
+                keep_original = True
+            if 'times' in params:
+                times = params['times']
+            else:
+                times = 30
+            if 'betashift' in params:
+                betashift = params['betashift']
+            else:
+                betashift=0.0005
+            if 'slopeshift' in params:
+                slopeshift = params['slopeshift']
+            else:
+                slopeshift = 0.002
+            if 'multishift' in params:
+                multishift = params['multishift']
+            else:
+                multishift = 0.05
         if keep_original:
             aug_list = copy.copy(self.spectra)
             y_list = copy.copy(self.labels)
