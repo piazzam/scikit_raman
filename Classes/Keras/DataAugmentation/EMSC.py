@@ -53,7 +53,7 @@ class EMSC(tf.keras.layers.Layer):
                                            self.dataaugment(spectra.numpy(), betashift=self.betashift, slopeshift=self.slopeshift,
                                                             multishift=self.multishift)))
         #for i in range(self.times):
-            #y_list = np.concatenate((y_list, self.labels), axis=0)
+            #y_list = np.concatenate((y_list, labels), axis=0)
         aug_list = tf.convert_to_tensor(aug_list)
         return aug_list #, y_list
 
