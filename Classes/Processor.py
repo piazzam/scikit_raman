@@ -264,6 +264,12 @@ class Processor:
         return tsne_res
 
     def remove_alluminium(self, alluminium):
+        """
+        Remove alluminium from the background of the spectra.
+        :param alluminium: scikit_raman.Alluminium
+            this object represent an alluminium signal.
+        :return:
+        """
         allu = alluminium.spectra
         for i in range(len(self.dataset)):
             current_spectra = self.dataset[i][0]

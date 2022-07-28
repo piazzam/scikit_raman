@@ -55,12 +55,15 @@ class Dataset:
     def load_file(ds, file_type, file_name, label_dictionary = {'cov':0, 'covNeg': 1, 'ctrl':2}):
         """
         Load a file and automatically create a Dataset object.
-        :param ds: Dataset object to be returned.
-        :param file_type: type of file to load.
-        :param file_name: name of the file to load
-        :param label_dictionary: dictionary for mapping category (str) in numeric label
-        :return: a dataset object loaded from pickle. The pickle must be a pd.DataFrame well-formatted
-                followed our policies.
+        :param ds: scikit_raman.Dataset
+            Dataset object to be returned.
+        :param file_type: str
+            type of file to load.
+        :param file_name: str
+            name of the file to load
+        :param label_dictionary: dict, optional
+            dictionary for mapping category (str) in numeric label.
+        :return: a dataset object loaded from the file.
         """
         if file_type == 'pkl':
             df = pd.read_pickle(file_name)
@@ -83,6 +86,9 @@ class Dataset:
     def create_label(self, label_dictionary):
         """
         Create numeric labels for the dataset object.
+        :param label_dictionary: dict
+            dictionary on which rely for the numeric labels.
+        :return:
         """
         labels = []
         for el in self.category:
@@ -92,7 +98,8 @@ class Dataset:
     def get_raw_data(self):
         """
         Return a new Dataset object with only raw data.
-        :return: Dataset object
+        :return: scikit_raman.Dataset
+            object with raw data.
         """
         spectra = []
         x_axis = []
@@ -116,7 +123,8 @@ class Dataset:
     def get_dark_data(self):
         """
         Return new dataset with only dark data.
-        :return: Dataset
+        :return: scikit_raman.Dataset
+            dataset object with dark data.
         """
         spectra = []
         x_axis = []
@@ -180,9 +188,8 @@ class Dataset:
         Implements the k-fold strategies. It preserves the patients.
         :param k: int
             Number of the fold
-        :return:
-            folds: (j, (train_ids, test_ids))
-                Different fold for the different cv cycle.
+        :return: list
+            Different folds for the different cv cycle.
         """
         x_train = self.spectra
         if not hasattr(self, 'labels'):
@@ -196,10 +203,9 @@ class Dataset:
     def leave_one_patient_cv(self):
         """
         Apply leave-one-patient out cross-validation.
-        :return:
-            folds: (j, (train_ids, test_ids))
-                Different folds for the different cv cycle. J corresponds to the number of
-                patients.
+        :return: list
+            Different folds for the different cv cycle. J corresponds to the number of
+            patients.
         """
         x_train = self.spectra
         if not hasattr(self, 'labels'):
@@ -213,36 +219,32 @@ class Dataset:
     def get_unique_category(self):
         """
         Get a numpy array with unique category values.
-        :return:
-            np.array:
-                contains unique value of the categories
+        :return: np.array:
+            contains unique value of the categories
         """
         return np.unique(self.category)
 
     def get_unique_labels(self):
         """
         Get a numpy array with unique labels values.
-        :return:
-            np.array:
-                contains unique value of the labels
+        :return: np.array:
+            contains unique value of the labels
         """
         return np.unique(self.labels)
 
     def get_unique_user(self):
         """
         Get a numpy array with unique user names.
-        :return:
-            np.array:
-                contains unique value of the users.
+        :return: np.array:
+            contains unique value of the users.
         """
         return np.unique(self.user)
 
     def remove_elements(self, elements):
         """
         Remove elements from the dataset.
-        :param elements:
-                list
-                    list of the elements to remove.
+        :param elements:list
+            list of the elements to remove.
         """
         self.spectra = np.delete(self.spectra, elements, axis = 0)
         self.x_axis = np.delete(self.x_axis, elements, axis = 0)

@@ -21,12 +21,11 @@ class DataAugmenter:
     def dataaugment(self, betashift, slopeshift, multishift):
         """
         Function propaedeutic to data augmentation.
-            :param betashift:
-            :param slopeshift:
-            :param multishift:
-            :return
-                np.array:
-                    an array containing augmented signals.
+        :param betashift:
+        :param slopeshift:
+        :param multishift:
+        :return np.array:
+            an array containing augmented signals.
         """
         # baseline shift
         signal = self.spectra
@@ -45,16 +44,18 @@ class DataAugmenter:
 
     def augment_signals(self, times, keep_original=True, betashift=0.0005, slopeshift=0.002, multishift=0.005):
         """
-        It apply data augmentation strategy. Augment the all dataset many times as specified by times.
-        :param times:
-            int
-                number of reply of replicas of the dataset.
-        :param keep_original:
-            bool
-                keep original dataset or not in the augmented dataset.
-        :param betashift:
-        :param slopeshift:
-        :param multishift:
+        It applies EMSC data augmentation strategy. Augment current dataset many times as specified by times.
+        :param times: int
+            number of reply of replicas of the dataset.
+        :param keep_original: bool
+            if true the original dataset is kept in the augmented dataset
+        :param betashift: float, optional
+            The default value is 0.005.
+        :param slopeshift: float, optional
+            The default values is 0.002.
+        :param multishift: float, optional.
+            The default values is 0.005
+        :return:
         """
         if keep_original:
             aug_list = copy.copy(self.spectra)
@@ -74,8 +75,8 @@ class DataAugmenter:
     def emsc(self, params):
         """
         Apply emsc data augmentation.
-        :param params: dict
-            Parameters on which apply the emsc function.
+        :param params: dict, optional
+            Parameters on which apply the emsc function. The default value is None.
         :return:
         """
         if params == None:

@@ -263,15 +263,22 @@ class DLModel:
                     break
         return train_losses, val_losses, train_acc, val_acc
 
-    def predict_function(self, model, test_set):
-        model.eval()
+    def predict_function(self, test_set):
+        """
+        It apply a prediction
+        :param test_set: scikit_raman.PytorchDataset
+            a test set on which predict.
+        :return: list
+            lables and predicted values.
+        """
+        self.model.eval()
         labels = []
         predicted_labels = []
         with torch.no_grad():
             for j, (ramanSpectraVal, labelVal, user) in enumerate(test_set):
                 ramanSpectraVal = ramanSpectraVal.to(self.device)
                 labelVal = labelVal.to(self.device)
-                output_val = model(ramanSpectraVal)
+                output_val = self.model(ramanSpectraVal)
                 test_label = torch.argmax(output_val, dim=1)
                 labels.append(labelVal)
                 predicted_labels.append(test_label)

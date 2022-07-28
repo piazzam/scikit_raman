@@ -15,7 +15,6 @@ class PytorchDataset(Dataset):
         user: np.array
             user names of the dataset.
         """
-
     def __init__(self, x, y, user):
         super(PytorchDataset).__init__()
         self.x = torch.from_numpy(x)

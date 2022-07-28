@@ -24,9 +24,15 @@ class MLModel:
         Train a model with k-fold cross validation. Print the confusion matrix and the performances
         at every fold and after all folds.
         :param dataset: scikit_raman.Dataset
-            A dataset object from scikit_raman class
-        :param k: int
+            A dataset object from scikit_raman class.
+        :param k: int, optional.
             Number of folds. The default value is 10.
+        :param fold_level, optional.
+            if true results are returned as fold level. The default values is True.
+        :param get_patient_prediction, optional.
+            if true results are returned for every patient. The default value is True.
+        :return dict
+            a dictionary is returned, based on the user choiches.
         """
         folds = dataset.k_fold(k)
         tot_pred_list = []
@@ -93,6 +99,12 @@ class MLModel:
         and the performances at every fold and after all folds.
         :param dataset: scikit_raman.Dataset
             A dataset object for traning task.
+        :param get_patient_prediction, optional
+            if true prediction ef every patient are returned. The default value is True.
+        :param patient_level, optional
+            if true prediction at patient level are returned. The default value is True.
+        :return dict
+            dictionary based on the user choiches.
         """
         folds = dataset.leave_one_patient_cv()
         tot_pred_list = []

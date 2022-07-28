@@ -27,6 +27,12 @@ class DLModelKeras:
         number of epochs
     callbacks: tf.keras.callbacks
         callbacks to apply in the fitting fase.
+    optimizer: str
+        optimizer of the model.
+    loss: str
+        loss function for the training of the model.
+    metrics: str
+        metrics for the evaluation of the model.
     """
 
     def __init__(self, model, batch_size, epochs, callbacks, optimizer, loss, metrics):
@@ -42,17 +48,15 @@ class DLModelKeras:
     def load_model_benchmark(dlm,  n_dims, multi_gpu = False, data_augmentation = False):
         """
         Load the benchmark model.
-        :param n_dims:
-                int
-                    input dimension of the data
-        :param multi_gpu:
-                bool
-                    if True multi_gpu model is used.
-        :return:
-                DLModelKers
-                    Returns a new DLModelKeras.
+        :param n_dims: int
+            number of feature for the problem.
+        :param multi_gpu: bool, optional
+            if true model with multi_gpu is created. The default values is False.
+        :param data_augmentation: bool, optional
+            if true online data augmentation is added in the model. The default value is False.
+        :return: scikit_raman.Keras.DLMoldeKeras
+            a model onject representing the benchmark model.
         """
-
         loss = 'categorical_crossentropy'
         metrics = ['categorical_accuracy']
         optimizer = Adam(lr=0.00020441990333108206)
@@ -128,24 +132,27 @@ class DLModelKeras:
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True, return_history = True, test_size = 0.1, data_augmentation = False, f_name = 'emsc', f_params = None):
         """
         Train the model with Leave One Patient Out Cross Validation
-        :param dataset:
-                Dataset
-                    A Dataset object on which train the model.
-        :param number_classes:
-                int
-                    A integer that represent the number of classes of the problem.
-        :param patient_level:
-                bool
-                    If true the results are returned at patient level granularity
-        :param get_patient_prediction:
-                bool
-                    If true every prediction of the patient is returned.
-        :param return_history:
-                bool
-                    if true the histories of the training is returned.
-        :return:
-                dict
-                    Returns a dictionary with the results based on the different choiches.
+        :param dataset: scikit_raman.Dataset
+            a Dataset object on which train the model.
+        :param number_classes: int
+            an integer that represent the number of classes of the problem.
+        :param patient_level: bool, optional
+            if true the results are returned at patient level granularity. The default value is True.
+        :param get_patient_prediction: bool, optional
+            if true every prediction of the patient is returned. The default value is True.
+        :param return_history: bool, optional
+            if true the histories of the training is returned. The default value is True.
+        :param test_size: float, optional
+            dimension of the validation set. The default value is 0.1.
+        :param data_augmentation: bool, optional
+            if true offline data augmentation is applied. The default value is False.
+        :param f_name: str, optional
+            function name of the data augmentation strategy. It must be a scikit_raman.DataAugmenter function. The
+            default value is 'emsc'
+        :param f_params: dict, optional
+            parameters in input to data augmentation function. The default value is None.
+        :return: dict
+            results based on the user choiches.
         """
         folds = dataset.leave_one_patient_cv()
         tot_pred_list = []
@@ -206,26 +213,29 @@ class DLModelKeras:
 
     def train_model_cv(self, dataset, number_classes, k = 10, fold_level = True, get_patient_prediction = True, return_history = True, data_augmentation = False, f_name = 'emsc', f_params = None):
         """
-                Train the model with Leave One Patient Out Cross Validation
-                :param dataset:
-                        Dataset
-                            A Dataset object on which train the model.
-                :param number_classes:
-                        int
-                            A integer that represent the number of classes of the problem.
-                :param patient_level:
-                        bool
-                            If true the results are returned at patient level granularity
-                :param get_patient_prediction:
-                        bool
-                            If true every prediction of the patient is returned.
-                :param return_history:
-                        bool
-                            if true the histories of the training is returned.
-                :return:
-                        dict
-                            Returns a dictionary that is different based on the choiches.
-                """
+        Train the model with K-Fold Cross Validation.
+        :param dataset: scikit_raman.Dataset
+            Dataset object on which train the model.
+        :param number_classes: int
+            number of target classes of the task.
+        :param k: int, optional
+            number of fold for the k-kold cross validation. The default value is 10.
+        :param fold_level: bool, optional
+            if true results for every fold are returned. The default value is True.
+        :param get_patient_prediction: bool, optional
+            if true every prediction for every patient is returned. The default value is True.
+        :param return_history: bool, optional
+            if true history of the training procedure is returned. The default value is True.
+        :param data_augmentation: bool, optional
+            if true offline data augmentation is applied. The default value is False.
+        :param f_name: str, optional
+            string name of the data augmentation function. It must be a DataAugmenter function. The default value is
+            'emsc'
+        :param f_params: dict, optional
+            dictionary with the parameters of the data augmentation function. The default value is None.
+        :return: dict
+            dictionary of the results based on the user choiches.
+        """
         folds = dataset.k_fold(k)
         tot_pred_list = []
         tot_label_list = []
@@ -304,23 +314,19 @@ class DLModelKeras:
 
     def fit_model(self, X_train, y_train, X_val, y_val, return_history = True):
         """
-        Train a model.
-        :param X_train:
-                np.array
-                    The trainset.
-        :param y_train:
-                np.array
-                    The labels. Must be in categorical way.
-        :param X_val:
-                np.array
-                    The validation set.
-        :param y_val:
-                np.array
-                    The validation labels. Must be in categorical way.
-        :param return_history:
-                bool
-                    If true history of the training is returned.
-        :return:
+        Fit a model.
+        :param X_train: np.array
+            trainset.
+        :param y_train: np.array
+            labels of the trainset.
+        :param X_val: np.array
+            validation set.
+        :param y_val: np.array
+            labels of the validation set.
+        :param return_history: bool, optional
+            if true history of the training is returned. The default value is True.
+        :return: list
+            if selected return the history of the training
         """
         history = self.model.fit(X_train, y_train,
                                  epochs=self.epochs,
@@ -332,13 +338,11 @@ class DLModelKeras:
 
     def test_model(self, X_test):
         """
-        Test a model and return the prediction.
-        :param X_test:
-                np.array
-                    The test set.
-        :return:
-                np.array
-                    The prediction.
+        Test a model on a test set.
+        :param X_test: np.array
+            testset.
+        :return: np.array
+            prediction.
         """
         pred = self.model.predict(X_test)
         y_pred = np.argmax(pred, axis=-1)

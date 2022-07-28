@@ -8,9 +8,9 @@ class Alluminium:
 
     Attributes
     ----------
-    x-axis : ndarray
+    x-axis : np.array
         x-axis of the Alluminium.
-    spectra: ndarray
+    spectra: np.array
         spectra of the Alluminium.
     """
 

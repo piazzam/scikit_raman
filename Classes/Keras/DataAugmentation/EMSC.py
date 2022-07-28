@@ -14,12 +14,12 @@ class EMSC(tf.keras.layers.Layer):
         number of times to replicate the data.
     keep_original: bool
         if True the original dataset is kept in the dataset.
-    slopeshift: float
-        parameter to smooth the emsc function.
-    betashift: float
-        parameter to smooth the emsc function.
-    multishift: float
-        parameter to smooth the emsc function.
+    slopeshift: float, optional
+        parameter to smooth the emsc function. The default values is 0.002.
+    betashift: float, optional
+        parameter to smooth the emsc function. The default value is 0.005.
+    multishift: float, optional
+        parameter to smooth the emsc function. The default values is 0.005
     """
 
     def __init__(self, times, keep_original=True, betashift=0.0005, slopeshift=0.002, multishift=0.005, **kwargs):
@@ -36,7 +36,7 @@ class EMSC(tf.keras.layers.Layer):
         :param spectra: Tensor
             Tensor of input spectra.
         :param training: bool
-            modality on which model is apply.
+            modality on which model is apply. The default values is None.
         :return:
         """
         if self.keep_original:
@@ -60,12 +60,13 @@ class EMSC(tf.keras.layers.Layer):
     def dataaugment(self, signal, betashift, slopeshift, multishift):
         """
         Function propaedeutic to data augmentation.
-            :param betashift:
-            :param slopeshift:
-            :param multishift:
-            :return
-                np.array:
-                    an array containing augmented signals.
+        :param signal: np.array
+            spectra to augment.
+        :param betashift:
+        :param slopeshift:
+        :param multishift:
+        :return np.array:
+            an array containing augmented signals.
         """
         # baseline shift
         #signal = self.spectra
