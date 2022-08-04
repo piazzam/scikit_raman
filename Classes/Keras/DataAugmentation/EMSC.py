@@ -40,7 +40,7 @@ class EMSC(tf.keras.layers.Layer):
         :return:
         """
         if self.keep_original:
-            aug_list = copy.copy(spectra)
+            aug_list = copy.copy(spectra.numpy())
             #y_list = copy.copy(labels)
         #else:
             #y_list = np.array([])

@@ -193,7 +193,7 @@ class Processor:
             # Apply correction
             x = np.array(X[i])
             norm[i] = scaler.fit_transform(np.reshape(x, (-1, 1)))
-            norm[i] = list(norm[i].reshape(991))
+            norm[i] = list(norm[i].reshape(self.dataset.n_dims))
         self.dataset.spectra = np.array(norm)
 
     def l2_normalization(self):

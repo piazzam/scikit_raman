@@ -144,4 +144,36 @@ class Evaluator:
             df = pd.DataFrame.from_dict(self.results[el])
             df.to_csv(folder_path+str(el)+'.csv')
 
-
+    def total_result_patient(self, show = True, save = True, folder_path = "results/"):
+        """
+        Creates the total results at patient level.
+        :param show: bool
+            If true the results are shown.
+        :param save: bool
+            If true the results are save.
+        :param folder_path: str
+            If save parameter is true folder path on which save the results.
+        :return: list
+            Returns the confusion matrix and the report.
+        """
+        cm_patient_level = confusion_matrix(self.results['patient_level']['pred_list'],
+                                            self.results['patient_level']['label_list'])
+        report_patient_level = classification_report(self.results['patient_level']['pred_list'],
+                                                     self.results['patient_level']['label_list'], output_dict=True,
+                                                     labels=self.classes)
+        df_patient_level = pd.DataFrame(cm_patient_level, index=self.classes, columns=self.classes)
+        df_report = pd.DataFrame(report_patient_level)
+        plt.figure(figsize=(10, 7))
+        cm_plot = sn.heatmap(df_patient_level, annot=True, fmt='d', annot_kws={"fontsize":24})
+        if save:
+            os.makedirs(os.path.dirname(folder_path), exist_ok=True)
+            df_patient_level.to_csv(folder_path + "cm_total_patient.csv")
+            df_report.to_csv(folder_path + "report_total_patient.csv")
+            cm_plot.figure.savefig(folder_path + "cm_total_patient.png")
+        if show:
+            cm_plot.figure.show()
+            print(classification_report(self.results['patient_level']['pred_list'],
+                                                     self.results['patient_level']['label_list'], output_dict=False,
+                                                     labels=self.classes))
+            print(cm_patient_level)
+        return cm_patient_level, report_patient_level
