@@ -187,7 +187,7 @@ class Evaluator:
             list of the saved models.
         """
         os.makedirs(os.path.dirname(folder_path), exist_ok=True)
-        saved_models = self.results['models']['saved_models']
+        saved_models = self.results['saved_models']['models']
         for i in range(len(saved_models)):
             with open("model_"+str(i)+'.json', 'w') as json_file:
                 json_file.write(saved_models[i])
@@ -202,7 +202,7 @@ class Evaluator:
             list of the saved weights.
         """
         os.makedirs(os.path.dirname(folder_path), exist_ok=True)
-        saved_weights = self.results['weights']['saved_weights']
+        saved_weights = self.results['saved_weights']['weights']
         for i in range(len(saved_weights)):
             np.savetxt('weights_'+str(i)+'.csv', saved_weights, delimiter = ',')
         return saved_weights

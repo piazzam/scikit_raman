@@ -53,7 +53,7 @@ class DLModelKeras:
         :param multi_gpu: bool, optional
             if true model with multi_gpu is created. The default values is False.
         :return: scikit_raman.Keras.DLMoldeKeras
-            a model onject representing the benchmark model.
+            a model object representing the benchmark model.
         """
         loss = 'categorical_crossentropy'
         metrics = ['categorical_accuracy']
@@ -124,10 +124,35 @@ class DLModelKeras:
 
     @classmethod
     def load_from_json(dlm, filename, batch_size = 256, epochs = 200, callbacks = [], optimizer = Adam(lr=0.00020441990333108206), loss = 'categorical_crossentropy', metrics = ['categorical_accuracy']):
+        """
+        Load a model from json file.
+        :param filename: str
+            filename of json file.
+        :param batch_size: int, optional.
+            batch size of the model. The default value is 256.
+        :param epochs: int, optional.
+            epochs of the model. The default value is 200.
+        :param callbacks: list
+            list of the callbacks of the model. The default value is [].
+        :param optimizer: keras.optimizers, optional
+            optimizer of the model. The default value is Adam.
+        :param loss: str, optional.
+            loss function of the model. The defualt value is categorical_crossentropy.
+        :param metrics: list, optional.
+        metrics on which evaluate the model. The default value is ['categorical_accuracy']
+        :return: scikit_raman.Keras.DLMoldeKeras
+            A model object representing the json model.
+        """
         model = model_from_json(filename)
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
 
     def load_weights(self, filename):
+        """
+        Load weights into model. The weights must be stored in csv file.
+        :param filename: str
+            filename of weights
+        :return:
+        """
         weights = np.genfromtxt(filename, delimiter = ',')
         self.model.set_weights(weights)
 
@@ -227,7 +252,7 @@ class DLModelKeras:
             dictionary['history'] = nested_dictionary
         if save_model:
             nested_dictionary = {'models' : json_models}
-            dictionary['saved_model'] = nested_dictionary
+            dictionary['saved_models'] = nested_dictionary
         if save_weights:
             nested_dictionary = {'weights': weights}
             dictionary['saved_weights'] = nested_dictionary
