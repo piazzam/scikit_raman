@@ -178,7 +178,7 @@ class Evaluator:
             print(cm_patient_level)
         return cm_patient_level, report_patient_level
 
-    def store_model(self, folder_path = "results/models"):
+    def store_model(self, folder_path = "results/models/"):
         """
         Store a list of model in json format.
         :param folder_path: str, optional
