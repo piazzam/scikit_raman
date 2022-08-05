@@ -8,7 +8,7 @@ from tensorflow.keras.models import clone_model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 from tensorflow.python.keras.utils.multi_gpu_utils import multi_gpu_model
-from scikit_raman.Classes.Keras.DataAugmentation.EMSC import *
+from keras.models import model_from_json
 from scikit_raman.Classes.DataAugmenter import *
 
 
@@ -121,6 +121,15 @@ class DLModelKeras:
                                                cooldown=10)
         callbacks = [es, lr]
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
+
+    @classmethod
+    def load_from_json(dlm, filename, batch_size = 256, epochs = 200, callbacks = [], optimizer = Adam(lr=0.00020441990333108206), loss = 'categorical_crossentropy', metrics = ['categorical_accuracy']):
+        model = model_from_json(filename)
+        return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
+
+    def load_weights(self, filename):
+        weights = np.genfromtxt(filename, delimiter = ',')
+        self.model.set_weights(weights)
 
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True,
                                           return_history = True, test_size = 0.1, data_augmentation = False, f_name = 'emsc',
