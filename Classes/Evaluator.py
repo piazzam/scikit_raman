@@ -177,3 +177,32 @@ class Evaluator:
                                                      labels=self.classes))
             print(cm_patient_level)
         return cm_patient_level, report_patient_level
+
+    def store_model(self, folder_path = "results/models"):
+        """
+        Store a list of model in json format.
+        :param folder_path: str, optional
+            folder path to which store the models.
+        :return: list
+            list of the saved models.
+        """
+        os.makedirs(os.path.dirname(folder_path), exist_ok=True)
+        saved_models = self.results['models']['saved_models']
+        for i in range(len(saved_models)):
+            with open("model_"+str(i)+'.json', 'w') as json_file:
+                json_file.write(saved_models[i])
+        return saved_models
+
+    def store_weights(self, folder_path = "results/models/"):
+        """
+        Store the weights of the model.
+        :param folder_path: str, optional
+            folder path in which store the weights.
+        :return: list
+            list of the saved weights.
+        """
+        os.makedirs(os.path.dirname(folder_path), exist_ok=True)
+        saved_weights = self.results['weights']['saved_weights']
+        for i in range(len(saved_weights)):
+            np.savetxt('weights_'+str(i)+'.csv', saved_weights, delimiter = ',')
+        return saved_weights
