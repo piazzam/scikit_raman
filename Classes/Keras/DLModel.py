@@ -45,15 +45,13 @@ class DLModelKeras:
         self.metrics = metrics
 
     @classmethod
-    def load_model_benchmark(dlm,  n_dims, multi_gpu = False, data_augmentation = False):
+    def load_model_benchmark(dlm,  n_dims, multi_gpu = False):
         """
         Load the benchmark model.
         :param n_dims: int
             number of feature for the problem.
         :param multi_gpu: bool, optional
             if true model with multi_gpu is created. The default values is False.
-        :param data_augmentation: bool, optional
-            if true online data augmentation is added in the model. The default value is False.
         :return: scikit_raman.Keras.DLMoldeKeras
             a model onject representing the benchmark model.
         """
@@ -64,8 +62,6 @@ class DLModelKeras:
 
         # ----- init model
         model = Sequential()
-        if data_augmentation:
-            model.add(EMSC(times, name="EMSC_augmentation"))
         model.add(InputLayer(input_shape=(n_dims,)))
         model.add(Reshape((n_dims, 1)))
 
@@ -116,10 +112,7 @@ class DLModelKeras:
         # ----- Compile
         if multi_gpu:
             model = multi_gpu_model(model, gpus=[0, 1, 2, 3])
-        if data_augmentation:
-            model.compile(optimizer=optimizer, loss=loss, metrics=metrics, run_eagerly=True)
-        else:
-            model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+        model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
         epochs = 273
         batch_size = 338
         es = EarlyStopping(monitor="val_categorical_accuracy", patience=100, verbose=1,
@@ -129,7 +122,9 @@ class DLModelKeras:
         callbacks = [es, lr]
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
 
-    def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True, return_history = True, test_size = 0.1, data_augmentation = False, f_name = 'emsc', f_params = None):
+    def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True,
+                                          return_history = True, test_size = 0.1, data_augmentation = False, f_name = 'emsc',
+                                          f_params = None, save_model = False, save_weights = False):
         """
         Train the model with Leave One Patient Out Cross Validation
         :param dataset: scikit_raman.Dataset
@@ -151,6 +146,10 @@ class DLModelKeras:
             default value is 'emsc'
         :param f_params: dict, optional
             parameters in input to data augmentation function. The default value is None.
+        :param save_model: bool, optional
+            if true json format of the model is returned. The default value is False.
+        :param save_weights: bool, optional
+            if true numpy array with model weights is returned. The default value is False.
         :return: dict
             results based on the user choiches.
         """
@@ -161,6 +160,8 @@ class DLModelKeras:
         pat_pred_list = []
         pat_label_list = []
         pat_names_list = []
+        json_models = []
+        weights = []
         histories = []
         names_list = []
         for j, (train_idx, test_idx) in enumerate(folds):
@@ -199,6 +200,12 @@ class DLModelKeras:
                 pat_pred_list.append(np.argmax(counts))
                 pat_label_list.append(y_test_cv[0])
                 pat_names_list.append(np.unique(names_test_cv))
+            if save_model:
+                json_model = trained_model.to_json()
+                json_models.append(json_model)
+            if save_weights:
+                weight = trained_model.get_weights()
+                weights.append(weight)
         dictionary = {}
         if patient_level:
             nested_dictionary = {'pred_list': pat_pred_list, 'label_list':pat_label_list, 'names_list':pat_names_list}
@@ -209,9 +216,16 @@ class DLModelKeras:
         if return_history:
             nested_dictionary = {'histories':histories, 'patients':names_list}
             dictionary['history'] = nested_dictionary
+        if save_model:
+            nested_dictionary = {'models' : json_models}
+            dictionary['saved_model'] = nested_dictionary
+        if save_weights:
+            nested_dictionary = {'weights': weights}
+            dictionary['saved_weights'] = nested_dictionary
         return dictionary
 
-    def train_model_cv(self, dataset, number_classes, k = 10, fold_level = True, get_patient_prediction = True, return_history = True, data_augmentation = False, f_name = 'emsc', f_params = None):
+    def train_model_cv(self, dataset, number_classes, k = 10, fold_level = True, get_patient_prediction = True, return_history = True,
+                       data_augmentation = False, f_name = 'emsc', f_params = None, save_model = False, save_weights = False):
         """
         Train the model with K-Fold Cross Validation.
         :param dataset: scikit_raman.Dataset
@@ -233,6 +247,10 @@ class DLModelKeras:
             'emsc'
         :param f_params: dict, optional
             dictionary with the parameters of the data augmentation function. The default value is None.
+        :param save_model: bool, optional
+            if true json format of the model is returned. The default value is False.
+        :param save_weights: bool, optional
+            if true numpy array with model weights is returned. The default value is False.
         :return: dict
             dictionary of the results based on the user choiches.
         """
@@ -245,6 +263,8 @@ class DLModelKeras:
         fold_names_list = []
         histories = []
         names_list = []
+        json_models = []
+        weights = []
         for j, (train_idx, test_idx) in enumerate(folds):
             trained_model = clone_model(self.model)
             trained_model.compile(optimizer=self.optimizer, loss=self.loss, metrics=self.metrics)
@@ -288,7 +308,6 @@ class DLModelKeras:
                             l.append(y_pred[i])
                     list_pred.append(l)
                     labels.append(l_v)
-
                 patient_level = []
                 for el in list_pred:
                     counts = np.bincount(el)
@@ -300,6 +319,10 @@ class DLModelKeras:
                 fold_pred_list.append(patient_level)
                 fold_label_list.append(labels_patient_level)
                 fold_names_list.append(np.unique(names_test_cv))
+            if save_model:
+                json_models.append(trained_model.to_json())
+            if save_weights:
+                weights.append(trained_model.get_weights())
         dictionary = {}
         if fold_level:
             nested_dictionary = {'pred_list': fold_pred_list, 'label_list': fold_label_list, 'names_list': fold_names_list}
@@ -310,6 +333,12 @@ class DLModelKeras:
         if return_history:
             nested_dictionary = {'histories':histories, 'patients':names_list}
             dictionary['history'] = nested_dictionary
+        if save_model:
+            nested_dictionary = {'models' : json_models}
+            dictionary['saved_model'] = nested_dictionary
+        if save_weights:
+            nested_dictionary = {'weights': weights}
+            dictionary['saved_weights'] = nested_dictionary
         return dictionary
 
     def fit_model(self, X_train, y_train, X_val, y_val, return_history = True):
