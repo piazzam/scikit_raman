@@ -189,7 +189,7 @@ class Evaluator:
         os.makedirs(os.path.dirname(folder_path), exist_ok=True)
         saved_models = self.results['saved_models']['models']
         for i in range(len(saved_models)):
-            with open("model_"+str(i)+'.json', 'w') as json_file:
+            with open(folder_path + "model_"+str(i)+'.json', 'w') as json_file:
                 json_file.write(saved_models[i])
         return saved_models
 
