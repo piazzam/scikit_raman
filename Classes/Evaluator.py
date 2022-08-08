@@ -204,5 +204,5 @@ class Evaluator:
         os.makedirs(os.path.dirname(folder_path), exist_ok=True)
         saved_weights = self.results['saved_weights']['weights']
         for i in range(len(saved_weights)):
-            np.savetxt('weights_'+str(i)+'.csv', saved_weights, delimiter = ',')
+            np.savetxt('weights_'+str(i)+'.csv', saved_weights, fmt='%s', delimiter = ',')
         return saved_weights
