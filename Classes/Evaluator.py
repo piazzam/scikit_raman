@@ -188,7 +188,7 @@ class Evaluator:
         """
         os.makedirs(os.path.dirname(folder_path), exist_ok=True)
         saved_models = self.results['saved_models']['models']
-        patient_names = self.results['saved_weoghts']['names_list']
+        patient_names = self.results['saved_models']['names_list']
         for i in range(len(saved_models)):
             with open(folder_path + "model_"+patient_names[i]+'.json', 'w') as json_file:
                 json_file.write(saved_models[i])
@@ -204,7 +204,7 @@ class Evaluator:
         """
         os.makedirs(os.path.dirname(folder_path), exist_ok=True)
         saved_weights = self.results['saved_weights']['weights']
-        patient_names = self.results['saved_weoghts']['names_list']
+        patient_names = self.results['saved_weights']['names_list']
         for i in range(len(saved_weights)):
             np.savetxt(folder_path+'weights_'+patient_names[i]+'.csv', saved_weights, fmt='%s', delimiter = ',')
         return saved_weights
