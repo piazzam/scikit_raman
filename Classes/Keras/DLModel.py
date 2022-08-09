@@ -251,10 +251,10 @@ class DLModelKeras:
             nested_dictionary = {'histories':histories, 'patients':names_list}
             dictionary['history'] = nested_dictionary
         if save_model:
-            nested_dictionary = {'models' : json_models}
+            nested_dictionary = {'models' : json_models, 'names_list':pat_names_list}
             dictionary['saved_models'] = nested_dictionary
         if save_weights:
-            nested_dictionary = {'weights': weights}
+            nested_dictionary = {'weights': weights, 'names_list':pat_names_list}
             dictionary['saved_weights'] = nested_dictionary
         return dictionary
 
@@ -368,10 +368,10 @@ class DLModelKeras:
             nested_dictionary = {'histories':histories, 'patients':names_list}
             dictionary['history'] = nested_dictionary
         if save_model:
-            nested_dictionary = {'models' : json_models}
+            nested_dictionary = {'models' : json_models, 'names_list':fold_names_list}
             dictionary['saved_model'] = nested_dictionary
         if save_weights:
-            nested_dictionary = {'weights': weights}
+            nested_dictionary = {'weights': weights, 'names_list':fold_names_list}
             dictionary['saved_weights'] = nested_dictionary
         return dictionary
 
