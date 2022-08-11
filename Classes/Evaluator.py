@@ -190,7 +190,7 @@ class Evaluator:
         saved_models = self.results['saved_models']['models']
         patient_names = self.results['saved_models']['names_list']
         for i in range(len(saved_models)):
-            with open(folder_path + "model_"+patient_names[i]+'.json', 'w') as json_file:
+            with open(folder_path + "model_"+str(patient_names[i][0])+'.json', 'w') as json_file:
                 json_file.write(saved_models[i])
         return saved_models
 
@@ -206,5 +206,5 @@ class Evaluator:
         saved_weights = self.results['saved_weights']['weights']
         patient_names = self.results['saved_weights']['names_list']
         for i in range(len(saved_weights)):
-            np.savetxt(folder_path+'weights_'+patient_names[i]+'.csv', saved_weights, fmt='%s', delimiter = ',')
+            np.savetxt(folder_path+'weights_'+str(patient_names[i][0])+'.csv', saved_weights, fmt='%s', delimiter = ',')
         return saved_weights

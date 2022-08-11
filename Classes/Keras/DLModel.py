@@ -158,7 +158,7 @@ class DLModelKeras:
 
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True,
                                           return_history = True, test_size = 0.1, data_augmentation = False, f_name = 'emsc',
-                                          f_params = None, save_model = False, save_weights = False):
+                                          f_params = None, save_model = False, save_weights = False, random_state = 42):
         """
         Train the model with Leave One Patient Out Cross Validation
         :param dataset: scikit_raman.Dataset
@@ -208,7 +208,7 @@ class DLModelKeras:
             names_test_cv = dataset.user[test_idx]
             y_train_cv_cat = to_categorical(y_train_cv, number_classes)
             X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv_cat, test_size=test_size,
-                                                                    # random_state = 42,
+                                                                    random_state = random_state,
                                                                     stratify=y_train_cv)
             if data_augmentation:
                 da = DataAugmenter(X_train_cv, y_train_cv)
@@ -259,7 +259,8 @@ class DLModelKeras:
         return dictionary
 
     def train_model_cv(self, dataset, number_classes, k = 10, fold_level = True, get_patient_prediction = True, return_history = True,
-                       data_augmentation = False, f_name = 'emsc', f_params = None, save_model = False, save_weights = False):
+                       data_augmentation = False, f_name = 'emsc', f_params = None, save_model = False,
+                       save_weights = False, random_state = 42):
         """
         Train the model with K-Fold Cross Validation.
         :param dataset: scikit_raman.Dataset
@@ -309,7 +310,7 @@ class DLModelKeras:
             names_test_cv = dataset.user[test_idx]
             y_train_cv_cat = to_categorical(y_train_cv, number_classes)
             X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv_cat, test_size=.1,
-                                                                    # random_state = 42,
+                                                                    random_state = random_state,
                                                                     stratify=y_train_cv)
             if data_augmentation:
                 da = DataAugmenter(X_train_cv, y_train_cv)
