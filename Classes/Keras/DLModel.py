@@ -11,6 +11,7 @@ from tensorflow.python.keras.utils.multi_gpu_utils import multi_gpu_model
 from keras.models import model_from_json
 from scikit_raman.Classes.DataAugmenter import *
 from scikit_raman.Classes.Keras.DataAugmentation.EMSC import *
+from scikit_raman.Classes.Keras.DataAugmentation.Shift import *
 
 
 class DLModelKeras:

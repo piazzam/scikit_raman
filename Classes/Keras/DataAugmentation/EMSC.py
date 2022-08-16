@@ -1,7 +1,5 @@
 import tensorflow as tf
 import numpy as np
-import copy
-
 
 class EMSC(tf.keras.layers.Layer):
     """
@@ -40,7 +38,7 @@ class EMSC(tf.keras.layers.Layer):
             if tf.random.uniform([]) > self.factor:
                 new_spectra.append(self.dataaugment(el))
             else:
-                new_spectra.append(self.dataaugment(el))
+                new_spectra.append(el)
         new_spectra = tf.convert_to_tensor(new_spectra)
         return new_spectra
 
@@ -76,8 +74,8 @@ class EMSC(tf.keras.layers.Layer):
     def get_config(self):
         config = super().get_config().copy()
         config.update({
-            'times': self.times,
-            'keep_original': self.keep_original,
+            'factor': self.times,
+            'seed': self.keep_original,
             'betashift': self.betashift,
             'slopeshift': self.slopeshift,
             'multishift': self.multishift,
