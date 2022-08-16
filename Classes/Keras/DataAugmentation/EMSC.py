@@ -10,8 +10,10 @@ class EMSC(tf.keras.layers.Layer):
 
     Attributes
     ----------
-    times : int
-        number of times to replicate the data.
+    factor: float
+        percentage of the data on which apply on the fly data augmentation.
+    seed: int, optional
+        if None, no seed is set. Otherwise set a seed for tf.random. Default value is None.
     keep_original: bool
         if True the original dataset is kept in the dataset.
     slopeshift: float, optional
@@ -22,42 +24,27 @@ class EMSC(tf.keras.layers.Layer):
         parameter to smooth the emsc function. The default values is 0.005
     """
 
-    def __init__(self, times, keep_original=True, betashift=0.0005, slopeshift=0.002, multishift=0.005, **kwargs):
+    def __init__(self, factor, seed = None, betashift=0.0005, slopeshift=0.002, multishift=0.005, **kwargs):
         super(EMSC, self).__init__(**kwargs)
-        self.times = times
-        self.keep_original = keep_original
+        self.factor = factor
         self.betashift = betashift
         self.slopeshift = slopeshift
         self.multishift = multishift
+        self.seed = seed
 
-    def call(self, spectra, training=None):
-        """
-        Function called when this layer is activated.
-        :param spectra: Tensor
-            Tensor of input spectra.
-        :param training: bool
-            modality on which model is apply. The default values is None.
-        :return:
-        """
-        if self.keep_original:
-            aug_list = copy.copy(spectra.numpy())
-            #y_list = copy.copy(labels)
-        #else:
-            #y_list = np.array([])
-        for i in range(self.times):
-            if self.keep_original == False and i == 0:
-                aug_list = self.dataaugment(spectra.numpy(), betashift=self.betashift, slopeshift=self.slopeshift,
-                                            multishift=self.multishift)
+    def call(self, spectra, Training=None):
+        new_spectra = []
+        if self.seed != None:
+            tf.random.set_seed(self.seed)
+        for el in spectra.numpy():
+            if tf.random.uniform([]) > self.factor:
+                new_spectra.append(self.dataaugment(el))
             else:
-                aug_list = np.concatenate((aug_list,
-                                           self.dataaugment(spectra.numpy(), betashift=self.betashift, slopeshift=self.slopeshift,
-                                                            multishift=self.multishift)))
-        #for i in range(self.times):
-            #y_list = np.concatenate((y_list, labels), axis=0)
-        aug_list = tf.convert_to_tensor(aug_list)
-        return aug_list #, y_list
+                new_spectra.append(self.dataaugment(el))
+        new_spectra = tf.convert_to_tensor(new_spectra)
+        return new_spectra
 
-    def dataaugment(self, signal, betashift, slopeshift, multishift):
+    def dataaugment(self, signal):
         """
         Function propaedeutic to data augmentation.
         :param signal: np.array
@@ -69,16 +56,19 @@ class EMSC(tf.keras.layers.Layer):
             an array containing augmented signals.
         """
         # baseline shift
-        #signal = self.spectra
-        beta = np.random.random(size=(signal.shape[0], 1)) * 2 * betashift - betashift
-        slope = np.random.random(size=(signal.shape[0], 1)) * 2 * slopeshift - slopeshift + 1
+        #beta = np.random.random(size=(signal.shape[0], 1)) * 2 * self.betashift - self.betashift
+        #slope = np.random.random(size=(signal.shape[0], 1)) * 2 * self.slopeshift - self.slopeshift + 1
+        beta = np.random.random(size=(1, 1)) * 2 * self.betashift - self.betashift
+        slope = np.random.random(size=(1, 1)) * 2 * self.slopeshift - self.slopeshift + 1
         # relative positions
-        axis = np.array(range(signal.shape[1])) / float(signal.shape[1])
+        #axis = np.array(range(signal.shape[1])) / float(signal.shape[1])
+        axis = np.array(range(signal.shape[0])) / float(signal.shape[0])
         # offset
         offset = slope * (axis) + beta - axis - slope / 2. + 0.5
 
         # multiplicative coefficient
-        multi = np.random.random(size=(signal.shape[0], 1)) * 2 * multishift - multishift + 1
+        #multi = np.random.random(size=(signal.shape[0], 1)) * 2 * self.multishift - self.multishift + 1
+        multi = np.random.random(size=(1, 1)) * 2 * self.multishift - self.multishift + 1
         augmented_signal = multi * signal + offset
 
         return augmented_signal

@@ -10,6 +10,7 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.python.keras.utils.multi_gpu_utils import multi_gpu_model
 from keras.models import model_from_json
 from scikit_raman.Classes.DataAugmenter import *
+from scikit_raman.Classes.Keras.DataAugmentation.EMSC import *
 
 
 class DLModelKeras:
@@ -45,23 +46,29 @@ class DLModelKeras:
         self.metrics = metrics
 
     @classmethod
-    def load_model_benchmark(dlm,  n_dims, multi_gpu = False):
+    def load_model_benchmark(dlm,  n_dims, multi_gpu = False, gpus_list = [1,2,3,4], data_augmentation = False,
+                             factor = 0.5):
         """
         Load the benchmark model.
         :param n_dims: int
             number of feature for the problem.
         :param multi_gpu: bool, optional
-            if true model with multi_gpu is created. The default values is False.
+            if true model with multi_gpu is created. The default value is False.
+        :param data_augmentation: bool, optional
+            if true data augmentation on the fly is added to the model. The default value is False.
+        :param factor: float, optional.
+            percentage on which apply data augmentation. The default value is 0.5.
         :return: scikit_raman.Keras.DLMoldeKeras
             a model object representing the benchmark model.
         """
         loss = 'categorical_crossentropy'
         metrics = ['categorical_accuracy']
         optimizer = Adam(lr=0.00020441990333108206)
-        times = 30
 
         # ----- init model
         model = Sequential()
+        if data_augmentation:
+            model.add(EMSC(factor, name="EMSC_augmentation"))
         model.add(InputLayer(input_shape=(n_dims,)))
         model.add(Reshape((n_dims, 1)))
 
@@ -109,10 +116,17 @@ class DLModelKeras:
         # ----- Classification layer
         model.add(Dense(units=3, activation='softmax'))
 
+        if data_augmentation:
+            model.add
+
         # ----- Compile
         if multi_gpu:
-            model = multi_gpu_model(model, gpus=[0, 1, 2, 3])
-        model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+            model = multi_gpu_model(model, gpus=gpus_list)
+        if data_augmentation:
+            model.compile(optimizer=optimizer, loss=loss, metrics=metrics, run_eagerly=True)
+        else:
+            model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+        #model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
         epochs = 273
         batch_size = 338
         es = EarlyStopping(monitor="val_categorical_accuracy", patience=100, verbose=1,
