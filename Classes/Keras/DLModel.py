@@ -4,14 +4,15 @@ from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization,
     Reshape
 from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.models import clone_model
+from keras.models import clone_model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
-from tensorflow.python.keras.utils.multi_gpu_utils import multi_gpu_model
-from keras.models import model_from_json
+#from tensorflow.keras.utils.multi_gpu_utils import multi_gpu_model
+from tensorflow.keras.models import model_from_json
 from scikit_raman.Classes.DataAugmenter import *
 from scikit_raman.Classes.Keras.DataAugmentation.EMSC import *
 from scikit_raman.Classes.Keras.DataAugmentation.Shift import *
+import tensorflow as tf
 
 
 class DLModelKeras:
@@ -64,7 +65,9 @@ class DLModelKeras:
         """
         loss = 'categorical_crossentropy'
         metrics = ['categorical_accuracy']
-        optimizer = Adam(lr=0.00020441990333108206)
+
+        #optimizer = tf.keras.optimizers.Adam(learning_rate=0.00020441990333108206)
+        optimizer = Adam(learning_rate = 0.00020441990333108206)
 
         # ----- init model
         model = Sequential()
@@ -117,8 +120,10 @@ class DLModelKeras:
         # ----- Classification layer
         model.add(Dense(units=3, activation='softmax'))
 
-        if data_augmentation:
-            model.add
+        #if data_augmentation:
+        #    model.add
+
+        print(type(optimizer))
 
         # ----- Compile
         if multi_gpu:
@@ -138,7 +143,7 @@ class DLModelKeras:
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
 
     @classmethod
-    def load_from_json(dlm, filename, batch_size = 256, epochs = 200, callbacks = [], optimizer = Adam(lr=0.00020441990333108206), loss = 'categorical_crossentropy', metrics = ['categorical_accuracy']):
+    def load_from_json(dlm, filename, batch_size = 256, epochs = 200, callbacks = [], optimizer = Adam(learning_rate=0.00020441990333108206), loss = 'categorical_crossentropy', metrics = ['categorical_accuracy']):
         """
         Load a model from json file.
         :param filename: str
@@ -168,8 +173,9 @@ class DLModelKeras:
             filename of weights
         :return:
         """
-        weights = np.genfromtxt(filename, delimiter = ',')
-        self.model.set_weights(weights)
+        #weights = np.genfromtxt(filename, delimiter = ',')
+        #self.model.set_weights(filename)
+        self.model.load_weights(filename)
 
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True,
                                           return_history = True, test_size = 0.1, data_augmentation = False, f_name = 'emsc',
@@ -231,6 +237,8 @@ class DLModelKeras:
                 func(f_params)
                 X_train_cv = da.spectra
                 y_train_cv = da.labels
+            print(X_train_cv.shape)
+            print(y_train_cv.shape)
             history = trained_model.fit(X_train_cv, y_train_cv,
                                 epochs=self.epochs,
                                 validation_data=(X_val, y_val),

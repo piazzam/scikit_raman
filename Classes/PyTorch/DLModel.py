@@ -49,7 +49,7 @@ class DLModel:
         self.model = model.double()
         self.model.to(self.device)
 
-    def train_model_leave_one_patient_out(self, dataset, early_stopping = True, patience = 100, scheduler = None, patient_level = True, get_patient_prediction = True, return_history = True, val_size = 0.1, data_augmentation_online = True, data_augmentation_offline = True, f_name = "emsc", f_params = None):
+    def train_model_leave_one_patient_out(self, dataset, early_stopping = True, patience = 100, scheduler = None, patient_level = True, get_patient_prediction = True, return_history = True, val_size = 0.1, data_augmentation_online = False, data_augmentation_offline = True, f_name = "emsc", f_params = None):
         """
         Train the model with Leave One Patient Out Cross Validation.
         :param dataset: scikit_raman.Dataset
