@@ -17,7 +17,7 @@ import tensorflow as tf
 
 class DLModelKeras:
     """
-    A class that represents a DLModel object in keras.
+    A class that represents a DLModel object in keras that uses a multiGPU model.
     ...
 
     Attributes
@@ -36,6 +36,8 @@ class DLModelKeras:
         loss function for the training of the model.
     metrics: str
         metrics for the evaluation of the model.
+    strategy: tf.distributed.MirroredStrategy
+        object that represents a MirroredStrategy object for use the network with multi-gpu.
     """
 
     def __init__(self, model, batch_size, epochs, callbacks, optimizer, loss, metrics, strategy=None):
@@ -55,8 +57,8 @@ class DLModelKeras:
         Load the benchmark model.
         :param n_dims: int
             number of feature for the problem.
-        :param multi_gpu: bool, optional
-            if true model with multi_gpu is created. The default value is False.
+        :param gpus_list: list, optional
+            it is the list represents the available gpus. The default value is ["GPU:0", "GPU:1", "GPU:2", "GPU:3"].
         :param data_augmentation: bool, optional
             if true data augmentation on the fly is added to the model. The default value is False.
         :param factor: float, optional.
@@ -156,7 +158,9 @@ class DLModelKeras:
         :param loss: str, optional.
             loss function of the model. The defualt value is categorical_crossentropy.
         :param metrics: list, optional.
-        metrics on which evaluate the model. The default value is ['categorical_accuracy']
+            metrics on which evaluate the model. The default value is ['categorical_accuracy']
+        :param gpus_list: list, optional
+            it is the list represents the available gpus. The default value is ["GPU:0", "GPU:1", "GPU:2", "GPU:3"].
         :return: scikit_raman.Keras.DLMoldeKeras
             A model object representing the json model.
         """
