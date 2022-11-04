@@ -7,6 +7,8 @@ from sklearn.preprocessing import MinMaxScaler
 from sklearn import preprocessing
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
+from scikit_raman.Classes.Preprocessing.PCA_result import *
+from scikit_raman.Classes.Preprocessing.TSNE_result import *
 
 class Processor:
     """
@@ -122,17 +124,15 @@ class Processor:
                 DESCRIPTION.
         """
         spikes = abs(np.array(self.modified_z_score(np.diff(X)))) > threshold
-        X_out = X.copy()  # So we don’t overwrite y
+        X_out = X.copy()
         ns = 0
         for i in np.arange(len(spikes) - m):
-            if spikes[i] != 0:  # If we have a spike in position i
-                w = np.arange(i - m, i + 1 + m)  # we select 2 m + 1 points around our spike
-                w2 = w[spikes[w] == 0]  # From such interval, we choose the ones which are not spikes
-                if (len(w2) != 0):  # avoid erroneous detected spikes ([2m+1]+ consecutive spikes)
-                    X_out[i] = np.mean(np.array(X)[w2])  # and we average their values
+            if spikes[i] != 0:
+                w = np.arange(i - m, i + 1 + m)
+                w2 = w[spikes[w] == 0]
+                if (len(w2) != 0):
+                    X_out[i] = np.mean(np.array(X)[w2])
                     ns += 1
-        # if(ns > 0):
-        #    print('Found '+str(ns)+' spikes')
         return X_out
 
     def spike_removal(self):
@@ -217,13 +217,14 @@ class Processor:
         Apply the pca on the spectra data.
         :param n_components: int, optional. The default value is 2.
             Number of components of the pca.
-        :return: ndarray
-            Transformed values.
+        :return: scikit_raman.PCA_result
+            An object that represents the results of PCA
         """
         pca = PCA(n_components=n_components)
         spectra = self.dataset.spectra
         pca = pca.fit_transform(spectra)
-        return pca
+        pca_result = PCA_result(pca, self.dataset)
+        return pca_result
 
     def pca_fit(self, n_components=2):
         """
@@ -243,11 +244,12 @@ class Processor:
         Transform the data with the pca object.
         :param pca: sklearn.Decomposition.PCA object
             PCA object to apply.
-        :return: ndarray
-            The components of the pca.
+        :return: scikit_raman.PCA_result
+            An object that represents the results of PCA
         """
         spectra = self.dataset.spectra
         pca_result = pca.transform(spectra)
+        pca_result = PCA_result(pca_result, self.dataset)
         return pca_result
 
     def tsne_fit_transform(self, n_components=2):
@@ -255,13 +257,14 @@ class Processor:
         Apply the t-sne reduction.
         :param n_components: int
             Number of components for the t-sne.
-        :return: ndarray
-            The components of the t-sne.
+        :return: scikit_raman.TSNE_result
+            An object that represents the result of tsne
         """
         tsne = TSNE(n_components=n_components)
         spectra = self.dataset.spectra
         tsne_res = tsne.fit_transform(spectra)
-        return tsne_res
+        tsne_result = TSNE_result(tsne_res, self.dataset)
+        return tsne_result
 
     def remove_alluminium(self, alluminium):
         """
