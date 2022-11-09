@@ -277,5 +277,73 @@ class Dataset:
         x_axis_list = np.array(x_axis_list)
         self.x_axis = x_axis_list
 
+    def search_by_name(self, name):
+        ret_list = []
+        for i in range(len(self.user)):
+            if self.user[i] == name:
+                ret_list.append(i)
+        spectra = []
+        x_axis = []
+        raw = []
+        user = []
+        name = []
+        category = []
+        labels = []
+        for i in ret_list:
+            spectra.append(self.spectra[i])
+            x_axis.append(self.x_axis[i])
+            raw.append(self.raw[i])
+            user.append(self.user[i])
+            name.append(self.name[i])
+            category.append(self.category[i])
+            labels.append(self.labels[i])
+        return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name), np.array(category), np.array(labels))
+
+    def search_by_category_name(self, cat):
+        ret_list = []
+        for i in range(len(self.category)):
+            if self.category[i] == cat:
+                ret_list.append(i)
+        spectra = []
+        x_axis = []
+        raw = []
+        user = []
+        name = []
+        category = []
+        labels = []
+        for i in ret_list:
+            spectra.append(self.spectra[i])
+            x_axis.append(self.x_axis[i])
+            raw.append(self.raw[i])
+            user.append(self.user[i])
+            name.append(self.name[i])
+            category.append(self.category[i])
+            labels.append(self.labels[i])
+        return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name), np.array(category), np.array(labels))
+
+    def search_by_category_label(self, lab):
+        ret_list = []
+        for i in range(len(self.labels)):
+            if self.labels[i] == lab:
+                ret_list.append(i)
+        spectra = []
+        x_axis = []
+        raw = []
+        user = []
+        name = []
+        category = []
+        labels = []
+        for i in ret_list:
+            spectra.append(self.spectra[i])
+            x_axis.append(self.x_axis[i])
+            raw.append(self.raw[i])
+            user.append(self.user[i])
+            name.append(self.name[i])
+            category.append(self.category[i])
+            labels.append(self.labels[i])
+        return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name), np.array(category), np.array(labels))
+
+
+
 
 
