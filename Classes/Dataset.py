@@ -278,6 +278,13 @@ class Dataset:
         self.x_axis = x_axis_list
 
     def search_by_name(self, name):
+        """
+        Search and return subset of the dataset corresponding to the specified user.
+        :param name:string
+            String corresponding to the user name of the patients.
+        :return: scikit_raman.Dataset
+            A dataset object representing the subset of the Dataset.
+        """
         ret_list = []
         for i in range(len(self.user)):
             if self.user[i] == name:
@@ -300,6 +307,13 @@ class Dataset:
         return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name), np.array(category), np.array(labels))
 
     def search_by_category_name(self, cat):
+        """
+        Search and return subset of the dataset corresponding to the specified label name.
+        :param name:string
+            String corresponding to the label.
+        :return: scikit_raman.Dataset
+            A dataset object representing the subset of the Dataset.
+        """
         ret_list = []
         for i in range(len(self.category)):
             if self.category[i] == cat:
@@ -322,6 +336,13 @@ class Dataset:
         return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name), np.array(category), np.array(labels))
 
     def search_by_category_label(self, lab):
+        """
+        Search and return subset of the dataset corresponding to the specified user.
+        :param name:int
+            Int corresponding to the user category of the patients.
+        :return: scikit_raman.Dataset
+            A dataset object representing the subset of the Dataset.
+        """
         ret_list = []
         for i in range(len(self.labels)):
             if self.labels[i] == lab:
