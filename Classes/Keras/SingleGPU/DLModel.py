@@ -38,6 +38,7 @@ class DLModelKeras:
         metrics for the evaluation of the model.
     """
 
+    OBJECT_TYPE = {'cnn':Conv1D, 'pool':MaxPooling1D, 'batch':BatchNormalization, 'dropout':Dropout, 'fc': Dense, 'lrelu': LeakyReLU}
     def __init__(self, model, batch_size, epochs, callbacks, optimizer, loss, metrics):
         self.model = model
         self.batch_size = batch_size
@@ -154,6 +155,113 @@ class DLModelKeras:
         """
         model = model_from_json(filename)
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
+
+    @classmethod
+    def load_from_json_optuna(dlm, file_arch, file_hyper, optimizer, loss, metrics, n_dims):
+        layers = []
+        learnning_rate = 0.001
+        epochs = 100
+        batch_size = 256
+        layers.append(InputLayer(input_shape=(n_dims,)))
+        layers.append(Reshape((n_dims, 1)))
+        for el in file_arch.keys():
+            if file_arch[el]['type'] == 'cnn':
+                if 'filters' in file_arch[el]['params']:
+                    filters = file_arch[el]['params']['filters']
+                else:
+                    filters = 100
+                if 'kernel_size' in file_arch[el]['params']:
+                    kernel_size = file_arch[el]['params']['kernel_size']
+                else:
+                    kernel_size = 100
+                if 'strides' in file_arch[el]['params']:
+                    strides = file_arch[el]['params']['strides']
+                else:
+                    strides = 100
+                if 'padding' in file_arch[el]['params']:
+                    padding = file_arch[el]['params']['kernel_size']
+                else:
+                    padding = 'same'
+                if 'activation' in file_arch[el]['params']:
+                    activation = file_arch[el]['params']['activation']
+                else:
+                    activation = 'relu'
+                if file_arch[el]['add'] == True:
+                    obj = Conv1D(filters=filters,kernel_size=kernel_size,strides=strides,padding=padding,activation=activation )
+                    layers.append(obj)
+            elif file_arch[el]['type'] == 'pool':
+                if 'pool_size' in file_arch[el]['params']:
+                    pool_size = file_arch[el]['params']['pool_size']
+                else:
+                    pool_size = 6
+                if 'strides' in file_arch[el]['params']:
+                    strides = file_arch[el]['params']['strides']
+                else:
+                    strides = 3
+                if 'padding' in file_arch[el]['params']:
+                    padding = file_arch[el]['params']['padding']
+                else:
+                    padding = 'same'
+                if file_arch[el]['add'] == True:
+                    obj = MaxPooling1D(pool_size=pool_size,strides=strides,padding=padding)
+                    layers.append(obj)
+            elif file_arch[el]['type'] == 'batch':
+                if 'momentum' in file_arch[el]['params']:
+                    momentun = file_arch[el]['params']['momentum']
+                else:
+                    momentun = 0.99
+                if 'epsilon' in file_arch[el]['params']:
+                    epsilon = file_arch[el]['params']['epsilon']
+                else:
+                    epsilon = 3
+                if file_arch[el]['add'] == True:
+                    obj = BatchNormalization(momentum=momentun, epsilon=epsilon)
+                    layers.append(obj)
+            elif file_arch[el]['type'] == 'flatten':
+                obj = Flatten()
+                layers.append(obj)
+            elif file_arch[el]['type'] == 'fc':
+                if 'units' in file_arch[el]['params']:
+                    units = file_arch[el]['params']['units']
+                else:
+                    units = 128
+                if file_arch[el]['add'] == True:
+                    obj = Dense(units=units)
+                    layers.append(obj)
+            elif file_arch[el]['type'] == 'dropout':
+                if 'rate' in file_arch[el]['params']:
+                    rate = file_arch[el]['params']['rate']
+                else:
+                    rate = 0.1
+                if file_arch[el]['add']:
+                    obj = Dropout(rate=rate)
+                    layers.append(obj)
+            elif file_arch[el]['type']  == 'lrelu':
+                if file_arch[el]['add'] == True:
+                    obj = LeakyReLU()
+                    layers.append(obj)
+            elif file_arch[el]['type'] == 'final':
+                if 'units' in file_arch[el]['params']:
+                    units = file_arch[el]['params']['units']
+                else:
+                    units = 3
+                if 'activation' in file_arch[el]['params']:
+                    activation = file_arch[el]['params']['activation']
+                else:
+                    activation = 'softmax'
+                obj.add(Dense(units=units, activation = activation))
+        model = Sequential(layers)
+        model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+        learnning_rate = file_hyper['learning_rate']
+        epochs = file_hyper['epochs']
+        batch_size = file_hyper['batch_size']
+        callbacks = []
+        return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
+
+
+
+
+
 
     def load_weights(self, filename):
         """
@@ -422,17 +530,9 @@ class DLModelKeras:
         y_pred = np.argmax(pred, axis=-1)
         return y_pred
 
-    #@staticmethod
-    #def objective(trial, dictionary):
-    #    if dictionary['epochs']:
-    #        epochs = trial.suggest_int(name='epochs', low=dictionary['epochs_value']['low'], high=dictionary['epochs_value']['high'])
-    #    else:
-    #        epochs = dictionary['epochs_value']
-    #    if dictionary['batch_size']:
-    #        batch_size = trial.suggest_int(name = 'batch_size', low = dictionary['batch_size_value']['low'], high = dictionary['batch_size_value']['high'])
 
-    #def optimize_model(self, dataset, loss, metrics, dictionary_values):
-    #    model_list = []
+
+
 
 
 

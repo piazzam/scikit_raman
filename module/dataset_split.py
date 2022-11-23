@@ -5,7 +5,7 @@ def k_fold(k, df):
     if 'label' not in df.columns:
         raise Exception("This dataframe doesn't have a label column")
     else:
-        y_train = df['spectra']
+        y_train = df['label']
         groups = df['user'].values
         folds = list(GroupKFold(n_splits = k).split(x_train, y_train, groups=groups))
         return folds
