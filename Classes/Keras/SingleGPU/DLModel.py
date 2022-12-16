@@ -48,7 +48,7 @@ class DLModelKeras:
         self.metrics = metrics
 
     @classmethod
-    def load_model_benchmark(dlm,  n_dims, data_augmentation = False, factor = 0.5):
+    def load_model_benchmark(dlm,  n_dims, number_classes = 3, data_augmentation = False, factor = 0.5):
         """
         Load the benchmark model.
         :param n_dims: int
@@ -114,7 +114,7 @@ class DLModelKeras:
         model.add(Dropout(rate=0.1))
 
         # ----- Classification layer
-        model.add(Dense(units=3, activation='softmax'))
+        model.add(Dense(units=number_classes, activation='softmax'))
 
         # ----- Compile
         if data_augmentation:
