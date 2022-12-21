@@ -12,6 +12,7 @@ from scikit_raman.Classes.DataAugmenter import *
 from scikit_raman.Classes.Keras.DataAugmentation.EMSC import *
 from scikit_raman.Classes.Keras.DataAugmentation.Shift import *
 from copy import deepcopy
+from keras.models import load_model
 import tensorflow as tf
 
 
@@ -132,9 +133,9 @@ class DLModelKeras:
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
 
     @classmethod
-    def load_from_json(dlm, filename, batch_size = 256, epochs = 200, callbacks = [], optimizer = Adam(learning_rate=0.00020441990333108206), loss = 'categorical_crossentropy', metrics = ['categorical_accuracy']):
+    def load_model(dlm, filename = "model_saved/model", batch_size = 256, epochs = 200, callbacks = [], optimizer = Adam(learning_rate=0.00020441990333108206), loss = 'categorical_crossentropy', metrics = ['categorical_accuracy']):
         """
-        Load a model from json file.
+        Load a model from classical storage keras.
         :param filename: str
             filename of json file.
         :param batch_size: int, optional.
@@ -152,21 +153,15 @@ class DLModelKeras:
         :return: scikit_raman.Keras.DLMoldeKeras
             A model object representing the json model.
         """
-        model = model_from_json(filename)
+        model = load_model(filename)
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
 
-    def load_weights(self, filename):
-        """
-        Load weights into model. The weights must be stored in csv file.
-        :param filename: str
-            filename of weights
-        :return:
-        """
+    def load_weights(self, filename = "model_saved/weights"):
         self.model.load_weights(filename)
-
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True,
                                           return_history = True, test_size = 0.1, data_augmentation = False, f_name = 'emsc',
-                                          f_params = None, save_model = False, save_weights = False, random_state = 42):
+                                          f_params = None, save_model = False, model_path = "model_saved/model/", save_weights = False,
+                                          weights_path = "model_saved/weights/", random_state = 42):
         """
         Train the model with Leave One Patient Out Cross Validation
         :param dataset: scikit_raman.Dataset
@@ -202,8 +197,6 @@ class DLModelKeras:
         pat_pred_list = []
         pat_label_list = []
         pat_names_list = []
-        json_models = []
-        weights = []
         histories = []
         names_list = []
         for j, (train_idx, test_idx) in enumerate(folds):
@@ -225,8 +218,6 @@ class DLModelKeras:
                 func(f_params)
                 X_train_cv = da.spectra
                 y_train_cv = da.labels
-            print(X_train_cv.shape)
-            print(y_train_cv.shape)
             history = trained_model.fit(X_train_cv, y_train_cv,
                                 epochs=self.epochs,
                                 validation_data=(X_val, y_val),
@@ -246,11 +237,9 @@ class DLModelKeras:
                 pat_label_list.append(y_test_cv[0])
                 pat_names_list.append(np.unique(names_test_cv))
             if save_model:
-                json_model = trained_model.to_json()
-                json_models.append(json_model)
+                trained_model.save(model_path)
             if save_weights:
-                weight = trained_model.get_weights()
-                weights.append(weight)
+                trained_model.save_weights(weights_path)
         dictionary = {}
         if patient_level:
             nested_dictionary = {'pred_list': pat_pred_list, 'label_list':pat_label_list, 'names_list':pat_names_list}
@@ -261,17 +250,11 @@ class DLModelKeras:
         if return_history:
             nested_dictionary = {'histories':histories, 'patients':names_list}
             dictionary['history'] = nested_dictionary
-        if save_model:
-            nested_dictionary = {'models' : json_models, 'names_list':pat_names_list}
-            dictionary['saved_models'] = nested_dictionary
-        if save_weights:
-            nested_dictionary = {'weights': weights, 'names_list':pat_names_list}
-            dictionary['saved_weights'] = nested_dictionary
         return dictionary
 
     def train_model_cv(self, dataset, number_classes, k = 10, fold_level = True, get_patient_prediction = True, return_history = True,
-                       data_augmentation = False, f_name = 'emsc', f_params = None, save_model = False,
-                       save_weights = False, random_state = 42):
+                       data_augmentation = False, f_name = 'emsc', f_params = None, save_model = False, model_path = "model_saved/model/",
+                       save_weights = False, weights_path = "model_saved/weights/", random_state = 42):
         """
         Train the model with K-Fold Cross Validation.
         :param dataset: scikit_raman.Dataset
@@ -309,8 +292,6 @@ class DLModelKeras:
         fold_names_list = []
         histories = []
         names_list = []
-        json_models = []
-        weights = []
         for j, (train_idx, test_idx) in enumerate(folds):
             trained_model = clone_model(self.model)
             optimizer = deepcopy(self.optimizer)
@@ -367,9 +348,9 @@ class DLModelKeras:
                 fold_label_list.append(labels_patient_level)
                 fold_names_list.append(np.unique(names_test_cv))
             if save_model:
-                json_models.append(trained_model.to_json())
+                trained_model.save(model_path)
             if save_weights:
-                weights.append(trained_model.get_weights())
+                trained_model.save_weights(weights_path)
         dictionary = {}
         if fold_level:
             nested_dictionary = {'pred_list': fold_pred_list, 'label_list': fold_label_list, 'names_list': fold_names_list}
@@ -380,12 +361,6 @@ class DLModelKeras:
         if return_history:
             nested_dictionary = {'histories':histories, 'patients':names_list}
             dictionary['history'] = nested_dictionary
-        if save_model:
-            nested_dictionary = {'models' : json_models, 'names_list':fold_names_list}
-            dictionary['saved_model'] = nested_dictionary
-        if save_weights:
-            nested_dictionary = {'weights': weights, 'names_list':fold_names_list}
-            dictionary['saved_weights'] = nested_dictionary
         return dictionary
 
     def fit_model(self, X_train, y_train, X_val, y_val, return_history = True):
