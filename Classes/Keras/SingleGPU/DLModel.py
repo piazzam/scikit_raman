@@ -7,13 +7,12 @@ from tensorflow.keras.models import Sequential
 from keras.models import clone_model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
-from tensorflow.keras.models import model_from_json
 from scikit_raman.Classes.DataAugmenter import *
 from scikit_raman.Classes.Keras.DataAugmentation.EMSC import *
 from scikit_raman.Classes.Keras.DataAugmentation.Shift import *
 from copy import deepcopy
-from keras.models import load_model
-import tensorflow as tf
+from tensorflow.keras.models import load_model
+from tensorflow.keras.models import Model
 
 
 class DLModelKeras:
@@ -399,8 +398,20 @@ class DLModelKeras:
         y_pred = np.argmax(pred, axis=-1)
         return y_pred
 
+    def change_input_tl(self, new_input_dims, old_input_dims):
+        new_model = Sequential()
+        new_model.add(InputLayer(input_shape=(new_input_dims,)))
+        new_model.add(Dense(old_input_dims))
+        for el in self.model.layers:
+            new_model.add(el)
 
+        self.model = new_model
 
-
+    def change_output_tl(self, new_output_dims, new_activation_function = "softmax"):
+        input_shape = self.model.layers[0].input_shape
+        new_model = tf.keras.models.Sequential(self.model.layers[:-1])
+        new_model.build(input_shape)
+        new_model.add(Dense(units=new_output_dims, activation = new_activation_function))
+        self.model = new_model
 
 
