@@ -7,11 +7,11 @@ from tensorflow.keras.models import Sequential
 from keras.models import clone_model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
-#from tensorflow.keras.utils.multi_gpu_utils import multi_gpu_model
 from tensorflow.keras.models import model_from_json
 from scikit_raman.Classes.DataAugmenter import *
 from scikit_raman.Classes.Keras.DataAugmentation.EMSC import *
 from scikit_raman.Classes.Keras.DataAugmentation.Shift import *
+from copy import deepcopy
 import tensorflow as tf
 
 
@@ -208,7 +208,8 @@ class DLModelKeras:
         names_list = []
         for j, (train_idx, test_idx) in enumerate(folds):
             trained_model = clone_model(self.model)
-            trained_model.compile(optimizer=self.optimizer, loss = self.loss, metrics = self.metrics)
+            optimizer = deepcopy(self.optimizer)
+            trained_model.compile(optimizer=optimizer, loss = self.loss, metrics = self.metrics)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
@@ -312,7 +313,8 @@ class DLModelKeras:
         weights = []
         for j, (train_idx, test_idx) in enumerate(folds):
             trained_model = clone_model(self.model)
-            trained_model.compile(optimizer=self.optimizer, loss=self.loss, metrics=self.metrics)
+            optimizer = deepcopy(self.optimizer)
+            trained_model.compile(optimizer=optimizer, loss=self.loss, metrics=self.metrics)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
@@ -421,18 +423,6 @@ class DLModelKeras:
         pred = self.model.predict(X_test)
         y_pred = np.argmax(pred, axis=-1)
         return y_pred
-
-    #@staticmethod
-    #def objective(trial, dictionary):
-    #    if dictionary['epochs']:
-    #        epochs = trial.suggest_int(name='epochs', low=dictionary['epochs_value']['low'], high=dictionary['epochs_value']['high'])
-    #    else:
-    #        epochs = dictionary['epochs_value']
-    #    if dictionary['batch_size']:
-    #        batch_size = trial.suggest_int(name = 'batch_size', low = dictionary['batch_size_value']['low'], high = dictionary['batch_size_value']['high'])
-
-    #def optimize_model(self, dataset, loss, metrics, dictionary_values):
-    #    model_list = []
 
 
 

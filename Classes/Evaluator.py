@@ -58,7 +58,7 @@ class Evaluator:
             print(cm_patient_level)
         return cm_patient_level, report_patient_level
 
-    def total_result(self, show = True, save = True, folder_path = "/result"):
+    def total_result(self, show = True, save = True, folder_path = "results/"):
         """
         Creates the total results.
         :param show: bool
@@ -92,7 +92,7 @@ class Evaluator:
             print(cm_total)
         return cm_total, report_total
 
-    def results_every_patient(self, show = True, save = True, folder_path = "/result"):
+    def results_every_patient(self, show = True, save = True, folder_path = "results/"):
         """
         Create the results for every patient.
         :param show: bool
