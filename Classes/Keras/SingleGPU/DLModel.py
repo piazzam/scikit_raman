@@ -224,7 +224,7 @@ class DLModelKeras:
                                 batch_size=self.batch_size, verbose=1,
                                 callbacks=self.callbacks)
             histories.append(history)
-            names_list.append(np.unique(names_test_cv))
+            names_list.append(np.unique(names_test_cv)[0])
             pred = trained_model.predict(X_test_cv)
             y_pred = np.argmax(pred, axis=-1)
             if get_patient_prediction:
@@ -235,7 +235,7 @@ class DLModelKeras:
                 counts = np.bincount(y_pred)
                 pat_pred_list.append(np.argmax(counts))
                 pat_label_list.append(y_test_cv[0])
-                pat_names_list.append(np.unique(names_test_cv))
+                pat_names_list.append(np.unique(names_test_cv)[0])
             if save_model:
                 trained_model.save(model_path)
             if save_weights:

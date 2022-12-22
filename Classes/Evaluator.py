@@ -223,7 +223,7 @@ class Evaluator:
         if show:
             plt.show()
         if save:
-            plt.savefig(folder_path+"/loss/" + patient_name + ".png")
+            plt.savefig(folder_path+"/loss/" + str(patient_name) + ".png")
 
         plt.figure()
         plt.xlabel('Epochs')
@@ -234,7 +234,7 @@ class Evaluator:
         if show:
             plt.show()
         if save:
-            plt.savefig(folder_path+"/accuracy/" + patient_name + ".png")
+            plt.savefig(folder_path+"/accuracy/" + str(patient_name) + ".png")
     def result_training_history(self, folder_path = "results/training", save = True, show = True):
         patient_names = self.results['history']['patients']
         histories = self.results['history']['histories']
