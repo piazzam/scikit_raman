@@ -198,11 +198,12 @@ class DLModelKeras:
         pat_names_list = []
         histories = []
         names_list = []
+        optimizer = deepcopy(self.optimizer)
         for j, (train_idx, test_idx) in enumerate(folds):
             names_test_cv = dataset.user[test_idx]
             trained_model = clone_model(self.model)
             #optimizer = deepcopy(self.optimizer)
-            optimizer = Adam(learning_rate=0.00020441990333108206)
+            #optimizer = Adam(learning_rate=0.00020441990333108206)
             trained_model.compile(optimizer=optimizer, loss = self.loss, metrics = self.metrics)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
