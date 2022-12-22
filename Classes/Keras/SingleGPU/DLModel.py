@@ -199,14 +199,15 @@ class DLModelKeras:
         histories = []
         names_list = []
         for j, (train_idx, test_idx) in enumerate(folds):
+            names_test_cv = dataset.user[test_idx]
             trained_model = clone_model(self.model)
-            optimizer = deepcopy(self.optimizer)
+            #optimizer = deepcopy(self.optimizer)
+            optimizer = Adam(learning_rate=0.00020441990333108206)
             trained_model.compile(optimizer=optimizer, loss = self.loss, metrics = self.metrics)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
             y_test_cv = dataset.labels[test_idx]
-            names_test_cv = dataset.user[test_idx]
             y_train_cv_cat = to_categorical(y_train_cv, number_classes)
             X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv_cat, test_size=test_size,
                                                                     random_state = random_state,
@@ -293,7 +294,8 @@ class DLModelKeras:
         names_list = []
         for j, (train_idx, test_idx) in enumerate(folds):
             trained_model = clone_model(self.model)
-            optimizer = deepcopy(self.optimizer)
+            optimizer = Adam(learning_rate=0.00020441990333108206)
+            #optimizer = deepcopy(self.optimizer)
             trained_model.compile(optimizer=optimizer, loss=self.loss, metrics=self.metrics)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]

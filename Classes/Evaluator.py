@@ -37,7 +37,8 @@ class Evaluator:
             Returns the confusion matrix and the report.
         """
         cm_patient_level = confusion_matrix(self.results['patient_level']['pred_list'],
-                                            self.results['patient_level']['label_list'])
+                                            self.results['patient_level']['label_list'],
+                                            labels = self.classes)
         report_patient_level = classification_report(self.results['patient_level']['pred_list'],
                                                      self.results['patient_level']['label_list'], output_dict=True,
                                                      labels=self.classes)
@@ -71,7 +72,7 @@ class Evaluator:
             Returns the confusion matrix and the report.
         """
         cm_total = confusion_matrix(self.results['total_prediction']['pred_list'],
-                                            self.results['total_prediction']['label_list'])
+                                            self.results['total_prediction']['label_list'], labels = self.classes)
         report_total = classification_report(self.results['total_prediction']['pred_list'],
                                                      self.results['total_prediction']['label_list'], output_dict=True,
                                                      labels=self.classes)
@@ -114,9 +115,9 @@ class Evaluator:
                 if el == total_names_list[j]:
                     labels.append(self.results['total_prediction']['label_list'][j])
                     prediction.append(self.results['total_prediction']['pred_list'][j])
-                k = j
+                    k = j
             i = k
-            cm_model = confusion_matrix(prediction, labels)
+            cm_model = confusion_matrix(prediction, labels, labels = self.classes)
             report_model = classification_report(prediction, labels, output_dict=True, labels=self.classes)
             df_cm_model = pd.DataFrame(cm_model, index=self.classes, columns=self.classes)
             df_report_model = pd.DataFrame(report_model)
@@ -157,7 +158,8 @@ class Evaluator:
             Returns the confusion matrix and the report.
         """
         cm_patient_level = confusion_matrix(self.results['patient_level']['pred_list'],
-                                            self.results['patient_level']['label_list'])
+                                            self.results['patient_level']['label_list'],
+                                            labels = self.classes)
         report_patient_level = classification_report(self.results['patient_level']['pred_list'],
                                                      self.results['patient_level']['label_list'], output_dict=True,
                                                      labels=self.classes)
@@ -208,3 +210,34 @@ class Evaluator:
         for i in range(len(saved_weights)):
             np.savetxt(folder_path+'weights_'+str(patient_names[i][0])+'.csv', saved_weights, fmt='%s', delimiter = ',')
         return saved_weights
+
+    def plot_history(self, network_history, patient_name, folder_path = "results/training" , save = True, show = True):
+        x_plot = list(range(1,len(network_history.history["loss"])+1))
+        plt.figure()
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        plt.plot(x_plot, network_history.history['loss'])
+        plt.plot(x_plot, network_history.history['val_loss'])
+        plt.legend(['Training', 'Validation'])
+
+        if show:
+            plt.show()
+        if save:
+            plt.savefig(folder_path+"/loss/" + patient_name + ".png")
+
+        plt.figure()
+        plt.xlabel('Epochs')
+        plt.ylabel('Accuracy')
+        plt.plot(x_plot, network_history.history['categorical_accuracy'])
+        plt.plot(x_plot, network_history.history['val_categorical_accuracy'])
+        plt.legend(['Training', 'Validation'], loc='lower right')
+        if show:
+            plt.show()
+        if save:
+            plt.savefig(folder_path+"/accuracy/" + patient_name + ".png")
+    def result_training_history(self, folder_path = "results/training", save = True, show = True):
+        patient_names = self.results['history']['patients']
+        histories = self.results['history']['histories']
+
+        for history, patient_name in zip(histories, patient_names):
+            self.plot_history(history, patient_name, folder_path, save, show)
