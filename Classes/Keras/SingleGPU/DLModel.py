@@ -12,7 +12,6 @@ from scikit_raman.Classes.Keras.DataAugmentation.EMSC import *
 from scikit_raman.Classes.Keras.DataAugmentation.Shift import *
 from copy import deepcopy
 from tensorflow.keras.models import load_model
-from tensorflow.keras.models import Model
 
 
 class DLModelKeras:
@@ -121,7 +120,6 @@ class DLModelKeras:
             model.compile(optimizer=optimizer, loss=loss, metrics=metrics, run_eagerly=True)
         else:
             model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
-        #model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
         epochs = 273
         batch_size = 338
         es = EarlyStopping(monitor="val_categorical_accuracy", patience=100, verbose=1,
@@ -198,12 +196,12 @@ class DLModelKeras:
         pat_names_list = []
         histories = []
         names_list = []
-        optimizer = deepcopy(self.optimizer)
+        #optimizer = deepcopy(self.optimizer)
         for j, (train_idx, test_idx) in enumerate(folds):
             names_test_cv = dataset.user[test_idx]
             trained_model = clone_model(self.model)
             #optimizer = deepcopy(self.optimizer)
-            #optimizer = Adam(learning_rate=0.00020441990333108206)
+            optimizer = Adam(learning_rate=0.00020441990333108206)
             trained_model.compile(optimizer=optimizer, loss = self.loss, metrics = self.metrics)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
@@ -365,7 +363,8 @@ class DLModelKeras:
             dictionary['history'] = nested_dictionary
         return dictionary
 
-    def fit_model(self, X_train, y_train, X_val, y_val, return_history = True):
+    def fit_model(self, X_train, y_train, X_val, y_val, return_history = True, model_name = "model", save_model = False,
+                  save_weights = False, model_path = "model_saved/model/", weights_path = "model_saved/weights/"):
         """
         Fit a model.
         :param X_train: np.array
@@ -386,8 +385,15 @@ class DLModelKeras:
                                  validation_data=(X_val, y_val),
                                  batch_size=self.batch_size, verbose=1,
                                  callbacks=self.callbacks)
+        dictionary = {}
         if return_history:
-            return history
+            nested_dictionary = {'histories': [history], 'patients': [model_name]}
+            dictionary['history'] = nested_dictionary
+        if save_model:
+            self.model.save(model_path)
+        if save_weights:
+            self.model.save_weights(weights_path)
+        return dictionary
 
     def test_model(self, X_test):
         """
@@ -404,7 +410,7 @@ class DLModelKeras:
     def change_input_tl(self, new_input_dims, old_input_dims):
         new_model = Sequential()
         new_model.add(InputLayer(input_shape=(new_input_dims,)))
-        new_model.add(Dense(old_input_dims))
+        new_model.add(Dense(old_input_dims, name="dense_added"))
         for el in self.model.layers:
             new_model.add(el)
 
@@ -414,7 +420,7 @@ class DLModelKeras:
         input_shape = self.model.layers[0].input_shape
         new_model = tf.keras.models.Sequential(self.model.layers[:-1])
         new_model.build(input_shape)
-        new_model.add(Dense(units=new_output_dims, activation = new_activation_function))
+        new_model.add(Dense(units=new_output_dims, activation = new_activation_function, name="new_output_layer"))
         self.model = new_model
 
 
