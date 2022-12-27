@@ -207,8 +207,7 @@ class DLModelKeras:
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
             y_test_cv = dataset.labels[test_idx]
-            y_train_cv_cat = to_categorical(y_train_cv, number_classes)
-            X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv_cat, test_size=test_size,
+            X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv, test_size=test_size,
                                                                     random_state = random_state,
                                                                     stratify=y_train_cv)
             if data_augmentation:
@@ -217,9 +216,11 @@ class DLModelKeras:
                 func(f_params)
                 X_train_cv = da.spectra
                 y_train_cv = da.labels
-            history = trained_model.fit(X_train_cv, y_train_cv,
+            y_train_cv_cat = to_categorical(y_train_cv, number_classes)
+            y_val_cat = to_categorical(y_val, number_classes)
+            history = trained_model.fit(X_train_cv, y_train_cv_cat,
                                 epochs=self.epochs,
-                                validation_data=(X_val, y_val),
+                                validation_data=(X_val, y_val_cat),
                                 batch_size=self.batch_size, verbose=1,
                                 callbacks=self.callbacks)
             histories.append(history)
@@ -301,8 +302,7 @@ class DLModelKeras:
             y_train_cv = dataset.labels[train_idx]
             y_test_cv = dataset.labels[test_idx]
             names_test_cv = dataset.user[test_idx]
-            y_train_cv_cat = to_categorical(y_train_cv, number_classes)
-            X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv_cat, test_size=.1,
+            X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv, test_size=.1,
                                                                     random_state = random_state,
                                                                     stratify=y_train_cv)
             if data_augmentation:
@@ -311,9 +311,11 @@ class DLModelKeras:
                 func(f_params)
                 X_train_cv = da.spectra
                 y_train_cv = da.labels
-            history = trained_model.fit(X_train_cv, y_train_cv,
+            y_train_cv_cat = to_categorical(y_train_cv, number_classes)
+            y_val_cat = to_categorical(y_val, number_classes)
+            history = trained_model.fit(X_train_cv, y_train_cv_cat,
                                 epochs=self.epochs,
-                                validation_data=(X_val, y_val),
+                                validation_data=(X_val, y_val_cat),
                                 batch_size=self.batch_size, verbose=1,
                                 callbacks=self.callbacks)
             histories.append(history)
