@@ -154,7 +154,7 @@ class DLModelKeras:
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
 
     def load_weights(self, filename = "model_saved/weights"):
-        self.model.load_weights(filename)
+        self.model.load_weights(filename, compile=False)
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True,
                                           return_history = True, test_size = 0.1, data_augmentation = False, f_name = 'emsc',
                                           f_params = None, save_model = False, model_path = "model_saved/model/", save_weights = False,
