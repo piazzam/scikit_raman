@@ -107,7 +107,7 @@ class DLModel:
             loss_val_list.append(val_loss)
             acc_train_list.append(train_acc)
             acc_val_list.append(val_acc)
-            labels, predicted_values = self.predict_function(trained_model, test_dataset)
+            labels, predicted_values = self.predict_function(trained_model, test_dataset[i])
             if get_patient_prediction:
                 tot_pred_list.extend(predicted_values)
                 tot_label_list.extend(labels)
@@ -263,7 +263,7 @@ class DLModel:
                     break
         return train_losses, val_losses, train_acc, val_acc
 
-    def predict_function(self, test_set):
+    def predict_function(self, trained_model, test_set):
         """
         It apply a prediction
         :param test_set: scikit_raman.PytorchDataset
@@ -271,14 +271,15 @@ class DLModel:
         :return: list
             lables and predicted values.
         """
-        self.model.eval()
+        trained_model.eval()
         labels = []
         predicted_labels = []
+        test_set_generator = DataLoader(test_set)
         with torch.no_grad():
-            for j, (ramanSpectraVal, labelVal, user) in enumerate(test_set):
+            for j, (ramanSpectraVal, labelVal, user) in enumerate(test_set_generator):
                 ramanSpectraVal = ramanSpectraVal.to(self.device)
                 labelVal = labelVal.to(self.device)
-                output_val = self.model(ramanSpectraVal)
+                output_val = trained_model(ramanSpectraVal)
                 test_label = torch.argmax(output_val, dim=1)
                 labels.append(labelVal)
                 predicted_labels.append(test_label)
@@ -348,6 +349,7 @@ class DLModel:
         acc_train_list = []
         acc_val_list = []
         for i in range(len(train_dataset)):
+            print("i = ", i)
             trained_model = copy.deepcopy(self.model)
             optim = copy.deepcopy(self.optimizer)
             if data_augmentation_offline:
@@ -361,10 +363,10 @@ class DLModel:
             loss_val_list.append(val_loss)
             acc_train_list.append(train_acc)
             acc_val_list.append(val_acc)
-            labels, predicted_values = self.predict_function(trained_model, test_dataset)
+            labels_original, predicted_values = self.predict_function(trained_model, test_dataset[i])
             if get_patient_prediction:
                 tot_pred_list.extend(predicted_values)
-                tot_label_list.extend(labels)
+                tot_label_list.extend(labels_original)
                 tot_label_list.extend(train_dataset[i][2])
             if fold_level:
                 labels = []
@@ -374,17 +376,19 @@ class DLModel:
                     l_v = []
                     for j in range(len(train_dataset[i][2])):
                         if train_dataset[i][2][j] == el:
-                            l_v.append(labels[j])
+                            l_v.append(labels_original[j])
                             l.append(predicted_values[j])
                     list_pred.append(l)
                     labels.append(l_v)
 
                 patient_level = []
                 for el in list_pred:
+                    print(el)
                     counts = np.bincount(el)
                     patient_level.append(np.argmax(counts))
                 labels_patient_level = []
                 for el in labels:
+                    print(el)
                     counts = np.bincount(el)
                     labels_patient_level.append(np.argmax(counts))
                 fold_pred_list.append(patient_level)
