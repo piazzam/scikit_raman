@@ -200,4 +200,3 @@ class PlottingSpectra:
         plt.show()
         if save == True:
             plt.savefig(filename)
-
