@@ -55,6 +55,7 @@ class Processor:
             result.append(y_new)
         self.dataset.spectra = np.array(result)
         self.dataset.x_axis = np.array([x_new] * len(self.dataset.x_axis))
+        self.dataset.n_dims = self.dataset.spectra.shape[1]
 
     def delete_uninformative_spectra(self):
         """

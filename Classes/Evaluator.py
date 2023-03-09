@@ -37,7 +37,8 @@ class Evaluator:
             Returns the confusion matrix and the report.
         """
         cm_patient_level = confusion_matrix(self.results['patient_level']['pred_list'],
-                                            self.results['patient_level']['label_list'])
+                                            self.results['patient_level']['label_list'],
+                                            labels = self.classes)
         report_patient_level = classification_report(self.results['patient_level']['pred_list'],
                                                      self.results['patient_level']['label_list'], output_dict=True,
                                                      labels=self.classes)
@@ -58,7 +59,7 @@ class Evaluator:
             print(cm_patient_level)
         return cm_patient_level, report_patient_level
 
-    def total_result(self, show = True, save = True, folder_path = "/result"):
+    def total_result(self, show = True, save = True, folder_path = "results/"):
         """
         Creates the total results.
         :param show: bool
@@ -71,7 +72,7 @@ class Evaluator:
             Returns the confusion matrix and the report.
         """
         cm_total = confusion_matrix(self.results['total_prediction']['pred_list'],
-                                            self.results['total_prediction']['label_list'])
+                                            self.results['total_prediction']['label_list'], labels = self.classes)
         report_total = classification_report(self.results['total_prediction']['pred_list'],
                                                      self.results['total_prediction']['label_list'], output_dict=True,
                                                      labels=self.classes)
@@ -92,7 +93,7 @@ class Evaluator:
             print(cm_total)
         return cm_total, report_total
 
-    def results_every_patient(self, show = True, save = True, folder_path = "/result"):
+    def results_every_patient(self, show = True, save = True, folder_path = "results/"):
         """
         Create the results for every patient.
         :param show: bool
@@ -114,9 +115,9 @@ class Evaluator:
                 if el == total_names_list[j]:
                     labels.append(self.results['total_prediction']['label_list'][j])
                     prediction.append(self.results['total_prediction']['pred_list'][j])
-                k = j
+                    k = j
             i = k
-            cm_model = confusion_matrix(prediction, labels)
+            cm_model = confusion_matrix(prediction, labels, labels = self.classes)
             report_model = classification_report(prediction, labels, output_dict=True, labels=self.classes)
             df_cm_model = pd.DataFrame(cm_model, index=self.classes, columns=self.classes)
             df_report_model = pd.DataFrame(report_model)
@@ -157,7 +158,8 @@ class Evaluator:
             Returns the confusion matrix and the report.
         """
         cm_patient_level = confusion_matrix(self.results['patient_level']['pred_list'],
-                                            self.results['patient_level']['label_list'])
+                                            self.results['patient_level']['label_list'],
+                                            labels = self.classes)
         report_patient_level = classification_report(self.results['patient_level']['pred_list'],
                                                      self.results['patient_level']['label_list'], output_dict=True,
                                                      labels=self.classes)
@@ -178,33 +180,35 @@ class Evaluator:
             print(cm_patient_level)
         return cm_patient_level, report_patient_level
 
-    def store_model(self, folder_path = "results/models/"):
-        """
-        Store a list of model in json format.
-        :param folder_path: str, optional
-            folder path to which store the models.
-        :return: list
-            list of the saved models.
-        """
-        os.makedirs(os.path.dirname(folder_path), exist_ok=True)
-        saved_models = self.results['saved_models']['models']
-        patient_names = self.results['saved_models']['names_list']
-        for i in range(len(saved_models)):
-            with open(folder_path + "model_"+str(patient_names[i][0])+'.json', 'w') as json_file:
-                json_file.write(saved_models[i])
-        return saved_models
+    def plot_history(self, network_history, patient_name, folder_path = "results/training" , save = True, show = True):
+        x_plot = list(range(1,len(network_history.history["loss"])+1))
+        plt.figure()
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        plt.plot(x_plot, network_history.history['loss'])
+        plt.plot(x_plot, network_history.history['val_loss'])
+        plt.legend(['Training', 'Validation'])
 
-    def store_weights(self, folder_path = "results/models/"):
-        """
-        Store the weights of the model.
-        :param folder_path: str, optional
-            folder path in which store the weights.
-        :return: list
-            list of the saved weights.
-        """
+        if show:
+            plt.show()
+        if save:
+            os.makedirs(os.path.dirname(folder_path+"/loss/"), exist_ok=True)
+            plt.savefig(folder_path+"/loss/" + str(patient_name) + ".png")
+
+        plt.figure()
+        plt.xlabel('Epochs')
+        plt.ylabel('Accuracy')
+        plt.plot(x_plot, network_history.history['categorical_accuracy'])
+        plt.plot(x_plot, network_history.history['val_categorical_accuracy'])
+        plt.legend(['Training', 'Validation'], loc='lower right')
+        if show:
+            plt.show()
+        if save:
+            os.makedirs(os.path.dirname(folder_path + "/accuracy/"), exist_ok=True)
+            plt.savefig(folder_path+"/accuracy/" + str(patient_name) + ".png")
+    def result_training_history(self, folder_path = "results/training", save = True, show = True):
+        patient_names = self.results['history']['patients']
+        histories = self.results['history']['histories']
         os.makedirs(os.path.dirname(folder_path), exist_ok=True)
-        saved_weights = self.results['saved_weights']['weights']
-        patient_names = self.results['saved_weights']['names_list']
-        for i in range(len(saved_weights)):
-            np.savetxt(folder_path+'weights_'+str(patient_names[i][0])+'.csv', saved_weights, fmt='%s', delimiter = ',')
-        return saved_weights
+        for history, patient_name in zip(histories, patient_names):
+            self.plot_history(history, patient_name, folder_path, save, show)

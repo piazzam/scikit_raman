@@ -7,12 +7,11 @@ from tensorflow.keras.models import Sequential
 from keras.models import clone_model
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
-#from tensorflow.keras.utils.multi_gpu_utils import multi_gpu_model
-from tensorflow.keras.models import model_from_json
 from scikit_raman.Classes.DataAugmenter import *
 from scikit_raman.Classes.Keras.DataAugmentation.EMSC import *
 from scikit_raman.Classes.Keras.DataAugmentation.Shift import *
-import tensorflow as tf
+from copy import deepcopy
+from tensorflow.keras.models import load_model
 
 
 class DLModelKeras:
@@ -121,7 +120,6 @@ class DLModelKeras:
             model.compile(optimizer=optimizer, loss=loss, metrics=metrics, run_eagerly=True)
         else:
             model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
-        #model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
         epochs = 273
         batch_size = 338
         es = EarlyStopping(monitor="val_categorical_accuracy", patience=100, verbose=1,
@@ -132,9 +130,9 @@ class DLModelKeras:
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
 
     @classmethod
-    def load_from_json(dlm, filename, batch_size = 256, epochs = 200, callbacks = [], optimizer = Adam(learning_rate=0.00020441990333108206), loss = 'categorical_crossentropy', metrics = ['categorical_accuracy']):
+    def load_model(dlm, filename = "model_saved/model", batch_size = 256, epochs = 200, callbacks = [], optimizer = Adam(learning_rate=0.00020441990333108206), loss = 'categorical_crossentropy', metrics = ['categorical_accuracy']):
         """
-        Load a model from json file.
+        Load a model from classical storage keras.
         :param filename: str
             filename of json file.
         :param batch_size: int, optional.
@@ -152,21 +150,15 @@ class DLModelKeras:
         :return: scikit_raman.Keras.DLMoldeKeras
             A model object representing the json model.
         """
-        model = model_from_json(filename)
+        model = load_model(filename)
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
 
-    def load_weights(self, filename):
-        """
-        Load weights into model. The weights must be stored in csv file.
-        :param filename: str
-            filename of weights
-        :return:
-        """
-        self.model.load_weights(filename)
-
+    def load_weights(self, filename = "model_saved/weights"):
+        self.model.load_weights(filename, compile=False)
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True,
                                           return_history = True, test_size = 0.1, data_augmentation = False, f_name = 'emsc',
-                                          f_params = None, save_model = False, save_weights = False, random_state = 42):
+                                          f_params = None, save_model = False, model_path = "model_saved/model/", save_weights = False,
+                                          weights_path = "model_saved/weights/", random_state = 42):
         """
         Train the model with Leave One Patient Out Cross Validation
         :param dataset: scikit_raman.Dataset
@@ -202,20 +194,20 @@ class DLModelKeras:
         pat_pred_list = []
         pat_label_list = []
         pat_names_list = []
-        json_models = []
-        weights = []
         histories = []
         names_list = []
+        #optimizer = deepcopy(self.optimizer)
         for j, (train_idx, test_idx) in enumerate(folds):
+            names_test_cv = dataset.user[test_idx]
             trained_model = clone_model(self.model)
-            trained_model.compile(optimizer=self.optimizer, loss = self.loss, metrics = self.metrics)
+            #optimizer = deepcopy(self.optimizer)
+            optimizer = Adam(learning_rate=0.00020441990333108206)
+            trained_model.compile(optimizer=optimizer, loss = self.loss, metrics = self.metrics)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
             y_test_cv = dataset.labels[test_idx]
-            names_test_cv = dataset.user[test_idx]
-            y_train_cv_cat = to_categorical(y_train_cv, number_classes)
-            X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv_cat, test_size=test_size,
+            X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv, test_size=test_size,
                                                                     random_state = random_state,
                                                                     stratify=y_train_cv)
             if data_augmentation:
@@ -224,15 +216,15 @@ class DLModelKeras:
                 func(f_params)
                 X_train_cv = da.spectra
                 y_train_cv = da.labels
-            print(X_train_cv.shape)
-            print(y_train_cv.shape)
-            history = trained_model.fit(X_train_cv, y_train_cv,
+            y_train_cv_cat = to_categorical(y_train_cv, number_classes)
+            y_val_cat = to_categorical(y_val, number_classes)
+            history = trained_model.fit(X_train_cv, y_train_cv_cat,
                                 epochs=self.epochs,
-                                validation_data=(X_val, y_val),
+                                validation_data=(X_val, y_val_cat),
                                 batch_size=self.batch_size, verbose=1,
                                 callbacks=self.callbacks)
             histories.append(history)
-            names_list.append(np.unique(names_test_cv))
+            names_list.append(np.unique(names_test_cv)[0])
             pred = trained_model.predict(X_test_cv)
             y_pred = np.argmax(pred, axis=-1)
             if get_patient_prediction:
@@ -243,13 +235,11 @@ class DLModelKeras:
                 counts = np.bincount(y_pred)
                 pat_pred_list.append(np.argmax(counts))
                 pat_label_list.append(y_test_cv[0])
-                pat_names_list.append(np.unique(names_test_cv))
+                pat_names_list.append(np.unique(names_test_cv)[0])
             if save_model:
-                json_model = trained_model.to_json()
-                json_models.append(json_model)
+                trained_model.save(model_path)
             if save_weights:
-                weight = trained_model.get_weights()
-                weights.append(weight)
+                trained_model.save_weights(weights_path)
         dictionary = {}
         if patient_level:
             nested_dictionary = {'pred_list': pat_pred_list, 'label_list':pat_label_list, 'names_list':pat_names_list}
@@ -260,17 +250,11 @@ class DLModelKeras:
         if return_history:
             nested_dictionary = {'histories':histories, 'patients':names_list}
             dictionary['history'] = nested_dictionary
-        if save_model:
-            nested_dictionary = {'models' : json_models, 'names_list':pat_names_list}
-            dictionary['saved_models'] = nested_dictionary
-        if save_weights:
-            nested_dictionary = {'weights': weights, 'names_list':pat_names_list}
-            dictionary['saved_weights'] = nested_dictionary
         return dictionary
 
     def train_model_cv(self, dataset, number_classes, k = 10, fold_level = True, get_patient_prediction = True, return_history = True,
-                       data_augmentation = False, f_name = 'emsc', f_params = None, save_model = False,
-                       save_weights = False, random_state = 42):
+                       data_augmentation = False, f_name = 'emsc', f_params = None, save_model = False, model_path = "model_saved/model/",
+                       save_weights = False, weights_path = "model_saved/weights/", random_state = 42):
         """
         Train the model with K-Fold Cross Validation.
         :param dataset: scikit_raman.Dataset
@@ -308,18 +292,17 @@ class DLModelKeras:
         fold_names_list = []
         histories = []
         names_list = []
-        json_models = []
-        weights = []
         for j, (train_idx, test_idx) in enumerate(folds):
             trained_model = clone_model(self.model)
-            trained_model.compile(optimizer=self.optimizer, loss=self.loss, metrics=self.metrics)
+            optimizer = Adam(learning_rate=0.00020441990333108206)
+            #optimizer = deepcopy(self.optimizer)
+            trained_model.compile(optimizer=optimizer, loss=self.loss, metrics=self.metrics)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
             y_test_cv = dataset.labels[test_idx]
             names_test_cv = dataset.user[test_idx]
-            y_train_cv_cat = to_categorical(y_train_cv, number_classes)
-            X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv_cat, test_size=.1,
+            X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv, test_size=.1,
                                                                     random_state = random_state,
                                                                     stratify=y_train_cv)
             if data_augmentation:
@@ -328,9 +311,11 @@ class DLModelKeras:
                 func(f_params)
                 X_train_cv = da.spectra
                 y_train_cv = da.labels
-            history = trained_model.fit(X_train_cv, y_train_cv,
+            y_train_cv_cat = to_categorical(y_train_cv, number_classes)
+            y_val_cat = to_categorical(y_val, number_classes)
+            history = trained_model.fit(X_train_cv, y_train_cv_cat,
                                 epochs=self.epochs,
-                                validation_data=(X_val, y_val),
+                                validation_data=(X_val, y_val_cat),
                                 batch_size=self.batch_size, verbose=1,
                                 callbacks=self.callbacks)
             histories.append(history)
@@ -365,9 +350,9 @@ class DLModelKeras:
                 fold_label_list.append(labels_patient_level)
                 fold_names_list.append(np.unique(names_test_cv))
             if save_model:
-                json_models.append(trained_model.to_json())
+                trained_model.save(model_path)
             if save_weights:
-                weights.append(trained_model.get_weights())
+                trained_model.save_weights(weights_path)
         dictionary = {}
         if fold_level:
             nested_dictionary = {'pred_list': fold_pred_list, 'label_list': fold_label_list, 'names_list': fold_names_list}
@@ -378,15 +363,10 @@ class DLModelKeras:
         if return_history:
             nested_dictionary = {'histories':histories, 'patients':names_list}
             dictionary['history'] = nested_dictionary
-        if save_model:
-            nested_dictionary = {'models' : json_models, 'names_list':fold_names_list}
-            dictionary['saved_model'] = nested_dictionary
-        if save_weights:
-            nested_dictionary = {'weights': weights, 'names_list':fold_names_list}
-            dictionary['saved_weights'] = nested_dictionary
         return dictionary
 
-    def fit_model(self, X_train, y_train, X_val, y_val, return_history = True):
+    def fit_model(self, X_train, y_train, X_val, y_val, return_history = True, model_name = "model", save_model = False,
+                  save_weights = False, model_path = "model_saved/model/", weights_path = "model_saved/weights/"):
         """
         Fit a model.
         :param X_train: np.array
@@ -407,8 +387,15 @@ class DLModelKeras:
                                  validation_data=(X_val, y_val),
                                  batch_size=self.batch_size, verbose=1,
                                  callbacks=self.callbacks)
+        dictionary = {}
         if return_history:
-            return history
+            nested_dictionary = {'histories': [history], 'patients': [model_name]}
+            dictionary['history'] = nested_dictionary
+        if save_model:
+            self.model.save(model_path)
+        if save_weights:
+            self.model.save_weights(weights_path)
+        return dictionary
 
     def test_model(self, X_test):
         """
@@ -422,20 +409,20 @@ class DLModelKeras:
         y_pred = np.argmax(pred, axis=-1)
         return y_pred
 
-    #@staticmethod
-    #def objective(trial, dictionary):
-    #    if dictionary['epochs']:
-    #        epochs = trial.suggest_int(name='epochs', low=dictionary['epochs_value']['low'], high=dictionary['epochs_value']['high'])
-    #    else:
-    #        epochs = dictionary['epochs_value']
-    #    if dictionary['batch_size']:
-    #        batch_size = trial.suggest_int(name = 'batch_size', low = dictionary['batch_size_value']['low'], high = dictionary['batch_size_value']['high'])
+    def change_input_tl(self, new_input_dims, old_input_dims):
+        new_model = Sequential()
+        new_model.add(InputLayer(input_shape=(new_input_dims,)))
+        new_model.add(Dense(old_input_dims, name="dense_added"))
+        for el in self.model.layers:
+            new_model.add(el)
 
-    #def optimize_model(self, dataset, loss, metrics, dictionary_values):
-    #    model_list = []
+        self.model = new_model
 
-
-
-
+    def change_output_tl(self, new_output_dims, new_activation_function = "softmax"):
+        input_shape = self.model.layers[0].input_shape
+        new_model = tf.keras.models.Sequential(self.model.layers[:-1])
+        new_model.build(input_shape)
+        new_model.add(Dense(units=new_output_dims, activation = new_activation_function, name="new_output_layer"))
+        self.model = new_model
 
 

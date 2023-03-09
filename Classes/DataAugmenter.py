@@ -1,5 +1,6 @@
 import copy
 import numpy as np
+import random
 
 class DataAugmenter:
     """
@@ -29,6 +30,57 @@ class DataAugmenter:
         """
         # baseline shift
         signal = self.spectra
+        beta = np.random.random(size=(signal.shape[0], 1)) * 2 * betashift - betashift
+        slope = np.random.random(size=(signal.shape[0], 1)) * 2 * slopeshift - slopeshift + 1
+        # relative positions
+        axis = np.array(range(signal.shape[1])) / float(signal.shape[1])
+        # offset
+        offset = slope * (axis) + beta - axis - slope / 2. + 0.5
+
+        # multiplicative coefficient
+        multi = np.random.random(size=(signal.shape[0], 1)) * 2 * multishift - multishift + 1
+        augmented_signal = multi * signal + offset
+
+        return augmented_signal
+
+    def dataaugment_single_spectra(self, betashift, slopeshift, multishift):
+        """
+        Function propaedeutic to data augmentation.
+        :param betashift:
+        :param slopeshift:
+        :param multishift:
+        :return np.array:
+            an array containing augmented signals.
+        """
+        # baseline shift
+        random_index = random.randint(0, len(self.spectra) - 1)
+        signal = self.spectra[random_index]
+        label = self.labels[random_index]
+        beta = np.random.random(size=(1, 1)) * 2 * betashift - betashift
+        slope = np.random.random(size=(1, 1)) * 2 * slopeshift - slopeshift + 1
+        # relative positions
+        axis = np.array(range(len(signal))) / float(len(signal))
+        # offset
+        offset = slope * (axis) + beta - axis - slope / 2. + 0.5
+
+        # multiplicative coefficient
+        multi = np.random.random(size=(1, 1)) * 2 * multishift - multishift + 1
+        augmented_signal = multi * signal + offset
+
+        self.labels = np.append(self.labels, label)
+
+        return augmented_signal
+
+    def dataaugment_single_class(self, signal, betashift, slopeshift, multishift):
+        """
+        Function propaedeutic to data augmentation.
+        :param betashift:
+        :param slopeshift:
+        :param multishift:
+        :return np.array:
+            an array containing augmented signals.
+        """
+        # baseline shift
         beta = np.random.random(size=(signal.shape[0], 1)) * 2 * betashift - betashift
         slope = np.random.random(size=(signal.shape[0], 1)) * 2 * slopeshift - slopeshift + 1
         # relative positions
@@ -118,5 +170,132 @@ class DataAugmenter:
                 aug_list = np.concatenate((aug_list, self.dataaugment(betashift = betashift, slopeshift=slopeshift, multishift=multishift)))
         for i in range(times):
             y_list = np.concatenate((y_list, self.labels), axis=0)
+        self.spectra = aug_list
+        self.labels = y_list
+
+    def emsc_single_spectra(self, params):
+        """
+        Apply emsc data augmentation.
+        :param params: dict, optional
+            Parameters on which apply the emsc function. The default value is None.
+        :return:
+        """
+        if params == None:
+            keep_original = True
+            times = 300
+            betashift = 0.005
+            slopeshift = 0.002
+            multishift = 0.05
+        else:
+            if 'keep_original' in params:
+                keep_original = params['keep_original']
+            else:
+                keep_original = True
+            if 'times' in params:
+                times = params['times']
+            else:
+                times = 300
+            if 'betashift' in params:
+                betashift = params['betashift']
+            else:
+                betashift = 0.0005
+            if 'slopeshift' in params:
+                slopeshift = params['slopeshift']
+            else:
+                slopeshift = 0.002
+            if 'multishift' in params:
+                multishift = params['multishift']
+            else:
+                multishift = 0.05
+        if keep_original:
+            aug_list = copy.copy(self.spectra)
+            y_list = copy.copy(self.labels)
+        else:
+            y_list = np.array([])
+        for i in range(times):
+            if keep_original == False and i == 0:
+                aug_list = self.dataaugment_single_spectra(betashift=betashift, slopeshift=slopeshift,
+                                                           multishift=multishift)
+            else:
+                aug_list = np.concatenate(
+                    (aug_list, self.dataaugment_single_spectra(betashift=betashift, slopeshift=slopeshift,
+                                                               multishift=multishift)))
+        for i in range(times):
+            y_list = np.concatenate((y_list, self.labels), axis=0)
+        self.spectra = aug_list
+        #self.labels = y_list
+
+    def emsc_single_class(self, params):
+        """
+        Apply emsc data augmentation.
+        :param params: dict, optional
+            Parameters on which apply the emsc function. The default value is None.
+        :return:
+        """
+        if params == None:
+            keep_original = True
+            times = 300
+            betashift = 0.005
+            slopeshift = 0.002
+            multishift = 0.05
+            label = 0
+        else:
+            if 'keep_original' in params:
+                keep_original = params['keep_original']
+            else:
+                keep_original = True
+            if 'times' in params:
+                times = params['times']
+            else:
+                times = 300
+            if 'betashift' in params:
+                betashift = params['betashift']
+            else:
+                betashift = 0.0005
+            if 'slopeshift' in params:
+                slopeshift = params['slopeshift']
+            else:
+                slopeshift = 0.002
+            if 'multishift' in params:
+                multishift = params['multishift']
+            else:
+                multishift = 0.05
+            if 'label' in params:
+                label = params['label']
+            else:
+                label = 0
+        list_indices_label = np.where(self.labels == label)
+        list_label = []
+        list_spectra = []
+        for el in list_indices_label[0]:
+            list_label.append(self.labels[el])
+            list_spectra.append(self.spectra[el])
+        array_label = np.array(list_label)
+        array_spectra = np.array(list_spectra)
+        if keep_original:
+            aug_list = copy.copy(array_spectra)
+            y_list = copy.copy(array_label)
+        else:
+            y_list = np.array([])
+        for i in range(times):
+            if keep_original == False and i == 0:
+                aug_list = self.dataaugment_single_class(array_spectra, betashift=betashift, slopeshift=slopeshift,
+                                                           multishift=multishift)
+            else:
+                aug_list = np.concatenate(
+                    (aug_list, self.dataaugment_single_class(array_spectra, betashift=betashift, slopeshift=slopeshift,
+                                                               multishift=multishift)))
+        for i in range(times):
+            y_list = np.concatenate((y_list, array_label), axis=0)
+        spectra_final = []
+        label_final = []
+        for single_spectra, single_label in zip(self.spectra, self.labels):
+            if single_label != label:
+                spectra_final.append(single_spectra)
+                label_final.append(single_label)
+        spectra_final = np.array(spectra_final)
+        label_final = np.array(label_final)
+        aug_list = np.concatenate((aug_list, spectra_final))
+        y_list = np.concatenate((y_list, label_final))
         self.spectra = aug_list
         self.labels = y_list
