@@ -306,6 +306,20 @@ class Dataset:
             labels.append(self.labels[i])
         return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name), np.array(category), np.array(labels))
 
+    def search_by_name_indices(self, name):
+        """
+        Search and return subset of the dataset corresponding to the specified user.
+        :param name:string
+            String corresponding to the user name of the patients.
+        :return: scikit_raman.Dataset
+            A dataset object representing the subset of the Dataset.
+        """
+        ret_list = []
+        for i in range(len(self.user)):
+            if self.user[i] == name:
+                ret_list.append(i)
+        return ret_list
+
     def search_by_category_name(self, cat):
         """
         Search and return subset of the dataset corresponding to the specified label name.
