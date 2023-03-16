@@ -214,7 +214,7 @@ class DLModelKeras:
                         'reinit': reinit,
                         'epochs': self.epochs,
                         'batch_size': self.batch_size,
-                        'learning_rate': self.learning_rate}
+                        'lr': self.learning_rate}
                     wandbconfig.update(wandbconfig_base)
                 wandb.init(project=wandb_project,
                            name=wandb_project + str(np.unique(names_test_cv)[0]),
@@ -333,7 +333,7 @@ class DLModelKeras:
                         'reinit': reinit,
                         'epochs': self.epochs,
                         'batch_size': self.batch_size,
-                        'learning_rate': self.learning_rate}
+                        'lr': self.learning_rate}
                     wandbconfig.update(wandbconfig_base)
                 wandb.init(project=wandb_project,
                            name=wandb_project + str(j),
