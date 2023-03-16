@@ -209,6 +209,7 @@ class Evaluator:
     def result_training_history(self, folder_path = "results/training", save = True, show = True):
         patient_names = self.results['history']['patients']
         histories = self.results['history']['histories']
-        os.makedirs(os.path.dirname(folder_path), exist_ok=True)
+        if save:
+            os.makedirs(os.path.dirname(folder_path), exist_ok=True)
         for history, patient_name in zip(histories, patient_names):
             self.plot_history(history, patient_name, folder_path, save, show)
