@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import GroupKFold, LeaveOneGroupOut
-import copy
+import pickle
 
 class Dataset:
     """
@@ -50,6 +50,15 @@ class Dataset:
     def __len__(self):
         return self.n_elements
 
+    def extend(self, dataset):
+        self.spectra = np.append(self.spectra, dataset.spectra)
+        self.x_axis = np.append(self.x_axis, dataset.x_axis)
+        self.raw = np.append(self.raw, dataset.raw)
+        self.user = np.append(self.user, dataset.user)
+        self.name = np.append(self.name, dataset.name)
+        self.category = np.append(self.category,dataset.category)
+        self.labels = np.append(self.labels, dataset.labels)
+        self.n_elements = self.n_elements + len(dataset)
 
     @classmethod
     def load_file(ds, file_type, file_name, label_dictionary = {'cov':0, 'covNeg': 1, 'ctrl':2}):
@@ -77,7 +86,7 @@ class Dataset:
         user = df['user'].to_numpy()
         name = df['name'].to_numpy()
         category = df['category'].to_numpy()
-        if 'label' in df.columns:
+        if 'labels' in df.columns:
             labels = df['label'].to_numpy()
         else:
             labels = np.empty(shape = (0,0))
@@ -94,6 +103,26 @@ class Dataset:
         for el in self.category:
             labels.append(label_dictionary[el])
         self.labels = np.array(labels)
+
+    def to_df(self, save_label = True):
+        if save_label:
+            df = pd.DataFrame([], columns=['spectra', 'x-axis', 'raw', 'user', 'name', 'category', 'labels'])
+        else:
+            df = pd.DataFrame([], columns=['spectra', 'x-axis', 'raw', 'user', 'name', 'category'])
+        df['spectra'] = self.spectra.tolist()
+        df['x-axis'] = self.x_axis.tolist()
+        df['raw'] = self.raw.tolist()
+        df['user'] = self.user.tolist()
+        df['name'] = self.name.tolist()
+        df['category'] = self.category.tolist()
+        if save_label:
+            df['labels'] = self.labels.tolist()
+        return df
+
+    def save_pickle(self, filename, save_label = True):
+        df = self.to_df(save_label)
+        with open(filename, 'wb') as f:
+            pickle.dump(df, f)
 
     def get_raw_data(self):
         """
