@@ -51,13 +51,13 @@ class Dataset:
         return self.n_elements
 
     def extend(self, dataset):
-        self.spectra = np.append(self.spectra, dataset.spectra)
-        self.x_axis = np.append(self.x_axis, dataset.x_axis)
-        self.raw = np.append(self.raw, dataset.raw)
-        self.user = np.append(self.user, dataset.user)
-        self.name = np.append(self.name, dataset.name)
-        self.category = np.append(self.category,dataset.category)
-        self.labels = np.append(self.labels, dataset.labels)
+        self.spectra = np.append(self.spectra, dataset.spectra, axis=0)
+        self.x_axis = np.append(self.x_axis, dataset.x_axis, axis=0)
+        self.raw = np.append(self.raw, dataset.raw, axis=0)
+        self.user = np.append(self.user, dataset.user, axis=0)
+        self.name = np.append(self.name, dataset.name, axis=0)
+        self.category = np.append(self.category,dataset.category, axis=0)
+        self.labels = np.append(self.labels, dataset.labels, axis=0)
         self.n_elements = self.n_elements + len(dataset)
 
     @classmethod
