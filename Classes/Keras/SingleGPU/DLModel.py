@@ -13,6 +13,7 @@ from scikit_raman.Classes.Keras.DataAugmentation.Shift import *
 from tensorflow.keras.models import load_model
 import wandb
 from wandb.keras import WandbMetricsLogger
+from keras import backend as K
 
 
 class DLModelKeras:
@@ -228,6 +229,7 @@ class DLModelKeras:
                         raise TypeError("wandbcallbacks must be a list")
             trained_model = clone_model(self.model)
             trained_model.compile(optimizer=self.optimizer, loss = self.loss, metrics = self.metrics)
+            K.set_value(trained_model.optimizer.learning_rate, self.learning_rate)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
@@ -347,6 +349,7 @@ class DLModelKeras:
                         raise TypeError("wandbcallbacks must be a list")
             trained_model = clone_model(self.model)
             trained_model.compile(optimizer=self.optimizer, loss=self.loss, metrics=self.metrics)
+            K.set_value(trained_model.optimizer.learning_rate, self.learning_rate)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
