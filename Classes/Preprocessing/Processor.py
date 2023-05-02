@@ -9,6 +9,8 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from scikit_raman.Classes.Preprocessing.PCA_result import *
 from scikit_raman.Classes.Preprocessing.TSNE_result import *
+from scipy.signal import find_peaks, peak_prominences
+from scipy.signal import savgol_filter
 
 class Processor:
     """
@@ -148,6 +150,15 @@ class Processor:
             X_c.append(x_fix)
         self.dataset.spectra = np.array(X_c)
 
+    def smoothing_savitzky_golay(self, window_length=9, polyorder=2):
+        X = list(self.dataset.spectra)
+        X_filter = savgol_filter(X, window_length=window_length, polyorder=polyorder)
+        X_filter_bis = []
+        for el in X_filter:
+            X_filter_bis.append(el)
+        self.dataset.spectra = np.array(X_filter_bis)
+        self.dataset.spectra_to_numpy()
+
     def remove_baseline_polynomial(self, deg=6, max_it=100000, tol=pow(10, -11)):
         """
         Removes baseline (background noise) from the spectra. It apply the
@@ -281,3 +292,88 @@ class Processor:
             for s, al in zip(current_spectra, allu):
                 new_spectra.append(s - al)
             self.dataset.spectra[i] = np.array(new_spectra)
+
+    def realignment(self, window_size = 10):
+        y = self.dataset.spectra[0].tolist()
+        x = self.dataset.x_axis[0].tolist()
+        val = min(x, key=lambda x: abs(x - 1001))  # val = number with minimum distance from 1001
+        index_val = x.index(val)
+        one_value = x.index(val) - window_size
+        two_value = x.index(val) + window_size
+        y_small = y[one_value:two_value]
+        x_small = x[one_value:two_value]
+        p = find_peaks(y_small)
+        if len(p[0]) > 1:
+            prom = -1
+            prom_index = 0
+            for i in range(len(p[0])):
+                index_p = x.index(x_small[p[0][i]])
+                y = np.array(y)
+                prom_calc = peak_prominences(y, [index_p])
+                if prom_calc[0][0] > prom:
+                    prom = prom_calc[0][0]
+                    prom_index = i
+        else:
+            prom_index = 0
+        x_value = x_small[p[0][prom_index]]
+        y_value = y_small[p[0][prom_index]]
+        index_true = x.index(x_value)
+        new_spectra = []
+        new_spectra.append(y)
+        new_axis = []
+        new_axis.append(x)
+        for i in range(1, len(self.dataset)):
+            y = self.dataset.spectra[i].tolist()
+            x = self.dataset.x_axis[i].tolist()
+            val = min(x, key=lambda x: abs(x - 1001))
+            one_value = x.index(val) - window_size
+            two_value = x.index(val) + window_size
+            y_small = y[one_value:two_value]
+            x_small = x[one_value:two_value]
+            p = find_peaks(y_small)
+            new_y = []
+            if len(p[0]) > 1:
+                prom = -1
+                prom_index = 0
+                for k in range(len(p[0])):
+                    index = x.index(x_small[p[0][k]])
+                    y = np.array(y)
+                    prom_calc = peak_prominences(y, [index])
+                    if prom_calc[0][0] > prom:
+                        prom = prom_calc[0][0]
+                        prom_index = k
+            else:
+                prom_index = 0
+            if len(p[0]) >= 1:
+                x_value_curr = x_small[p[0][prom_index]]
+                y_value_curr = y_small[p[0][prom_index]]
+                index_curr = x.index(x_value_curr)
+                if index_true == index_curr:
+                    new_spectra.append(y)
+                    new_axis.append(x)
+                else:
+                    if index_true > index_curr:
+                        diff = index_true - index_curr
+                        new_index = (len(y)) - diff
+                        new_y = y[:new_index]
+                        for j in range(diff):
+                            new_y = np.insert(new_y, 0, y[0])
+                        new_spectra.append(new_y)
+                        new_axis.append(x)
+                    else:
+                        diff = index_curr - index_true
+                        new_y = y[diff:]
+                        for j in range(diff):
+                            new_y = np.append(new_y, y[len(y) - 1])
+                        new_spectra.append(new_y)
+                        new_axis.append(x)
+            else:
+                print(i)
+                print("ERROR - Max peak not found")
+                new_spectra.append(y)
+                new_axis.append(x)
+        self.dataset.spectra = np.array(new_spectra)
+        self.dataset.spectra_to_numpy()
+        self.dataset.x_axis = np.array(new_axis)
+        self.dataset.x_axis_to_numpy()
+        self.dataset.n_elements = len(new_spectra)

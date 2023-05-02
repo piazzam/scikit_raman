@@ -118,10 +118,10 @@ class DLModelKeras:
         model.add(Dense(units=number_classes, activation='softmax'))
 
         # ----- Compile
-        if data_augmentation:
-            model.compile(optimizer=optimizer, loss=loss, metrics=metrics, run_eagerly=True)
-        else:
-            model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+        #if data_augmentation:
+        #    model.compile(optimizer=optimizer, loss=loss, metrics=metrics, run_eagerly=True)
+        #else:
+        #    model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
         epochs = 273
         batch_size = 338
         es = EarlyStopping(monitor="val_categorical_accuracy", patience=100, verbose=1,
