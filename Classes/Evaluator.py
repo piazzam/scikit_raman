@@ -145,6 +145,35 @@ class Evaluator:
             df = pd.DataFrame.from_dict(self.results[el])
             df.to_csv(folder_path+str(el)+'.csv')
 
+    def total_result_patient_k_fold(self, show=True, save=True, folder_path="results"):
+        predicted = []
+        labels = []
+        for list in self.results['fold_level']['pred_list']:
+            predicted.extend(list)
+        for list in self.results['fold_level']['label_list']:
+            labels.extend(list)
+        cm_patient_level = confusion_matrix(predicted,
+                                                 labels,
+                                                 labels = self.classes)
+        report_patient_level = classification_report(predicted,
+                                                          labels, output_dict=True,
+                                                          labels=self.classes)
+        df_patient_level = pd.DataFrame(cm_patient_level, index=self.classes, columns=self.classes)
+        df_report = pd.DataFrame(report_patient_level)
+        plt.figure(figsize=(10, 7))
+        cm_plot = sn.heatmap(df_patient_level, annot=True, fmt='d', annot_kws={"fontsize":24})
+        if save:
+            os.makedirs(os.path.dirname(folder_path), exist_ok=True)
+            df_patient_level.to_csv(folder_path + "cm_total_patient.csv")
+            df_report.to_csv(folder_path + "report_total_patient.csv")
+            cm_plot.figure.savefig(folder_path + "cm_total_patient.png")
+        if show:
+            cm_plot.figure.show()
+            print(classification_report(predicted,
+                                        labels, output_dict=False,
+                                        labels=self.classes))
+            print(cm_patient_level)
+        return cm_patient_level, report_patient_level
     # def total_result_patient(self, show = True, save = True, folder_path = "results/"):
     #     """
     #     Creates the total results at patient level.

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import GroupKFold, LeaveOneGroupOut
 import pickle
+from sklearn.utils import shuffle
 
 class Dataset:
     """
@@ -226,7 +227,8 @@ class Dataset:
         else:
             y_train = self.labels
             groups = self.user
-            folds = list(GroupKFold(n_splits=k).split(x_train, y_train, groups=groups))
+            x_shuffled, y_shuffled, groups_shuffled = shuffle(x_train, y_train, groups, random_state=0)
+            folds = list(GroupKFold(n_splits=k).split(x_shuffled, y_shuffled, groups=groups_shuffled))
             return folds
 
     def leave_one_patient_cv(self):
@@ -405,9 +407,27 @@ class Dataset:
             name.append(self.name[i])
             category.append(self.category[i])
             labels.append(self.labels[i])
-        return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name), np.array(category), np.array(labels))
+        return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name),
+                       np.array(category), np.array(labels))
 
-
-
-
-
+    def create_mean_spectra(self):
+        users = self.get_unique_user()
+        spectra = []
+        x_axis = []
+        raw = []
+        user_list = []
+        name = []
+        category = []
+        labels = []
+        for user in users:
+            ds_user = self.search_by_name(user)
+            spectrum = np.mean(ds_user.spectra, axis=0)
+            spectra.append(spectrum)
+            x_axis.append(ds_user.x_axis[0])
+            raw.append(ds_user.raw[0])
+            user_list.append(ds_user.user[0])
+            name.append(ds_user.name[0])
+            category.append(ds_user.category[0])
+            labels.append(ds_user.labels[0])
+        return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user_list), np.array(name),
+                       np.array(category), np.array(labels))

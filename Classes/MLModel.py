@@ -1,3 +1,5 @@
+import copy
+
 import numpy as np
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
@@ -43,6 +45,7 @@ class MLModel:
         fold_names_list = []
         names_list = []
         for j, (train_idx, test_idx) in enumerate(folds):
+            trained_model = copy.deepcopy(self.model)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
@@ -51,9 +54,10 @@ class MLModel:
             names_test_cv = dataset.user[test_idx]
             names_list.append(np.unique(names_test_cv))
 
-            self.model.fit(X_train_cv, y_train_cv)
-
-            y_pred = self.model.predict(X_test_cv)
+            #self.model.fit(X_train_cv, y_train_cv)
+            trained_model.fit(X_train_cv, y_train_cv)
+            y_pred = trained_model.predict(X_test_cv)
+            #y_pred = self.model.predict(X_test_cv)
 
             if get_patient_prediction:
                 tot_pred_list.extend(y_pred)
@@ -115,17 +119,20 @@ class MLModel:
         pat_names_list = []
         names_list = []
         for j, (train_idx, test_idx) in enumerate(folds):
+            trained_model = copy.deepcopy(self.model)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
-            names_train_cv = dataset.user[train_idx]
+            #names_train_cv = dataset.user[train_idx]
             y_test_cv = dataset.labels[test_idx]
             names_test_cv = dataset.user[test_idx]
             names_list.append(names_test_cv)
 
-            self.model.fit(X_train_cv, y_train_cv)
-
-            y_pred = self.model.predict(X_test_cv)
+            trained_model.fit(X_train_cv, y_train_cv)
+            y_pred = trained_model.predict(X_test_cv)
+            # self.model.fit(X_train_cv, y_train_cv)
+            #
+            # y_pred = self.model.predict(X_test_cv)
 
             if get_patient_prediction:
                 tot_pred_list.extend(y_pred)
