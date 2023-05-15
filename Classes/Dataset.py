@@ -46,7 +46,8 @@ class Dataset:
         self.n_dims = self.spectra.shape[1]
 
     def __getitem__(self, items):
-        return self.spectra[items], self.x_axis[items], self.raw[items], self.user[items], self.name[items], self.category[items]
+        return self.spectra[items], self.x_axis[items], self.raw[items], self.user[items], self.name[items], \
+            self.category[items], self.labels[items]
 
     def __len__(self):
         return self.n_elements
@@ -175,6 +176,26 @@ class Dataset:
         ds = Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name), np.array(category), np.array(labels))
         return ds
 
+    def get_by_indices(self, indices):
+        spectra = []
+        x_axis = []
+        raw = []
+        user = []
+        name = []
+        category = []
+        labels = []
+        for index in indices:
+            spectra.append(self.spectra[index])
+            x_axis.append(self.x_axis[index])
+            raw.append(self.raw[index])
+            user.append(self.user[index])
+            name.append(self.name[index])
+            category.append(self.category[index])
+            labels.append(self.labels[index])
+        ds = Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name),
+                     np.array(category), np.array(labels))
+        return ds
+
     def change_category_name(self, dictionary):
         """
         Change the name of the category in string form based on dictionary.
@@ -227,8 +248,7 @@ class Dataset:
         else:
             y_train = self.labels
             groups = self.user
-            x_shuffled, y_shuffled, groups_shuffled = shuffle(x_train, y_train, groups, random_state=0)
-            folds = list(GroupKFold(n_splits=k).split(x_shuffled, y_shuffled, groups=groups_shuffled))
+            folds = list(GroupKFold(n_splits=k).split(x_train, y_train, groups=groups))
             return folds
 
     def leave_one_patient_cv(self):

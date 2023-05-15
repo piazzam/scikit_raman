@@ -106,17 +106,13 @@ class Evaluator:
             Return the confusion matrix and the reports.
         """
         total_names_list = self.results['total_prediction']['names_list']
-        i = 0
-        k = 0
         for el in np.unique(total_names_list):
             labels = []
             prediction = []
-            for j in range(i, len(total_names_list)):
+            for j in range(0, len(total_names_list)):
                 if el == total_names_list[j]:
                     labels.append(self.results['total_prediction']['label_list'][j])
                     prediction.append(self.results['total_prediction']['pred_list'][j])
-                    k = j
-            i = k
             cm_model = confusion_matrix(prediction, labels, labels = self.classes)
             report_model = classification_report(prediction, labels, output_dict=True, labels=self.classes)
             df_cm_model = pd.DataFrame(cm_model, index=self.classes, columns=self.classes)
