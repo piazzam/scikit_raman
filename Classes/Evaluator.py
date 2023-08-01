@@ -231,10 +231,49 @@ class Evaluator:
         if save:
             os.makedirs(os.path.dirname(folder_path + "/accuracy/"), exist_ok=True)
             plt.savefig(folder_path+"/accuracy/" + str(patient_name) + ".png")
+
+    def plot_history_binary(self, network_history, patient_name, folder_path = "results/training" , save = True, show = True):
+        x_plot = list(range(1,len(network_history.history["loss"])+1))
+        plt.figure()
+        plt.xlabel('Epochs')
+        plt.ylabel('Loss')
+        plt.plot(x_plot, network_history.history['loss'])
+        plt.plot(x_plot, network_history.history['val_loss'])
+        plt.legend(['Training', 'Validation'])
+
+        if show:
+            plt.show()
+        if save:
+            os.makedirs(os.path.dirname(folder_path+"/loss/"), exist_ok=True)
+            plt.savefig(folder_path+"/loss/" + str(patient_name) + ".png")
+
+        plt.figure()
+        plt.xlabel('Epochs')
+        plt.ylabel('Accuracy')
+        plt.plot(x_plot, network_history.history['accuracy'])
+        plt.plot(x_plot, network_history.history['val_accuracy'])
+        plt.legend(['Training', 'Validation'], loc='lower right')
+        if show:
+            plt.show()
+        if save:
+            os.makedirs(os.path.dirname(folder_path + "/accuracy/"), exist_ok=True)
+            plt.savefig(folder_path+"/accuracy/" + str(patient_name) + ".png")
     def result_training_history(self, folder_path = "results/training", save = True, show = True):
         patient_names = self.results['history']['patients']
         histories = self.results['history']['histories']
         if save:
             os.makedirs(os.path.dirname(folder_path), exist_ok=True)
+        i = 0
         for history, patient_name in zip(histories, patient_names):
-            self.plot_history(history, patient_name, folder_path, save, show)
+            self.plot_history(history, i, folder_path, save, show)
+            i += 1
+
+    def result_training_history_binary(self, folder_path = "results/training", save = True, show = True):
+        patient_names = self.results['history']['patients']
+        histories = self.results['history']['histories']
+        if save:
+            os.makedirs(os.path.dirname(folder_path), exist_ok=True)
+        i = 0
+        for history, patient_name in zip(histories, patient_names):
+            self.plot_history_binary(history, i, folder_path, save, show)
+            i += 1

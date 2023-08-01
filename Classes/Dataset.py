@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import GroupKFold, LeaveOneGroupOut
+from sklearn.model_selection import GroupKFold, LeaveOneGroupOut, StratifiedGroupKFold
 import pickle
 from sklearn.utils import shuffle
 
@@ -249,6 +249,23 @@ class Dataset:
             y_train = self.labels
             groups = self.user
             folds = list(GroupKFold(n_splits=k).split(x_train, y_train, groups=groups))
+            return folds
+
+    def stratified_k_fold(self, k, random_state=42):
+        """
+        Implements the k-fold strategies. It preserves the patients.
+        :param k: int
+            Number of the fold
+        :return: list
+            Different folds for the different cv cycle.
+        """
+        x_train = self.spectra
+        if not hasattr(self, 'labels'):
+            raise Exception("This dataset doesn't have labels")
+        else:
+            y_train = self.labels
+            groups = self.user
+            folds = list(StratifiedGroupKFold(n_splits=k).split(x_train, y_train, groups=groups, random_state=random_state))
             return folds
 
     def leave_one_patient_cv(self):
