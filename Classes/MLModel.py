@@ -21,7 +21,7 @@ class MLModel:
     def __init__(self, model):
         self.model = model
 
-    def train_model_cv(self, dataset, k = 10, fold_level = True, get_patient_prediction = True):
+    def train_model_cv(self, dataset, k = 10, fold_level = True, get_patient_prediction = True, check_users_separated=True):
         """
         Train a model with k-fold cross validation. Print the confusion matrix and the performances
         at every fold and after all folds.
@@ -44,12 +44,17 @@ class MLModel:
         fold_label_list = []
         fold_names_list = []
         names_list = []
+        total_users = np.unique(dataset.user)
         for j, (train_idx, test_idx) in enumerate(folds):
             trained_model = copy.deepcopy(self.model)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
-            names_train_cv = dataset.user[train_idx]
+            users_train = np.unique(dataset.user[train_idx])
+            user_test = np.unique(dataset.user[test_idx])
+            if check_users_separated:
+                if len(users_train) + len(user_test) > len(total_users):
+                    raise Exception("Mixed train and test")
             y_test_cv = dataset.labels[test_idx]
             names_test_cv = dataset.user[test_idx]
             names_list.append(np.unique(names_test_cv))

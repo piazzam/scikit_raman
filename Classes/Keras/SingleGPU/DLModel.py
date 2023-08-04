@@ -283,7 +283,7 @@ class DLModelKeras:
                        data_augmentation = False, f_name = 'emsc', f_params = None, save_model = False, model_path = "model_saved/model/",
                        save_weights = False, weights_path = "model_saved/weights/", random_state = 42, log_to_wandb = False,
                                           wandb_project="project_one", wandbconfig = {}, wandbcallbacks = [],
-                                          reinit=True):
+                                          reinit=True, check_users_separated=True):
         """
         Train the model with K-Fold Cross Validation.
         :param dataset: scikit_raman.Dataset
@@ -321,6 +321,7 @@ class DLModelKeras:
         fold_names_list = []
         histories = []
         names_list = []
+        total_users = np.unique(dataset.user)
         for j, (train_idx, test_idx) in enumerate(folds):
             if log_to_wandb:
                 print("log_to_wandb")
@@ -355,6 +356,11 @@ class DLModelKeras:
             y_train_cv = dataset.labels[train_idx]
             y_test_cv = dataset.labels[test_idx]
             names_test_cv = dataset.user[test_idx]
+            users_train = np.unique(dataset.user[train_idx])
+            user_test = np.unique(dataset.user[test_idx])
+            if check_users_separated:
+                if len(users_train) + len(user_test) > len(total_users):
+                    raise Exception("Mixed train and test")
             X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv, test_size=.1,
                                                                     random_state = random_state,
                                                                     stratify=y_train_cv)
