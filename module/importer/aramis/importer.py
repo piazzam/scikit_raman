@@ -4,6 +4,33 @@ import re
 from tqdm import tqdm
 import numpy as np
 
+
+def importer_farmaci(folder_path, cat_type = True):
+    imported_data = pd.DataFrame()
+    for filename in tqdm(os.listdir(folder_path)):
+        user = filename.split('.')[0]
+        if cat_type:
+            cat = filename.split('.')[0].split('_')[0]
+        else:
+            cat = filename.split('.')[0].split('_')[1].replace(' ', '_')
+        patient_spectras = pd.DataFrame(columns=['user', 'name', 'raw', 'spectra', 'category', 'x-axis'])
+        data = open(folder_path + '/' + filename)
+        rows = [line.split('\t') for line in data]
+        raw = True
+        for j in range(len(rows) - 1):
+            if (rows[0][1] == ''):
+                raman_shift = [float(el) for el in rows[0][2:]]
+                line = [float(el) for el in rows[j + 1][2:]]
+            else:
+                raman_shift = [float(el) for el in rows[0][1:]]
+                line = [float(el) for el in rows[j + 1][1:]]
+            patient_spectras = patient_spectras.append(
+                {'user': user, 'name': 'Raw', 'raw': raw, 'spectra': line, 'category': cat, 'x-axis': raman_shift},
+                ignore_index=True)
+        imported_data = imported_data.append(patient_spectras)
+    imported_data = imported_data.reset_index(drop=True)
+    return imported_data
+
 def importer(folder_path):
     """
     Import all the patient spectras contained in files in a folder. 

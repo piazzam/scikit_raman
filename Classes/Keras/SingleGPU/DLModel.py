@@ -1,3 +1,4 @@
+import copy
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization, InputLayer, Conv1D, MaxPooling1D, \
@@ -5,13 +6,14 @@ from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization,
 from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.models import Sequential
 from keras.models import clone_model
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers.legacy import Adam
 from tensorflow.keras.utils import to_categorical
 from scikit_raman.Classes.DataAugmenter import *
 from scikit_raman.Classes.Keras.DataAugmentation.EMSC import *
 from scikit_raman.Classes.Keras.DataAugmentation.Shift import *
-from copy import deepcopy
 from tensorflow.keras.models import load_model
+import wandb
+from wandb.keras import WandbMetricsLogger
 
 
 class DLModelKeras:
@@ -37,7 +39,7 @@ class DLModelKeras:
         metrics for the evaluation of the model.
     """
 
-    def __init__(self, model, batch_size, epochs, callbacks, optimizer, loss, metrics):
+    def __init__(self, model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate):
         self.model = model
         self.batch_size = batch_size
         self.epochs = epochs
@@ -45,6 +47,7 @@ class DLModelKeras:
         self.optimizer = optimizer
         self.loss = loss
         self.metrics = metrics
+        self.learning_rate = learning_rate
 
     @classmethod
     def load_model_benchmark(dlm,  n_dims, number_classes = 3, data_augmentation = False, factor = 0.5):
@@ -61,8 +64,8 @@ class DLModelKeras:
         """
         loss = 'categorical_crossentropy'
         metrics = ['categorical_accuracy']
-
-        optimizer = Adam(learning_rate = 0.00020441990333108206)
+        learning_rate = 0.00020441990333108206
+        optimizer = Adam(learning_rate = learning_rate)
 
         # ----- init model
         model = Sequential()
@@ -116,10 +119,10 @@ class DLModelKeras:
         model.add(Dense(units=number_classes, activation='softmax'))
 
         # ----- Compile
-        if data_augmentation:
-            model.compile(optimizer=optimizer, loss=loss, metrics=metrics, run_eagerly=True)
-        else:
-            model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+        #if data_augmentation:
+        #    model.compile(optimizer=optimizer, loss=loss, metrics=metrics, run_eagerly=True)
+        #else:
+        #    model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
         epochs = 273
         batch_size = 338
         es = EarlyStopping(monitor="val_categorical_accuracy", patience=100, verbose=1,
@@ -127,10 +130,10 @@ class DLModelKeras:
         lr = ReduceLROnPlateau(monitor="val_categorical_accuracy", factor=0.5, verbose=4, patience=80,
                                                cooldown=10)
         callbacks = [es, lr]
-        return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
+        return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
 
     @classmethod
-    def load_model(dlm, filename = "model_saved/model", batch_size = 256, epochs = 200, callbacks = [], optimizer = Adam(learning_rate=0.00020441990333108206), loss = 'categorical_crossentropy', metrics = ['categorical_accuracy']):
+    def load_model(dlm, filename = "model_saved/model", batch_size = 256, epochs = 200, callbacks = [], optimizer = Adam(learning_rate=0.00020441990333108206), loss = 'categorical_crossentropy', metrics = ['categorical_accuracy'], learning_rate=0.00020441990333108206):
         """
         Load a model from classical storage keras.
         :param filename: str
@@ -151,14 +154,16 @@ class DLModelKeras:
             A model object representing the json model.
         """
         model = load_model(filename)
-        return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics)
+        return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
 
     def load_weights(self, filename = "model_saved/weights"):
         self.model.load_weights(filename, compile=False)
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True,
                                           return_history = True, test_size = 0.1, data_augmentation = False, f_name = 'emsc',
                                           f_params = None, save_model = False, model_path = "model_saved/model/", save_weights = False,
-                                          weights_path = "model_saved/weights/", random_state = 42):
+                                          weights_path = "model_saved/weights/", random_state = 42, log_to_wandb = False,
+                                          wandb_project="project_one", wandbconfig = {}, wandbcallbacks = [],
+                                          reinit=True):
         """
         Train the model with Leave One Patient Out Cross Validation
         :param dataset: scikit_raman.Dataset
@@ -196,12 +201,34 @@ class DLModelKeras:
         pat_names_list = []
         histories = []
         names_list = []
-        #optimizer = deepcopy(self.optimizer)
         for j, (train_idx, test_idx) in enumerate(folds):
             names_test_cv = dataset.user[test_idx]
+            if log_to_wandb:
+                if wandbconfig == {}:
+                    wandbconfig = {
+                               'reinit': reinit,
+                               'epochs': self.epochs,
+                               'batch_size': self.batch_size,
+                               'learning_rate': self.learning_rate}
+                else:
+                    wandbconfig_base = {
+                        'reinit': reinit,
+                        'epochs': self.epochs,
+                        'batch_size': self.batch_size,
+                        'lr': self.learning_rate}
+                    wandbconfig.update(wandbconfig_base)
+                wandb.init(project=wandb_project,
+                           name=wandb_project + str(np.unique(names_test_cv)[0]),
+                           config=wandbconfig)
+                if wandbcallbacks == []:
+                    self.callbacks.extend([WandbMetricsLogger()])
+                else:
+                    try:
+                        self.callbacks.extend(wandbcallbacks)
+                    except TypeError as exc:
+                        raise TypeError("wandbcallbacks must be a list")
             trained_model = clone_model(self.model)
-            #optimizer = deepcopy(self.optimizer)
-            optimizer = Adam(learning_rate=0.00020441990333108206)
+            optimizer = copy.deepcopy(self.optimizer)
             trained_model.compile(optimizer=optimizer, loss = self.loss, metrics = self.metrics)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
@@ -254,7 +281,9 @@ class DLModelKeras:
 
     def train_model_cv(self, dataset, number_classes, k = 10, fold_level = True, get_patient_prediction = True, return_history = True,
                        data_augmentation = False, f_name = 'emsc', f_params = None, save_model = False, model_path = "model_saved/model/",
-                       save_weights = False, weights_path = "model_saved/weights/", random_state = 42):
+                       save_weights = False, weights_path = "model_saved/weights/", random_state = 42, log_to_wandb = False,
+                                          wandb_project="project_one", wandbconfig = {}, wandbcallbacks = [],
+                                          reinit=True, check_users_separated=True):
         """
         Train the model with K-Fold Cross Validation.
         :param dataset: scikit_raman.Dataset
@@ -292,16 +321,46 @@ class DLModelKeras:
         fold_names_list = []
         histories = []
         names_list = []
+        total_users = np.unique(dataset.user)
         for j, (train_idx, test_idx) in enumerate(folds):
+            if log_to_wandb:
+                print("log_to_wandb")
+                if wandbconfig == {}:
+                    wandbconfig = {
+                               'reinit': reinit,
+                               'epochs': self.epochs,
+                               'batch_size': self.batch_size,
+                               'learning_rate': self.learning_rate}
+                else:
+                    wandbconfig_base = {
+                        'reinit': reinit,
+                        'epochs': self.epochs,
+                        'batch_size': self.batch_size,
+                        'lr': self.learning_rate}
+                    wandbconfig.update(wandbconfig_base)
+                wandb.init(project=wandb_project,
+                           name=wandb_project + str(j),
+                           config=wandbconfig)
+                if wandbcallbacks == []:
+                    self.callbacks.extend([WandbMetricsLogger()])
+                else:
+                    try:
+                        self.callbacks.extend(wandbcallbacks)
+                    except TypeError as exc:
+                        raise TypeError("wandbcallbacks must be a list")
             trained_model = clone_model(self.model)
-            optimizer = Adam(learning_rate=0.00020441990333108206)
-            #optimizer = deepcopy(self.optimizer)
+            optimizer = copy.deepcopy(self.optimizer)
             trained_model.compile(optimizer=optimizer, loss=self.loss, metrics=self.metrics)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
             y_test_cv = dataset.labels[test_idx]
             names_test_cv = dataset.user[test_idx]
+            users_train = np.unique(dataset.user[train_idx])
+            user_test = np.unique(dataset.user[test_idx])
+            if check_users_separated:
+                if len(users_train) + len(user_test) > len(total_users):
+                    raise Exception("Mixed train and test")
             X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv, test_size=.1,
                                                                     random_state = random_state,
                                                                     stratify=y_train_cv)

@@ -82,10 +82,9 @@ class PlottingSpectra:
         plt.ylabel("Intensity", fontdict={'fontsize': 15})
         plt.rcParams.update({'font.size': 15})
         ax.plot(self.dataset.x_axis[0], np.transpose(self.dataset.spectra), linewidth=2.0)
-        plt.show()
-
         if save == True:
             plt.savefig(filename)
+        plt.show()
 
     def plot_category_name(self, category_name, save = False, filename = "plot.png",):
         """
@@ -136,7 +135,7 @@ class PlottingSpectra:
             plt.savefig(filename)
 
 
-    def plot_mean_category(self, category_label, label = "", color_map_value = 0,save=False, filename = "plot.png"):
+    def plot_mean_error_category(self, category_label, label = "", color_map_value = 0,save=False, filename = "plot.png"):
         if label == "":
             label = category_label
         cat_patient = self.dataset.search_by_category_name(category_label)
@@ -160,3 +159,51 @@ class PlottingSpectra:
         plt.show()
         if save == True:
             plt.savefig(filename)
+
+    def plot_mean_error_different_categories(self, color_map_value = 0, save=False, filename = "plot.png"):
+        unique_cat = np.unique(self.dataset.category)
+        plt.rcParams["figure.figsize"] = (20, 10)
+        plt.rcParams['legend.fontsize'] = 20
+        plt.rcParams['font.size'] = 20
+        cmap = plt.get_cmap("tab20")
+        x_als = np.array(self.dataset.x_axis[0])
+        for cat in unique_cat:
+            cat_ds = self.dataset.search_by_category_name(cat)
+            cat_array = []
+            for el in cat_ds.spectra:
+                cat_array.append(np.array(el))
+            df = pd.DataFrame(cat_array)
+            mean_als = df.mean()
+            std_als = df.std()
+            plt.errorbar(x_als,
+                     mean_als.values,
+                     yerr=std_als.values,
+                     ecolor=cmap(2 * (color_map_value + 1) - 1),
+                     color=cmap(2 * color_map_value),
+                     label=cat)
+            color_map_value += 1
+        plt.legend()
+        plt.show()
+        if save == True:
+            plt.savefig(filename)
+
+    def plot_mean_different_categories(self, save=True, filename="plot.png", show_legend=True):
+        unique_cat = np.unique(self.dataset.category)
+        lines = []
+        x = self.dataset.x_axis[0]
+        plt.xlabel("Raman shift (cm$^{-1}$)", fontdict={'fontsize': 15})
+        plt.ylabel("Intensity", fontdict={'fontsize': 15})
+        plt.rcParams.update({'font.size': 15})
+        for cat in unique_cat:
+            ds_cat = self.dataset.search_by_category_name(cat)
+            average_line = np.mean(ds_cat.spectra, axis=0)
+            lines.append(average_line)
+        for i in range(len(lines)):
+            line = lines[i]
+            label = unique_cat[i]
+            plt.plot(x, np.transpose(line), label=label)
+        if show_legend:
+            plt.legend()
+        if save == True:
+            plt.savefig(filename)
+        plt.show()
