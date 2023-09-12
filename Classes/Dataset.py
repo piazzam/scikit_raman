@@ -28,7 +28,8 @@ class Dataset:
         list of labels in numeric form.
     """
 
-    def __init__(self, spectra, x_axis, raw, user, name, category, labels, label_dictionary = {'cov':0, 'covNeg': 1, 'ctrl':2}):
+    def __init__(self, spectra, x_axis, raw, user, name, category, labels,
+                 assumed_drugs = [], label_dictionary = {'cov':0, 'covNeg': 1, 'ctrl':2}):
         self.spectra = spectra
         self.spectra_to_numpy()
         self.x_axis = x_axis
@@ -37,6 +38,7 @@ class Dataset:
         self.user = user
         self.name = name
         self.category = category
+        self.assumed_drugs = np.array(assumed_drugs)
         self.n_elements = len(spectra)
         #self.label_dictionary = label_dictionary
         if labels.size != 0:
