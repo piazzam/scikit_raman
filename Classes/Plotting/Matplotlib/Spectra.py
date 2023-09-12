@@ -182,6 +182,7 @@ class PlottingSpectra:
                      color=cmap(2 * color_map_value),
                      label=cat)
             color_map_value += 1
+        plt.legend()
         plt.show()
         if save == True:
             plt.savefig(filename)

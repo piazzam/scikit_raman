@@ -94,7 +94,16 @@ class Dataset:
             labels = df['label'].to_numpy()
         else:
             labels = np.empty(shape = (0,0))
-        return ds(spectra, x_axis, raw, user, name, category, labels, label_dictionary)
+        return ds(spectra, x_axis, raw, user, name, category, labels, [],label_dictionary)
+
+    def load_drugs(self, drugs):
+        assumed_drugs = []
+        for u in self.user:
+            this_user = drugs[drugs['Codice Labion'] == u]
+            assumed_drug = [this_user['farmaco1'], this_user['farmaco2'], this_user['farmaco3'], this_user['farmaco4'],
+                            this_user['farmaco5'], this_user['farmaco6']]
+            assumed_drugs.append(assumed_drug)
+        self.assumed_drugs = np.array(assumed_drugs)
 
     def create_label(self, label_dictionary):
         """
