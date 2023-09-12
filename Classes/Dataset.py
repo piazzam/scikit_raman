@@ -49,7 +49,7 @@ class Dataset:
 
     def __getitem__(self, items):
         return self.spectra[items], self.x_axis[items], self.raw[items], self.user[items], self.name[items], \
-            self.category[items], self.labels[items]
+            self.category[items], self.labels[items], self.assumed_drugs[items]
 
     def __len__(self):
         return self.n_elements
