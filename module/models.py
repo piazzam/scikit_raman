@@ -281,7 +281,7 @@ def create_model_simple_net(n_dims, n_classes):
     opt = Adam(learning_rate=learning_rate)
     batch_size = 256
     epochs = 100
-    metrics = ['binary_accuracy']
+    metrics = ['accuracy']
     loss = 'binary_crossentropy'
     model.compile(optimizer=opt, loss=loss, metrics=metrics)
 
