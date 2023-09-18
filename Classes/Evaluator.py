@@ -1,10 +1,12 @@
-from sklearn.metrics import classification_report
+from sklearn.metrics import classification_report, precision_recall_fscore_support
 from sklearn.metrics import confusion_matrix
 import pandas as pd
 import seaborn as sn
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+from sklearn.metrics import RocCurveDisplay
+
 
 
 class Evaluator:
@@ -42,6 +44,12 @@ class Evaluator:
         report_patient_level = classification_report(self.results['patient_level']['pred_list'],
                                                      self.results['patient_level']['label_list'], output_dict=True,
                                                      labels=self.classes)
+        specificity = self.calculate_specificity_personalized(self.results['patient_level']['pred_list'],
+                                                             self.results['patient_level']['label_list'])
+        for k in specificity.keys():
+            report_patient_level[k]['specificity'] = specificity[k]
+        report_patient_level['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
+        report_patient_level['weighted avg']['specificity'] = self.calculate_weighted_avg(specificity)
         df_patient_level = pd.DataFrame(cm_patient_level, index=self.classes, columns=self.classes)
         df_report = pd.DataFrame(report_patient_level)
         plt.figure(figsize=(10, 7))
@@ -59,6 +67,46 @@ class Evaluator:
             print(cm_patient_level)
         return cm_patient_level, report_patient_level
 
+    def calculate_specificty(self):
+        specificity = {}
+        for l in self.classes:
+            prec, recall, _, _ = precision_recall_fscore_support(
+                np.array(self.results['total_prediction']['label_list']) == l,
+                np.array(self.results['total_prediction']['pred_list']) == l,
+                pos_label=True, average=None)
+            specificity[str(l)] = 1-recall[0]
+        return specificity
+
+    def calculate_specificity_personalized(self, y_pred, y_true):
+        specificity = {}
+        for l in self.classes:
+            prec, recall, _, _ = precision_recall_fscore_support(
+                np.array(y_true) == l,
+                np.array(y_pred) == l,
+                pos_label=True, average=None)
+            specificity[str(l)] = 1 - recall[0]
+        return specificity
+
+    def calculate_macro_avg(self, d):
+        l = d.values()
+        return sum(l) / len(l)
+
+    def calculate_weighted_avg(self, d):
+        weights = {}
+        count = {}
+        for el in self.classes:
+            weights[str(el)] = 0
+            count[str(el)] = 0
+        total_labels = self.results['total_prediction']['label_list']
+        total_labels_number = len(total_labels)
+        for el in total_labels:
+            count[str(el)] += 1
+        for el in weights.keys():
+            weights[el] = count[el] / total_labels_number
+        for el in d.keys():
+            d[el] = weights[el] * d[el]
+        l = d.values()
+        return sum(l)# / len(l)
     def total_result(self, show = True, save = True, folder_path = "results/"):
         """
         Creates the total results.
@@ -76,6 +124,11 @@ class Evaluator:
         report_total = classification_report(self.results['total_prediction']['pred_list'],
                                                      self.results['total_prediction']['label_list'], output_dict=True,
                                                      labels=self.classes)
+        specificity = self.calculate_specificty()
+        for k in specificity.keys():
+            report_total[k]['specificity'] = specificity[k]
+        report_total['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
+        report_total['weighted avg']['specificity'] = self.calculate_weighted_avg(specificity)
         df_total = pd.DataFrame(cm_total, index=self.classes, columns=self.classes)
         df_report = pd.DataFrame(report_total)
         plt.figure(figsize=(10, 7))
@@ -115,6 +168,11 @@ class Evaluator:
                     prediction.append(self.results['total_prediction']['pred_list'][j])
             cm_model = confusion_matrix(prediction, labels, labels = self.classes)
             report_model = classification_report(prediction, labels, output_dict=True, labels=self.classes)
+            specificity = self.calculate_specificity_personalized(prediction, labels)
+            for k in specificity.keys():
+                report_model[k]['specificity'] = specificity[k]
+            report_model['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
+            report_model['weighted avg']['specificity'] = self.calculate_weighted_avg(specificity)
             df_cm_model = pd.DataFrame(cm_model, index=self.classes, columns=self.classes)
             df_report_model = pd.DataFrame(report_model)
             plt.figure(figsize=(10, 7))
@@ -141,6 +199,12 @@ class Evaluator:
             df = pd.DataFrame.from_dict(self.results[el])
             df.to_csv(folder_path+str(el)+'.csv')
 
+    def save_prediction_pkl(self, folder_path = "results/"):
+        os.makedirs(os.path.dirname(folder_path), exist_ok=True)
+        for el in self.results:
+            df = pd.DataFrame.from_dict(self.results[el])
+            df.to_pickle(folder_path+str(el)+'.pkl')
+
     def total_result_patient_k_fold(self, show=True, save=True, folder_path="results"):
         predicted = []
         labels = []
@@ -154,6 +218,11 @@ class Evaluator:
         report_patient_level = classification_report(predicted,
                                                           labels, output_dict=True,
                                                           labels=self.classes)
+        specificity = self.calculate_specificity_personalized(predicted, labels)
+        for k in specificity.keys():
+            report_patient_level[k]['specificity'] = specificity[k]
+        report_patient_level['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
+        report_patient_level['weighted avg']['specificity'] = self.calculate_weighted_avg(specificity)
         df_patient_level = pd.DataFrame(cm_patient_level, index=self.classes, columns=self.classes)
         df_report = pd.DataFrame(report_patient_level)
         plt.figure(figsize=(10, 7))
@@ -170,40 +239,56 @@ class Evaluator:
                                         labels=self.classes))
             print(cm_patient_level)
         return cm_patient_level, report_patient_level
-    # def total_result_patient(self, show = True, save = True, folder_path = "results/"):
-    #     """
-    #     Creates the total results at patient level.
-    #     :param show: bool
-    #         If true the results are shown.
-    #     :param save: bool
-    #         If true the results are save.
-    #     :param folder_path: str
-    #         If save parameter is true folder path on which save the results.
-    #     :return: list
-    #         Returns the confusion matrix and the report.
-    #     """
-    #     cm_patient_level = confusion_matrix(self.results['patient_level']['pred_list'],
-    #                                         self.results['patient_level']['label_list'],
-    #                                         labels = self.classes)
-    #     report_patient_level = classification_report(self.results['patient_level']['pred_list'],
-    #                                                  self.results['patient_level']['label_list'], output_dict=True,
-    #                                                  labels=self.classes)
-    #     df_patient_level = pd.DataFrame(cm_patient_level, index=self.classes, columns=self.classes)
-    #     df_report = pd.DataFrame(report_patient_level)
-    #     plt.figure(figsize=(10, 7))
-    #     cm_plot = sn.heatmap(df_patient_level, annot=True, fmt='d', annot_kws={"fontsize":24})
-    #     if save:
-    #         os.makedirs(os.path.dirname(folder_path), exist_ok=True)
-    #         df_patient_level.to_csv(folder_path + "cm_total_patient.csv")
-    #         df_report.to_csv(folder_path + "report_total_patient.csv")
-    #         cm_plot.figure.savefig(folder_path + "cm_total_patient.png")
-    #     if show:
-    #         cm_plot.figure.show()
-    #         print(classification_report(self.results['patient_level']['pred_list'],
-    #                                                  self.results['patient_level']['label_list'], output_dict=False,
-    #                                                  labels=self.classes))
-    #         print(cm_patient_level)
-    #     return cm_patient_level, report_patient_level
+
+    def extract_patient_level_from_total(self):
+        total_names_list = self.results['total_prediction']['names_list']
+        labels_patient_level = []
+        predictions_patient_level = []
+        for el in np.unique(total_names_list):
+            labels = []
+            prediction = []
+            for j in range(0, len(total_names_list)):
+                if el == total_names_list[j]:
+                    labels.append(self.results['total_prediction']['label_list'][j])
+                    prediction.append(self.results['total_prediction']['pred_list'][j])
+            labels_patient_level.append(max(set(labels), key=labels.count))
+            predictions_patient_level.append(max(set(prediction), key=prediction.count))
+        return labels_patient_level, predictions_patient_level
+
+    def results_patient_level_from_total(self, show=True, save=True, folder_path="results"):
+        total_names_list = self.results['total_prediction']['names_list']
+        labels_patient_level = []
+        predictions_patient_level = []
+        for el in np.unique(total_names_list):
+            labels = []
+            prediction = []
+            for j in range(0, len(total_names_list)):
+                if el == total_names_list[j]:
+                    labels.append(self.results['total_prediction']['label_list'][j])
+                    prediction.append(self.results['total_prediction']['pred_list'][j])
+            labels_patient_level.append(max(set(labels), key=labels.count))
+            predictions_patient_level.append(max(set(prediction), key=prediction.count))
+        cm_model = confusion_matrix(predictions_patient_level, labels_patient_level, labels=self.classes)
+        report_model = classification_report(predictions_patient_level, labels_patient_level, output_dict=True, labels=self.classes)
+        specificity = self.calculate_specificity_personalized(predictions_patient_level, labels_patient_level,)
+        for k in specificity.keys():
+            report_model[k]['specificity'] = specificity[k]
+        report_model['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
+        report_model['weighted avg']['specificity'] = self.calculate_weighted_avg(specificity)
+        df_cm_model = pd.DataFrame(cm_model, index=self.classes, columns=self.classes)
+        df_report_model = pd.DataFrame(report_model)
+        plt.figure(figsize=(10, 7))
+        cm_plot = sn.heatmap(df_cm_model, annot=True, fmt='d', annot_kws={"fontsize": 24})
+        if save:
+            os.makedirs(os.path.dirname(folder_path), exist_ok=True)
+            df_cm_model.to_csv(folder_path + str(el) + ".csv")
+            cm_plot.figure.savefig(folder_path + str(el) + ".png")
+            df_report_model.to_csv(folder_path + str(el) + ".csv")
+        if show:
+            print("Result patient level")
+            print(cm_model)
+            print(classification_report(predictions_patient_level, labels_patient_level, output_dict=False, labels=self.classes))
+            cm_plot.figure.show()
 
     def plot_history(self, network_history, patient_name, folder_path = "results/training" , save = True, show = True):
         x_plot = list(range(1,len(network_history.history["loss"])+1))
