@@ -280,9 +280,9 @@ def create_model_simple_net(n_dims, n_classes):
     learning_rate = 0.001
     opt = Adam(learning_rate=learning_rate)
     batch_size = 256
-    epochs = 100
-    metrics = ['accuracy']
-    loss = 'binary_crossentropy'
+    epochs = 300
+    metrics = ['categorical_accuracy']
+    loss = 'categorical_crossentropy'
     model.compile(optimizer=opt, loss=loss, metrics=metrics)
 
     keras_model = DLModelKeras(model, batch_size, epochs, callbacks, opt, loss, metrics, learning_rate)
