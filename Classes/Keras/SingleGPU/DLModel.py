@@ -156,6 +156,8 @@ class DLModelKeras:
         model = load_model(filename)
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
 
+    def compile_model(self):
+        self.model.compile(optimizer=self.optimizer, loss=self.loss, metrics=self.metrics)
     def load_weights(self, filename = "model_saved/weights"):
         self.model.load_weights(filename, compile=False)
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True,

@@ -48,8 +48,12 @@ class Dataset:
         self.n_dims = self.spectra.shape[1]
 
     def __getitem__(self, items):
-        return self.spectra[items], self.x_axis[items], self.raw[items], self.user[items], self.name[items], \
-            self.category[items], self.labels[items], self.assumed_drugs[items]
+        try:
+            return self.spectra[items], self.x_axis[items], self.raw[items], self.user[items], self.name[items], \
+                self.category[items], self.labels[items], self.assumed_drugs[items]
+        except IndexError:
+            return self.spectra[items], self.x_axis[items], self.raw[items], self.user[items], self.name[items], \
+                self.category[items], self.labels[items]
 
     def __len__(self):
         return self.n_elements
