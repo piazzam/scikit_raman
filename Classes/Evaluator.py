@@ -5,7 +5,8 @@ import seaborn as sn
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from sklearn.metrics import RocCurveDisplay
+from sklearn.metrics import RocCurveDisplay, roc_curve, roc_auc_score
+from tensorflow.keras.utils import to_categorical
 
 
 
@@ -22,9 +23,10 @@ class Evaluator:
             list of the classes.
         """
 
-    def __init__(self, results, classes):
+    def __init__(self, results, classes, target_names = {0:'COV+', 1:'COV-', 2:'CTRL'}):
         self.results = results
         self.classes = classes
+        self.target_names = target_names
 
     def total_result_patient(self, show = True, save = True, folder_path = "results/"):
         """
@@ -46,6 +48,10 @@ class Evaluator:
                                                      labels=self.classes)
         specificity = self.calculate_specificity_personalized(self.results['patient_level']['pred_list'],
                                                              self.results['patient_level']['label_list'])
+        if len(self.classes) == 2:
+            self.create_roc_curve_plot_binary(self.results['patient_level']['pred_list'],
+                                                    self.results['patient_level']['label_list'],
+                                                    show=show, save=save, filename=folder_path + "roc_curve_total_patient.png")
         for k in specificity.keys():
             report_patient_level[k]['specificity'] = specificity[k]
         report_patient_level['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
@@ -124,6 +130,10 @@ class Evaluator:
         report_total = classification_report(self.results['total_prediction']['pred_list'],
                                                      self.results['total_prediction']['label_list'], output_dict=True,
                                                      labels=self.classes)
+        if len(self.classes) == 2:
+            self.create_roc_curve_plot_binary(self.results['total_prediction']['pred_list'],
+                                                    self.results['total_prediction']['label_list'],
+                                                    show=show, save=save, filename=folder_path + "roc_curve_total.png")
         specificity = self.calculate_specificty()
         for k in specificity.keys():
             report_total[k]['specificity'] = specificity[k]
@@ -169,6 +179,10 @@ class Evaluator:
             cm_model = confusion_matrix(prediction, labels, labels = self.classes)
             report_model = classification_report(prediction, labels, output_dict=True, labels=self.classes)
             specificity = self.calculate_specificity_personalized(prediction, labels)
+            if len(self.classes):
+                self.create_roc_curve_plot_binary(prediction,
+                                            labels,
+                                            show=show, save=save, filename=folder_path + str(el) + '.png')
             for k in specificity.keys():
                 report_model[k]['specificity'] = specificity[k]
             report_model['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
@@ -219,6 +233,11 @@ class Evaluator:
                                                           labels, output_dict=True,
                                                           labels=self.classes)
         specificity = self.calculate_specificity_personalized(predicted, labels)
+        if len(self.classes) == 2:
+            self.create_roc_curve_plot_binary(predicted,
+                                              labels,
+                                              show=show, save=save,
+                                              filename=folder_path + "roc_curve_total_patient.png")
         for k in specificity.keys():
             report_patient_level[k]['specificity'] = specificity[k]
         report_patient_level['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
@@ -271,6 +290,13 @@ class Evaluator:
         cm_model = confusion_matrix(predictions_patient_level, labels_patient_level, labels=self.classes)
         report_model = classification_report(predictions_patient_level, labels_patient_level, output_dict=True, labels=self.classes)
         specificity = self.calculate_specificity_personalized(predictions_patient_level, labels_patient_level,)
+        if len(self.classes) == 2:
+            self.create_roc_curve_plot_binary(predictions_patient_level,
+                                              labels_patient_level,
+                                              estimator_name='patient_classificator',
+                                              show=show, save=save,
+                                              filename=folder_path + str(el) + '.png'
+                                              )
         for k in specificity.keys():
             report_model[k]['specificity'] = specificity[k]
         report_model['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
@@ -362,3 +388,34 @@ class Evaluator:
         for history, patient_name in zip(histories, patient_names):
             self.plot_history_binary(history, i, folder_path, save, show)
             i += 1
+
+    def create_roc_curve_plot_binary(self, y_pred, y, filename = "results/roc_auc.png", save=True, show=True):
+        fpr, tpr, thresholds = roc_curve(y, y_pred)
+        roc_auc = roc_auc_score(y, y_pred)
+        plt.plot(fpr, tpr, label='ROC curve (area = %0.2f)' % roc_auc)
+        plt.plot([0, 1], [0, 1], 'k--', label='Random classifier')
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('ROC Curve')
+        plt.legend(loc="lower right")
+        if show:
+            plt.show()
+        if save:
+            plt.savefig(filename)
+
+    def create_roc_curve_plot_multiclass(self, y_pred, y, filename = "results/roc_auc.png", save=True, show=True):
+        y_pred_prob = to_categorical(
+            y_pred, num_classes=None, dtype='float32'
+        )
+        for i in range(len(self.classes)):
+            fpr, tpr, thresh = roc_curve(y, y_pred_prob[:, i], pos_label=i)
+            plt.plot(fpr, tpr, linestyle='--', label=self.target_names[i] + ' vs Rest')
+        plt.plot([0, 1], [0, 1], 'k--', label='Random classifier')
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('ROC Curve')
+        plt.legend(loc="lower right")
+        if show:
+            plt.show()
+        if save:
+            plt.savefig(filename)
