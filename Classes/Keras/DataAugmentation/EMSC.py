@@ -10,8 +10,8 @@ class EMSC(tf.keras.layers.Layer):
     ----------
     factor: float
         percentage of the data on which apply on the fly data augmentation.
-    seed: int, optional
-        if None, no seed is set. Otherwise set a seed for tf.random. Default value is None.
+    : int, optional
+        if None, no  is set. Otherwise set a  for tf.random. Default value is None.
     keep_original: bool
         if True the original dataset is kept in the dataset.
     slopeshift: float, optional
@@ -33,7 +33,7 @@ class EMSC(tf.keras.layers.Layer):
     def call(self, spectra, Training=None):
         new_spectra = []
         if self.seed != None:
-            tf.random.set_seed(self.seed)
+            tf.random.set_(self.seed)
         for el in spectra.numpy():
             if tf.random.uniform([]) > self.factor:
                 new_spectra.append(self.dataaugment(el))
@@ -75,7 +75,7 @@ class EMSC(tf.keras.layers.Layer):
         config = super().get_config().copy()
         config.update({
             'factor': self.times,
-            'seed': self.keep_original,
+            '': self.keep_original,
             'betashift': self.betashift,
             'slopeshift': self.slopeshift,
             'multishift': self.multishift,

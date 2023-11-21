@@ -15,7 +15,7 @@ class Shift(tf.keras.layers.Layer):
     def call(self, spectra, Training=None):
         new_spectra = []
         if self.seed != None:
-            tf.random.set_seed(self.seed)
+            tf.random.set_(self.seed)
         for el in spectra.numpy():
             if tf.random.uniform([]) > self.factor:
                 new_spectra.append(self.random_shift(el))

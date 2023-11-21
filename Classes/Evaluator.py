@@ -52,6 +52,11 @@ class Evaluator:
             self.create_roc_curve_plot_binary(self.results['patient_level']['pred_list'],
                                                     self.results['patient_level']['label_list'],
                                                     show=show, save=save, filename=folder_path + "roc_curve_total_patient.png")
+        else:
+            self.create_roc_curve_plot_multiclass(self.results['patient_level']['pred_list'],
+                                              self.results['patient_level']['label_list'],
+                                              show=show, save=save,
+                                              filename=folder_path + "roc_curve_total_patient.png")
         for k in specificity.keys():
             report_patient_level[k]['specificity'] = specificity[k]
         report_patient_level['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
@@ -71,6 +76,7 @@ class Evaluator:
                                                      self.results['patient_level']['label_list'], output_dict=False,
                                                      labels=self.classes))
             print(cm_patient_level)
+        cm_plot.figure.clear()
         return cm_patient_level, report_patient_level
 
     def calculate_specificty(self):
@@ -134,6 +140,10 @@ class Evaluator:
             self.create_roc_curve_plot_binary(self.results['total_prediction']['pred_list'],
                                                     self.results['total_prediction']['label_list'],
                                                     show=show, save=save, filename=folder_path + "roc_curve_total.png")
+        else:
+            self.create_roc_curve_plot_multiclass(self.results['total_prediction']['pred_list'],
+                                              self.results['total_prediction']['label_list'],
+                                              show=show, save=save, filename=folder_path + "roc_curve_total.png")
         specificity = self.calculate_specificty()
         for k in specificity.keys():
             report_total[k]['specificity'] = specificity[k]
@@ -154,6 +164,7 @@ class Evaluator:
                                         self.results['total_prediction']['label_list'], output_dict=False,
                                         labels=self.classes))
             print(cm_total)
+        cm_plot.figure.clear()
         return cm_total, report_total
 
     def results_every_patient(self, show = True, save = True, folder_path = "results/"):
@@ -179,10 +190,6 @@ class Evaluator:
             cm_model = confusion_matrix(prediction, labels, labels = self.classes)
             report_model = classification_report(prediction, labels, output_dict=True, labels=self.classes)
             specificity = self.calculate_specificity_personalized(prediction, labels)
-            if len(self.classes):
-                self.create_roc_curve_plot_binary(prediction,
-                                            labels,
-                                            show=show, save=save, filename=folder_path + str(el) + '.png')
             for k in specificity.keys():
                 report_model[k]['specificity'] = specificity[k]
             report_model['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
@@ -201,6 +208,7 @@ class Evaluator:
                 print(cm_model)
                 print(classification_report(prediction, labels, output_dict=False, labels=self.classes))
                 cm_plot.figure.show()
+            cm_plot.figure.clear()
 
     def save_prediction_csv(self, folder_path = "results/"):
         """
@@ -238,6 +246,11 @@ class Evaluator:
                                               labels,
                                               show=show, save=save,
                                               filename=folder_path + "roc_curve_total_patient.png")
+        else:
+            self.create_roc_curve_plot_binary(predicted,
+                                              labels,
+                                              show=show, save=save,
+                                              filename=folder_path + "roc_curve_total_patient.png")
         for k in specificity.keys():
             report_patient_level[k]['specificity'] = specificity[k]
         report_patient_level['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
@@ -257,6 +270,7 @@ class Evaluator:
                                         labels, output_dict=False,
                                         labels=self.classes))
             print(cm_patient_level)
+        cm_plot.figure.clear()
         return cm_patient_level, report_patient_level
 
     def extract_patient_level_from_total(self):
@@ -290,13 +304,6 @@ class Evaluator:
         cm_model = confusion_matrix(predictions_patient_level, labels_patient_level, labels=self.classes)
         report_model = classification_report(predictions_patient_level, labels_patient_level, output_dict=True, labels=self.classes)
         specificity = self.calculate_specificity_personalized(predictions_patient_level, labels_patient_level,)
-        if len(self.classes) == 2:
-            self.create_roc_curve_plot_binary(predictions_patient_level,
-                                              labels_patient_level,
-                                              estimator_name='patient_classificator',
-                                              show=show, save=save,
-                                              filename=folder_path + str(el) + '.png'
-                                              )
         for k in specificity.keys():
             report_model[k]['specificity'] = specificity[k]
         report_model['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
@@ -315,6 +322,7 @@ class Evaluator:
             print(cm_model)
             print(classification_report(predictions_patient_level, labels_patient_level, output_dict=False, labels=self.classes))
             cm_plot.figure.show()
+        cm_plot.figure.clear()
 
     def plot_history(self, network_history, patient_name, folder_path = "results/training" , save = True, show = True):
         x_plot = list(range(1,len(network_history.history["loss"])+1))
@@ -342,6 +350,7 @@ class Evaluator:
         if save:
             os.makedirs(os.path.dirname(folder_path + "/accuracy/"), exist_ok=True)
             plt.savefig(folder_path+"/accuracy/" + str(patient_name) + ".png")
+        plt.close()
 
     def plot_history_binary(self, network_history, patient_name, folder_path = "results/training" , save = True, show = True):
         x_plot = list(range(1,len(network_history.history["loss"])+1))
@@ -369,6 +378,7 @@ class Evaluator:
         if save:
             os.makedirs(os.path.dirname(folder_path + "/accuracy/"), exist_ok=True)
             plt.savefig(folder_path+"/accuracy/" + str(patient_name) + ".png")
+        plt.close()
     def result_training_history(self, folder_path = "results/training", save = True, show = True):
         patient_names = self.results['history']['patients']
         histories = self.results['history']['histories']
@@ -402,6 +412,7 @@ class Evaluator:
             plt.show()
         if save:
             plt.savefig(filename)
+        plt.close()
 
     def create_roc_curve_plot_multiclass(self, y_pred, y, filename = "results/roc_auc.png", save=True, show=True):
         y_pred_prob = to_categorical(
@@ -419,3 +430,4 @@ class Evaluator:
             plt.show()
         if save:
             plt.savefig(filename)
+        plt.close()
