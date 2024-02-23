@@ -48,6 +48,43 @@ def create_model(n_dims, n_classes):
     keras_model = DLModelKeras(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
     return keras_model
 
+def create_model_benchmark_cnn(n_dims, n_classes):
+    learning_rate = 0.00020441990333108206
+    optimizer = Adam(learning_rate=learning_rate)
+    epochs = 300
+    batch_size = 256
+    model = Sequential()
+    model.add(InputLayer(input_shape=(n_dims,)))
+    model.add(Reshape((n_dims, 1)))
+    loss = "categorical_crossentropy"
+    metrics = ['categorical_accuracy']
+    model.add(Conv1D(filters=100,
+                     kernel_size=100,
+                     strides=1,
+                     padding='same',
+                     activation='relu'))
+    model.add(BatchNormalization(momentum=0.99, epsilon=0.01))
+    model.add(Conv1D(filters=100,
+                     kernel_size=5,
+                     strides=2,
+                     padding='same',
+                     activation='relu'))
+    model.add(MaxPooling1D(pool_size=6,
+                           strides=3,
+                           padding='same'))
+    model.add(BatchNormalization(momentum=0.99, epsilon=0.01))
+    model.add(Conv1D(filters=25,
+                     kernel_size=9,
+                     strides=5,
+                     padding='same',
+                     activation='relu'))
+    model.add(MaxPooling1D(pool_size=3,
+                           strides=2,
+                           padding='same'))
+    model.add(Flatten())
+    model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+    return model
+
 def create_model_custom_uno(n_dims, n_classes):
     es = EarlyStopping(monitor="val_categorical_accuracy", patience=50, verbose=1,
                        restore_best_weights=True)
