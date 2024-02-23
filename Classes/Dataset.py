@@ -68,7 +68,7 @@ class Dataset:
         self.n_elements = self.n_elements + len(dataset)
 
     @classmethod
-    def load_file(ds, file_type, file_name, label_dictionary = {'cov':0, 'covNeg': 1, 'ctrl':2}):
+    def load_file(ds, file_type, file_name, parquet_engine='fastparquet', label_dictionary = {'cov':0, 'covNeg': 1, 'ctrl':2}):
         """
         Load a file and automatically create a Dataset object.
         :param ds: scikit_raman.Dataset
@@ -85,6 +85,8 @@ class Dataset:
             df = pd.read_pickle(file_name)
         elif file_type == 'csv':
             df = pd.read_csv(file_name)
+        elif file_type == 'parquet':
+            df = pd.read_parquet(file_name, engine=parquet_engine)
         else:
             print("Error file type not supported")
         spectra = df['spectra'].to_numpy()
