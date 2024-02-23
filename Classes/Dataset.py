@@ -2,7 +2,6 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import GroupKFold, LeaveOneGroupOut, StratifiedGroupKFold, KFold
 import pickle
-from sklearn.utils import shuffle
 
 class Dataset:
     """
@@ -123,7 +122,7 @@ class Dataset:
 
     def to_df(self, save_label = True):
         if save_label:
-            df = pd.DataFrame([], columns=['spectra', 'x-axis', 'raw', 'user', 'name', 'category', 'labels'])
+            df = pd.DataFrame([], columns=['spectra', 'x-axis', 'raw', 'user', 'name', 'category', 'label'])
         else:
             df = pd.DataFrame([], columns=['spectra', 'x-axis', 'raw', 'user', 'name', 'category'])
         df['spectra'] = self.spectra.tolist()
@@ -140,6 +139,10 @@ class Dataset:
         df = self.to_df(save_label)
         with open(filename, 'wb') as f:
             pickle.dump(df, f)
+
+    def save_parquet(self, filename, save_label = True, engine='fastparquet'):
+        df = self.to_df(save_label)
+        df.to_parquet(filename, engine=engine)
 
     def get_raw_data(self):
         """
