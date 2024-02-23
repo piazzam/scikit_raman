@@ -112,6 +112,62 @@ def load_single_file(folder_path, filename, cat):
     return patient_spectras
 
 
+def load_single_file(folder_path, filename, cat):
+    """load the data from a single file. The file has to been formatted
+       followed the type of Raman Aramis. Further information in docs.
+
+      Parameters:
+      folder_path : string
+          the folder path to access the file
+      filename : string
+          the filename to load
+      cat: string
+          the category extracted from the folder path
+
+      Returns:
+      patient_spectras (pd.DataFrame):
+          the spectras of the patient in the file. It follow the rules defined
+          by our policy. See the docs for further information.
+
+     """
+    l, u = get_label_user(filename)
+    if l == "":
+        l = "X"
+        u = "X"+u
+    if "FARM" in u:
+        u = u.replace("FARM", cat)
+        u = u + 'F'
+        l = cat
+    elif ('20' in u.split('_')[1]) and u.split('_')[1] != '20':
+        u = u.replace('20', 'H')
+    if len(u.split('_')) > 2:
+        return None
+    if l != cat:
+        u = u.replace(l, cat)
+        l = cat
+    patient_spectras = pd.DataFrame(columns=['user', 'name', 'raw', 'spectra', 'category', 'x-axis'])
+    data = open(folder_path + '/' + filename)
+    rows = [line.split('\t') for line in data]
+    raw = True
+    for j in range(len(rows) - 1):
+        if (rows[0][1] == ''):
+            # raman_shift = rows[0][2:]
+            raman_shift = [float(el) for el in rows[0][2:]]
+            # raman_shift = np.array(raman_shift)
+            line = [float(el) for el in rows[j + 1][2:]]
+            # line = np.array(line)
+        else:
+            raman_shift = [float(el) for el in rows[0][1:]]
+            # raman_shift = np.array(raman_shift)
+            # raman_shift = rows[0][1:]
+            line = [float(el) for el in rows[j + 1][1:]]
+            # line = np.array(line)
+        patient_spectras = patient_spectras.append(
+            {'user': u, 'name': 'Raw', 'raw': raw, 'spectra': line, 'category': l, 'x-axis': raman_shift},
+            ignore_index=True)
+    return patient_spectras
+
+
 def get_label_user(filename):
     """
     Return the label of the patient and the name of patient. It extract the 
