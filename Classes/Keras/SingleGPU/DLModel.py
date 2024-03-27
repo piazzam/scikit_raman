@@ -266,9 +266,9 @@ class DLModelKeras:
                 pat_label_list.append(y_test_cv[0])
                 pat_names_list.append(np.unique(names_test_cv)[0])
             if save_model:
-                trained_model.save(model_path)
+                trained_model.save(model_path+str(names_test_cv[0]))
             if save_weights:
-                trained_model.save_weights(weights_path)
+                trained_model.save_weights(weights_path+str(names_test_cv[0]))
         dictionary = {}
         if patient_level:
             nested_dictionary = {'pred_list': pat_pred_list, 'label_list':pat_label_list, 'names_list':pat_names_list}
