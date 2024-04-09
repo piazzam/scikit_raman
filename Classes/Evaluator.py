@@ -7,6 +7,7 @@ import numpy as np
 import os
 from sklearn.metrics import RocCurveDisplay, roc_curve, roc_auc_score
 from tensorflow.keras.utils import to_categorical
+import copy
 
 
 
@@ -46,8 +47,7 @@ class Evaluator:
         report_patient_level = classification_report(self.results['patient_level']['pred_list'],
                                                      self.results['patient_level']['label_list'], output_dict=True,
                                                      labels=self.classes)
-        specificity = self.calculate_specificity_personalized(self.results['patient_level']['pred_list'],
-                                                             self.results['patient_level']['label_list'])
+        specificity = self.calculate_specificity(cm_patient_level)
         if len(self.classes) == 2:
             self.create_roc_curve_plot_binary(self.results['patient_level']['pred_list'],
                                                     self.results['patient_level']['label_list'],
@@ -58,7 +58,10 @@ class Evaluator:
                                               show=show, save=save,
                                               filename=folder_path + "roc_curve_total_patient.png")
         for k in specificity.keys():
-            report_patient_level[k]['specificity'] = specificity[k]
+            if np.isnan(specificity[k]):
+                report_patient_level[k]['specificity'] = 0
+            else:
+                report_patient_level[k]['specificity'] = specificity[k]
         report_patient_level['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
         report_patient_level['weighted avg']['specificity'] = self.calculate_weighted_avg(specificity)
         df_patient_level = pd.DataFrame(cm_patient_level, index=self.classes, columns=self.classes)
@@ -79,28 +82,49 @@ class Evaluator:
         cm_plot.figure.clear()
         return cm_patient_level, report_patient_level
 
-    def calculate_specificty(self):
+    def calculate_specificity(self, cm):
         specificity = {}
-        for l in self.classes:
-            prec, recall, _, _ = precision_recall_fscore_support(
-                np.array(self.results['total_prediction']['label_list']) == l,
-                np.array(self.results['total_prediction']['pred_list']) == l,
-                pos_label=True, average=None)
-            specificity[str(l)] = 1-recall[0]
+        #for c in range(3):
+        for c in self.classes:
+            #tp = cm[c, c]
+            fp = sum(cm[:, c]) - cm[c, c]
+            #fn = sum(cm[c, :]) - cm[c, c]
+            tn = sum(np.delete(sum(cm) - cm[c, :], c))
+
+            #recall = tp / (tp + fn)
+            #precision = tp / (tp + fp)
+            if (tn + fp) == 0:
+                s = 0
+            else:
+                s = tn / (tn + fp)
+            #f1_score = 2 * ((precision * recall) / (precision + recall))
+            specificity[str(c)] = s
         return specificity
 
-    def calculate_specificity_personalized(self, y_pred, y_true):
-        specificity = {}
-        for l in self.classes:
-            prec, recall, _, _ = precision_recall_fscore_support(
-                np.array(y_true) == l,
-                np.array(y_pred) == l,
-                pos_label=True, average=None)
-            specificity[str(l)] = 1 - recall[0]
-        return specificity
+    # def calculate_specificty(self):
+    #     conf_matrix = confusion_matrix(self.results['total_prediction']['label_list'],
+    #                                    self.results['total_prediction']['pred_list'])
+    #     specificity = {}
+    #     for l in self.classes:
+    #         true_negative = sum(conf_matrix[j, j] for j in range(conf_matrix.shape[0]) if j != l)
+    #         false_positive = sum(conf_matrix[j, j] for j in range(conf_matrix.shape[0]) if j != l)
+    #         s = true_negative / (true_negative + false_positive)
+    #         specificity[str(l)] = s
+    #     return specificity
+    #
+    # def calculate_specificity_personalized(self, y_pred, y_true):
+    #     specificity = {}
+    #     for l in self.classes:
+    #         prec, recall, _, _ = precision_recall_fscore_support(
+    #             np.array(y_true) == l,
+    #             np.array(y_pred) == l,
+    #             pos_label=True, average=None)
+    #         specificity[str(l)] = 1 - recall[0]
+    #     return specificity
 
     def calculate_macro_avg(self, d):
-        l = d.values()
+        d_v = list(d.values())
+        l = copy.deepcopy(d_v)
         return sum(l) / len(l)
 
     def calculate_weighted_avg(self, d):
@@ -117,7 +141,8 @@ class Evaluator:
             weights[el] = count[el] / total_labels_number
         for el in d.keys():
             d[el] = weights[el] * d[el]
-        l = d.values()
+        d_v = list(d.values())
+        l = copy.deepcopy(d_v)
         return sum(l)# / len(l)
     def total_result(self, show = True, save = True, folder_path = "results/"):
         """
@@ -144,9 +169,12 @@ class Evaluator:
             self.create_roc_curve_plot_multiclass(self.results['total_prediction']['pred_list'],
                                               self.results['total_prediction']['label_list'],
                                               show=show, save=save, filename=folder_path + "roc_curve_total.png")
-        specificity = self.calculate_specificty()
+        specificity = self.calculate_specificity(cm_total)
         for k in specificity.keys():
-            report_total[k]['specificity'] = specificity[k]
+            if np.isnan(specificity[k]):
+                report_total[k]['specificity'] = 0
+            else:
+                report_total[k]['specificity'] = specificity[k]
         report_total['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
         report_total['weighted avg']['specificity'] = self.calculate_weighted_avg(specificity)
         df_total = pd.DataFrame(cm_total, index=self.classes, columns=self.classes)
@@ -189,9 +217,12 @@ class Evaluator:
                     prediction.append(self.results['total_prediction']['pred_list'][j])
             cm_model = confusion_matrix(prediction, labels, labels = self.classes)
             report_model = classification_report(prediction, labels, output_dict=True, labels=self.classes)
-            specificity = self.calculate_specificity_personalized(prediction, labels)
+            specificity = self.calculate_specificity(cm_model)
             for k in specificity.keys():
-                report_model[k]['specificity'] = specificity[k]
+                if np.isnan(specificity[k]):
+                    report_model[k]['specificity'] = 0
+                else:
+                    report_model[k]['specificity'] = specificity[k]
             report_model['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
             report_model['weighted avg']['specificity'] = self.calculate_weighted_avg(specificity)
             df_cm_model = pd.DataFrame(cm_model, index=self.classes, columns=self.classes)
@@ -240,7 +271,7 @@ class Evaluator:
         report_patient_level = classification_report(predicted,
                                                           labels, output_dict=True,
                                                           labels=self.classes)
-        specificity = self.calculate_specificity_personalized(predicted, labels)
+        specificity = self.calculate_specificity(cm_patient_level)
         if len(self.classes) == 2:
             self.create_roc_curve_plot_binary(predicted,
                                               labels,
@@ -252,7 +283,10 @@ class Evaluator:
                                               show=show, save=save,
                                               filename=folder_path + "roc_curve_total_patient.png")
         for k in specificity.keys():
-            report_patient_level[k]['specificity'] = specificity[k]
+            if np.isnan(specificity[k]):
+                report_patient_level[k]['specificity'] = 0
+            else:
+                report_patient_level[k]['specificity'] = specificity[k]
         report_patient_level['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
         report_patient_level['weighted avg']['specificity'] = self.calculate_weighted_avg(specificity)
         df_patient_level = pd.DataFrame(cm_patient_level, index=self.classes, columns=self.classes)
@@ -303,9 +337,12 @@ class Evaluator:
             predictions_patient_level.append(max(set(prediction), key=prediction.count))
         cm_model = confusion_matrix(predictions_patient_level, labels_patient_level, labels=self.classes)
         report_model = classification_report(predictions_patient_level, labels_patient_level, output_dict=True, labels=self.classes)
-        specificity = self.calculate_specificity_personalized(predictions_patient_level, labels_patient_level,)
+        specificity = self.calculate_specificity(cm_model)
         for k in specificity.keys():
-            report_model[k]['specificity'] = specificity[k]
+            if np.isnan(specificity[k]):
+                report_model[k]['specificity'] = 0
+            else:
+                report_model[k]['specificity'] = specificity[k]
         report_model['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
         report_model['weighted avg']['specificity'] = self.calculate_weighted_avg(specificity)
         df_cm_model = pd.DataFrame(cm_model, index=self.classes, columns=self.classes)
