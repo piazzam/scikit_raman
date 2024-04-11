@@ -43,7 +43,7 @@ class DataAugmenter:
 
         return augmented_signal
 
-    def dataaugment_single_spectra(self, betashift, slopeshift, multishift):
+    def dataaugment_single_spectra(self, betashift, slopeshift, multishift, index='random'):
         """
         Function propaedeutic to data augmentation.
         :param betashift:
@@ -53,7 +53,10 @@ class DataAugmenter:
             an array containing augmented signals.
         """
         # baseline shift
-        random_index = random.randint(0, len(self.spectra) - 1)
+        if index == 'random':
+            random_index = random.randint(0, len(self.spectra) - 1)
+        else:
+            random_index = index
         signal = self.spectra[random_index]
         label = self.labels[random_index]
         beta = np.random.random(size=(1, 1)) * 2 * betashift - betashift
