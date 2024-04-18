@@ -105,10 +105,11 @@ class Dataset:
         assumed_drugs = []
         for u in self.user:
             this_user = drugs[drugs['Codice Labion'] == u]
-            assumed_drug = [this_user['farmaco1'], this_user['farmaco2'], this_user['farmaco3'], this_user['farmaco4'],
-                            this_user['farmaco5'], this_user['farmaco6']]
+            assumed_drug = [this_user['farmaco1'].to_numpy(), this_user['farmaco2'].to_numpy(), this_user['farmaco3'].to_numpy(), this_user['farmaco4'].to_numpy(),
+                            this_user['farmaco5'].to_numpy(), this_user['farmaco6'].to_numpy()]
             assumed_drugs.append(assumed_drug)
-        self.assumed_drugs = np.array(assumed_drugs)
+        #self.assumed_drugs = np.array(assumed_drugs)
+        self.assumed_drugs = assumed_drugs
 
     def create_label(self, label_dictionary):
         """

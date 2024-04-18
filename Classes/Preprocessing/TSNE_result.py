@@ -9,3 +9,6 @@ class TSNE_result:
         df_base['labels'] = dataset.labels
         df = pd.concat([pd.DataFrame(result), df_base], axis=1)
         self.result = df
+
+    def __init__(self, df):
+        self.result = df

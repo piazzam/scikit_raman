@@ -303,12 +303,12 @@ class Processor:
                     drug = drugs[i]
                     for s, d, in zip(spectra, drug):
                         new_spectrum.append(s - d)
-                    if new_spectra != []:
+                    if new_spectrum != []:
                         spectra = new_spectrum
                         new_spectrum = []
             if new_spectrum == []:
                 new_spectrum = spectra
-            new_spectra.append(new_spectrum)
+            new_spectra.append(np.array(new_spectrum))
         self.dataset.spectra = np.array(new_spectra)
 
 
