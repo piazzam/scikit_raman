@@ -275,7 +275,7 @@ class Processor:
         tsne = TSNE(n_components=n_components)
         spectra = self.dataset.spectra
         tsne_res = tsne.fit_transform(spectra)
-        tsne_result = TSNE_result(tsne_res, self.dataset)
+        tsne_result = TSNE_result.load_from_results(tsne_res, self.dataset)
         return tsne_result
 
     def remove_alluminium(self, alluminium):
