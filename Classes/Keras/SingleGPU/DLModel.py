@@ -6,7 +6,7 @@ from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization,
 from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.models import Sequential
 from keras.models import clone_model
-from tensorflow.keras.optimizers.legacy import Adam
+from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 from scikit_raman.Classes.DataAugmenter import *
 from scikit_raman.Classes.Keras.DataAugmentation.EMSC import *

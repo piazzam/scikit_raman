@@ -3,6 +3,7 @@ import numpy as np
 from sklearn.model_selection import GroupKFold, LeaveOneGroupOut, StratifiedGroupKFold, KFold
 import pickle
 
+
 class Dataset:
     """
     A class to represent a scikit-raman Dataset.
@@ -28,7 +29,7 @@ class Dataset:
     """
 
     def __init__(self, spectra, x_axis, raw, user, name, category, labels,
-                 assumed_drugs = [], label_dictionary = {'cov':0, 'covNeg': 1, 'ctrl':2}):
+                 assumed_drugs=[], label_dictionary={'cov': 0, 'covNeg': 1, 'ctrl': 2}):
         self.spectra = spectra
         self.spectra_to_numpy()
         self.x_axis = x_axis
@@ -39,7 +40,7 @@ class Dataset:
         self.category = category
         self.assumed_drugs = np.array(assumed_drugs)
         self.n_elements = len(spectra)
-        #self.label_dictionary = label_dictionary
+        # self.label_dictionary = label_dictionary
         if labels.size != 0:
             self.labels = labels
         else:
@@ -49,10 +50,10 @@ class Dataset:
     def __getitem__(self, items):
         try:
             return self.spectra[items], self.x_axis[items], self.raw[items], self.user[items], self.name[items], \
-                self.category[items], self.labels[items], self.assumed_drugs[items]
+                   self.category[items], self.labels[items], self.assumed_drugs[items]
         except IndexError:
             return self.spectra[items], self.x_axis[items], self.raw[items], self.user[items], self.name[items], \
-                self.category[items], self.labels[items]
+                   self.category[items], self.labels[items]
 
     def __len__(self):
         return self.n_elements
@@ -63,12 +64,13 @@ class Dataset:
         self.raw = np.append(self.raw, dataset.raw, axis=0)
         self.user = np.append(self.user, dataset.user, axis=0)
         self.name = np.append(self.name, dataset.name, axis=0)
-        self.category = np.append(self.category,dataset.category, axis=0)
+        self.category = np.append(self.category, dataset.category, axis=0)
         self.labels = np.append(self.labels, dataset.labels, axis=0)
         self.n_elements = self.n_elements + len(dataset)
 
     @classmethod
-    def load_file(ds, file_type, file_name, parquet_engine='fastparquet', label_dictionary = {'cov':0, 'covNeg': 1, 'ctrl':2}):
+    def load_file(ds, file_type, file_name, parquet_engine='fastparquet',
+                  label_dictionary={'cov': 0, 'covNeg': 1, 'ctrl': 2}):
         """
         Load a file and automatically create a Dataset object.
         :param ds: scikit_raman.Dataset
@@ -98,18 +100,18 @@ class Dataset:
         if 'labels' in df.columns:
             labels = df['label'].to_numpy()
         else:
-            labels = np.empty(shape = (0,0))
-        return ds(spectra, x_axis, raw, user, name, category, labels, [],label_dictionary)
+            labels = np.empty(shape=(0, 0))
+        return ds(spectra, x_axis, raw, user, name, category, labels, [], label_dictionary)
 
-    def load_drugs(self, drugs):
+    def load_drugs(self, drugs, drugs_category):
         assumed_drugs = []
-        for u in self.user:
-            this_user = drugs[drugs['Codice Labion'] == u]
-            assumed_drug = [this_user['farmaco1'].to_numpy(), this_user['farmaco2'].to_numpy(), this_user['farmaco3'].to_numpy(), this_user['farmaco4'].to_numpy(),
-                            this_user['farmaco5'].to_numpy(), this_user['farmaco6'].to_numpy()]
-            assumed_drugs.append(assumed_drug)
-        #self.assumed_drugs = np.array(assumed_drugs)
-        self.assumed_drugs = assumed_drugs
+        for i, u in enumerate(self.user):
+            if self.category[i] in drugs_category:
+                this_user = drugs[drugs['Codice Labion'] == u]
+                assumed_drug = [this_user['farmaco1'], this_user['farmaco2'], this_user['farmaco3'], this_user['farmaco4'],
+                                this_user['farmaco5'], this_user['farmaco6']]
+                assumed_drugs.append(assumed_drug)
+        self.assumed_drugs = np.array(assumed_drugs)
 
     def create_label(self, label_dictionary):
         """
@@ -123,7 +125,7 @@ class Dataset:
             labels.append(label_dictionary[el])
         self.labels = np.array(labels)
 
-    def to_df(self, save_label = True):
+    def to_df(self, save_label=True):
         if save_label:
             df = pd.DataFrame([], columns=['spectra', 'x-axis', 'raw', 'user', 'name', 'category', 'label'])
         else:
@@ -138,12 +140,12 @@ class Dataset:
             df['labels'] = self.labels.tolist()
         return df
 
-    def save_pickle(self, filename, save_label = True):
+    def save_pickle(self, filename, save_label=True):
         df = self.to_df(save_label)
         with open(filename, 'wb') as f:
             pickle.dump(df, f)
 
-    def save_parquet(self, filename, save_label = True, engine='fastparquet'):
+    def save_parquet(self, filename, save_label=True, engine='fastparquet'):
         df = self.to_df(save_label)
         df.to_parquet(filename, engine=engine)
 
@@ -169,7 +171,8 @@ class Dataset:
                 name.append(self.name[i])
                 category.append(self.category[i])
                 labels.append(self.labels[i])
-        ds = Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name), np.array(category), np.array(labels))
+        ds = Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name),
+                     np.array(category), np.array(labels))
         return ds
 
     def get_dark_data(self):
@@ -194,7 +197,8 @@ class Dataset:
                 name.append(self.name[i])
                 category.append(self.category[i])
                 labels.append(self.labels[i])
-        ds = Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name), np.array(category), np.array(labels))
+        ds = Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name),
+                     np.array(category), np.array(labels))
         return ds
 
     def get_by_indices(self, indices):
@@ -271,6 +275,7 @@ class Dataset:
             groups = self.user
             folds = list(GroupKFold(n_splits=k).split(x_train, y_train, groups=groups))
             return folds
+
     def simple_k_fold(self, k):
         x_train = self.spectra
         if not hasattr(self, 'labels'):
@@ -279,6 +284,7 @@ class Dataset:
             y_train = self.labels
             folds = list(KFold(n_splits=k).split(x_train, y_train))
             return folds
+
     def stratified_k_fold(self, k):
         """
         Implements the k-fold strategies. It preserves the patients.
@@ -342,13 +348,13 @@ class Dataset:
         :param elements:list
             list of the elements to remove.
         """
-        self.spectra = np.delete(self.spectra, elements, axis = 0)
-        self.x_axis = np.delete(self.x_axis, elements, axis = 0)
-        self.raw = np.delete(self.raw, elements, axis = 0)
-        self.name = np.delete(self.name, elements, axis = 0)
-        self.user = np.delete(self.user, elements, axis = 0)
-        self.category = np.delete(self.category, elements, axis = 0)
-        self.labels = np.delete(self.labels, elements, axis = 0)
+        self.spectra = np.delete(self.spectra, elements, axis=0)
+        self.x_axis = np.delete(self.x_axis, elements, axis=0)
+        self.raw = np.delete(self.raw, elements, axis=0)
+        self.name = np.delete(self.name, elements, axis=0)
+        self.user = np.delete(self.user, elements, axis=0)
+        self.category = np.delete(self.category, elements, axis=0)
+        self.labels = np.delete(self.labels, elements, axis=0)
         self.n_elements -= len(elements)
 
     def spectra_to_numpy(self):
@@ -400,7 +406,8 @@ class Dataset:
             name.append(self.name[i])
             category.append(self.category[i])
             labels.append(self.labels[i])
-        return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name), np.array(category), np.array(labels))
+        return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name),
+                       np.array(category), np.array(labels))
 
     def search_by_name_indices(self, name):
         """
@@ -443,7 +450,8 @@ class Dataset:
             name.append(self.name[i])
             category.append(self.category[i])
             labels.append(self.labels[i])
-        return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name), np.array(category), np.array(labels))
+        return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name),
+                       np.array(category), np.array(labels))
 
     def search_by_category_label(self, lab):
         """
