@@ -292,25 +292,29 @@ class Processor:
             for s, al in zip(current_spectra, allu):
                 new_spectra.append(s - al)
             self.dataset.spectra[i] = np.array(new_spectra)
-    def remove_drugs(self, drugs):
+
+    def remove_drugs(self, drugs, drugs_category):
         new_spectra = []
         for element in self.dataset:
-            new_spectrum = []
+            category = element[5]
             spectra = element[0]
-            assumed_drugs = element[7]
-            for i in range(len(assumed_drugs)):
-                if assumed_drugs[i][0] == 1:
-                    drug = drugs[i]
-                    for s, d, in zip(spectra, drug):
-                        new_spectrum.append(s - d)
-                    if new_spectrum != []:
-                        spectra = new_spectrum
-                        new_spectrum = []
-            if new_spectrum == []:
-                new_spectrum = spectra
-            new_spectra.append(np.array(new_spectrum))
+            if category in drugs_category:
+                new_spectrum = []
+                assumed_drugs = element[7]
+                for i in range(len(assumed_drugs)):
+                    if assumed_drugs[i][0] == 1:
+                        drug = drugs[i]
+                        for s, d in zip(spectra, drug):
+                            new_spectrum.append(s - d)
+                        if new_spectra != []:
+                            spectra = new_spectrum
+                            new_spectrum = []
+                if new_spectrum == []:
+                    new_spectrum = spectra
+                new_spectra.append(new_spectrum)
+            else:
+                new_spectra.append(spectra)
         self.dataset.spectra = np.array(new_spectra)
-
 
     def realignment(self, window_size = 10):
         y = self.dataset.spectra[0].tolist()
