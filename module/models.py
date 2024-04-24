@@ -2,7 +2,7 @@ from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization,
     Reshape
 from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.optimizers.legacy import Adam
+from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import tensorflow as tf
 from scikit_raman.Classes.Keras.SingleGPU.DLModel import DLModelKeras
