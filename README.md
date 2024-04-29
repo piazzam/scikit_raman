@@ -10,16 +10,20 @@ scikit_raman is a Python library designed for manipulation and analysis of Raman
 
 Before installing scikit_raman, ensure you have the following prerequisites installed:
 
-- Python 3.x
+- Python 3.8
 - Git (for cloning the repository)
 
 #### Installation Steps
 
-To keep your project environment clean and isolated, it's recommended to install scikit_raman within a virtual environment. Here's how to do it:
+To keep your project environment clean and isolated, it's recommended to install scikit_raman within a virtual environment.
+
+#### Standard Installation (For Users):
+
+If you only intend to use the library:
 
 1. Create a virtual environment for your project:
 
-   ```bash
+   ```
    python3 -m venv myenv
    ```
 
@@ -29,49 +33,67 @@ To keep your project environment clean and isolated, it's recommended to install
 
    - On Windows:
    
-     ```bash
+     ```
      myenv\Scripts\activate
      ```
 
    - On Unix or MacOS:
    
-     ```bash
+     ```
      source myenv/bin/activate
      ```
 
 3. Clone the scikit_raman repository:
 
-   ```bash
+   ```
    git clone https://gitlab.com/marcoplaza98/scikit_raman.git
    ```
 
 4. Navigate into the cloned repository directory:
 
-   ```bash
+   ```
    cd scikit_raman
    ``` 
 
 5. Install scikit_raman using pip:
 
-   ```bash
+   ```
    pip install .
    ```
 
    This will install scikit_raman along with its dependencies into your virtual environment.
 
-6. You're all set! You can now start using scikit_raman within your project.
+#### Editable Installation (For Developers):
 
-   Whenever you're finished working with scikit_raman, you can deactivate the virtual environment by running:
+If you intend to contribute to the library or need to work on it:
 
-   ```bash
-   deactivate
+1. Follow steps 1 to 4 from the standard installation instructions above.
+
+2. Install scikit_raman in editable mode using pip:
+
    ```
+   pip install -e .
+   ```
+
+   If installation in editable mode fails, ensure your pip and setuptools are up to date. You can upgrade them with the following commands:
+
+   ```
+   pip install --upgrade pip setuptools
+   ```
+   
+You're all set! You can now start using scikit_raman within your project.
+
+Whenever you're finished working with scikit_raman, you can deactivate the virtual environment by running:
+
+```
+deactivate
+```
 
 ### Usage
 
 Once installed, you can start using scikit_raman in your Python projects. Import the necessary modules and functions as needed:
 
-```python
+```
 import scikit_raman
 ```
 
