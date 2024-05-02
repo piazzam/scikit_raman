@@ -5,6 +5,7 @@ import seaborn as sn
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import csv
 from sklearn.metrics import RocCurveDisplay, roc_curve, roc_auc_score
 from tensorflow.keras.utils import to_categorical
 
@@ -431,3 +432,40 @@ class Evaluator:
         if save:
             plt.savefig(filename)
         plt.close()
+
+  
+    def save_results_into_csv(self, filename, name, classification, model, preprocessing, pca, drugs_categories, all_target_names):
+        report_patient_level = classification_report(self.results['patient_level']['pred_list'],
+                                                    self.results['patient_level']['label_list'], output_dict=True,
+                                                    labels=self.classes, target_names=self.target_names)
+        report_total = classification_report(self.results['total_prediction']['pred_list'],
+                                            self.results['total_prediction']['label_list'], output_dict=True,
+                                            labels=self.classes, target_names=self.target_names)
+        
+        if not os.path.exists(filename):
+            with open(filename, 'w', newline='') as file:
+                writer = csv.writer(file)
+                header = ['name', 'classification', 'model', 'preprocessing', 'pca',
+                          'drugs_categories', 'accuracy_spectra_level', 'accuracy_patient_level']
+                for metric in ['precision', 'recall', 'f1-score']:
+                    for target_name in all_target_names:
+                        header.append(f"{'sensitivity' if metric == 'recall' else metric}_{target_name}_spectra_level")
+                        header.append(f"{'sensitivity' if metric == 'recall' else metric}_{target_name}_patient_level")
+                        
+                writer.writerow(header)
+
+        with open(filename, 'a', newline='') as file:
+            writer = csv.writer(file)
+            row = [name, classification, model, preprocessing, pca, drugs_categories if drugs_categories is not None else 'None',
+                   report_total['accuracy'], report_patient_level['accuracy']]
+            for metric in ['precision', 'recall', 'f1-score']:
+                for target_name in all_target_names:
+                    if target_name not in list(self.target_names.values()):
+                        row.append('None')
+                        row.append('None')
+                    else:
+                        for label, class_name in self.target_names.items():
+                            if class_name == target_name:
+                                row.append(report_total[label][metric])
+                                row.append(report_patient_level[label][metric])
+            writer.writerow(row)

@@ -10,7 +10,8 @@ scikit_raman is a Python library designed for manipulation and analysis of Raman
 
 Before installing scikit_raman, ensure you have the following prerequisites installed:
 
-- Python 3.8
+- Python 3.8 or higher
+- Pip version 24.0 or higher
 - Git (for cloning the repository)
 
 #### Installation Steps
@@ -75,10 +76,10 @@ If you intend to contribute to the library or need to work on it:
    pip install -e .
    ```
 
-   If installation in editable mode fails, ensure your pip and setuptools are up to date. You can upgrade them with the following commands:
+   If installation in editable mode fails, ensure your setuptools version is up to date. You can upgrade it with the following commands:
 
    ```
-   pip install --upgrade pip setuptools
+   pip install --upgrade setuptools
    ```
    
 You're all set! You can now start using scikit_raman within your project.
@@ -100,6 +101,11 @@ import scikit_raman
 ### Supported Platforms
 
 scikit_raman should work on any platform where Python is supported. The installation steps provided above are applicable to most Unix-like systems (Linux, macOS). For Windows users, you may need to adjust the commands slightly to accommodate differences in command line interfaces.
+
+### Contributors
+
+- **Name:** Riccardo Frigerio
+- **GitLab:** [RFrig16](https://gitlab.com/RFrig16)
 
 ### Author
 
