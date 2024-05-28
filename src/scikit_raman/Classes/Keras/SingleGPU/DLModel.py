@@ -6,11 +6,11 @@ from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization,
 from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.models import Sequential
 from keras.models import clone_model
-from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 from scikit_raman.Classes.DataAugmenter import *
 from scikit_raman.Classes.Keras.DataAugmentation.EMSC import *
 from scikit_raman.Classes.Keras.DataAugmentation.Shift import *
+from scikit_raman.Classes.Keras.SingleGPU.utility import get_optimizer
 from tensorflow.keras.models import load_model
 import wandb
 from wandb.keras import WandbMetricsLogger
@@ -65,7 +65,8 @@ class DLModelKeras:
         loss = 'categorical_crossentropy'
         metrics = ['categorical_accuracy']
         learning_rate = 0.00020441990333108206
-        optimizer = Adam(learning_rate = learning_rate)
+        # optimizer = Adam(learning_rate = learning_rate)
+        optimizer = get_optimizer('adam', learning_rate)
 
         # ----- init model
         model = Sequential()
@@ -133,7 +134,7 @@ class DLModelKeras:
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
 
     @classmethod
-    def load_model(dlm, filename = "model_saved/model", batch_size = 256, epochs = 200, callbacks = [], optimizer = Adam(learning_rate=0.00020441990333108206), loss = 'categorical_crossentropy', metrics = ['categorical_accuracy'], learning_rate=0.00020441990333108206):
+    def load_model(dlm, filename = "model_saved/model", batch_size = 256, epochs = 200, callbacks = [], optimizer='adam', loss = 'categorical_crossentropy', metrics = ['categorical_accuracy'], learning_rate=0.00020441990333108206):
         """
         Load a model from classical storage keras.
         :param filename: str
@@ -154,6 +155,7 @@ class DLModelKeras:
             A model object representing the json model.
         """
         model = load_model(filename)
+        optimizer = get_optimizer(optimizer, learning_rate)
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
 
     def compile_model(self):
@@ -485,5 +487,4 @@ class DLModelKeras:
         new_model.build(input_shape)
         new_model.add(Dense(units=new_output_dims, activation = new_activation_function, name="new_output_layer"))
         self.model = new_model
-
-
+        
