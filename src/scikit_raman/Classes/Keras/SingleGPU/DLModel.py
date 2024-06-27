@@ -6,11 +6,11 @@ from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization,
 from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.models import Sequential
 from keras.models import clone_model
-from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.utils import to_categorical
 from scikit_raman.Classes.DataAugmenter import *
 from scikit_raman.Classes.Keras.DataAugmentation.EMSC import *
 from scikit_raman.Classes.Keras.DataAugmentation.Shift import *
+from scikit_raman.Classes.Keras.SingleGPU.utility import get_optimizer
 from tensorflow.keras.models import load_model
 import wandb
 from wandb.keras import WandbMetricsLogger
@@ -50,7 +50,7 @@ class DLModelKeras:
         self.learning_rate = learning_rate
 
     @classmethod
-    def load_model_benchmark(dlm,  n_dims, number_classes = 3, data_augmentation = False, factor = 0.5):
+    def load_model_benchmark(dlm,  n_dims, number_classes=3, data_augmentation=False, factor=0.5):
         """
         Load the benchmark model.
         :param n_dims: int
@@ -65,7 +65,9 @@ class DLModelKeras:
         loss = 'categorical_crossentropy'
         metrics = ['categorical_accuracy']
         learning_rate = 0.00020441990333108206
-        optimizer = Adam(learning_rate = learning_rate)
+        # optimizer = Adam(learning_rate = learning_rate)
+        # optimizer = get_optimizer('adam', learning_rate)
+        optimizer = 'adam'
 
         # ----- init model
         model = Sequential()
@@ -119,21 +121,21 @@ class DLModelKeras:
         model.add(Dense(units=number_classes, activation='softmax'))
 
         # ----- Compile
-        #if data_augmentation:
+        # if data_augmentation:
         #    model.compile(optimizer=optimizer, loss=loss, metrics=metrics, run_eagerly=True)
-        #else:
+        # else:
         #    model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
         epochs = 273
         batch_size = 338
         es = EarlyStopping(monitor="val_categorical_accuracy", patience=100, verbose=1,
-                                           restore_best_weights=True)
+                           restore_best_weights=True)
         lr = ReduceLROnPlateau(monitor="val_categorical_accuracy", factor=0.5, verbose=4, patience=80,
-                                               cooldown=10)
+                               cooldown=10)
         callbacks = [es, lr]
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
 
     @classmethod
-    def load_model(dlm, filename = "model_saved/model", batch_size = 256, epochs = 200, callbacks = [], optimizer = Adam(learning_rate=0.00020441990333108206), loss = 'categorical_crossentropy', metrics = ['categorical_accuracy'], learning_rate=0.00020441990333108206):
+    def load_model(dlm, filename="model_saved/model", batch_size=256, epochs=200, callbacks=[], optimizer='adam', loss='categorical_crossentropy', metrics=['categorical_accuracy'], learning_rate=0.00020441990333108206):
         """
         Load a model from classical storage keras.
         :param filename: str
@@ -154,17 +156,22 @@ class DLModelKeras:
             A model object representing the json model.
         """
         model = load_model(filename)
+        # optimizer_fun = get_optimizer(optimizer, learning_rate)
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
 
     def compile_model(self):
-        self.model.compile(optimizer=self.optimizer, loss=self.loss, metrics=self.metrics)
-    def load_weights(self, filename = "model_saved/weights"):
+        optimizer = get_optimizer(self.optimizer, self.learning_rate)
+        self.model.compile(optimizer=optimizer,
+                           loss=self.loss, metrics=self.metrics)
+
+    def load_weights(self, filename="model_saved/weights"):
         self.model.load_weights(filename, compile=False)
-    def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level = True, get_patient_prediction = True,
-                                          return_history = True, test_size = 0.1, data_augmentation = False, f_name = 'emsc',
-                                          f_params = None, save_model = False, model_path = "model_saved/model/", save_weights = False,
-                                          weights_path = "model_saved/weights/", random_state = 42, log_to_wandb = False,
-                                          wandb_project="project_one", wandbconfig = {}, wandbcallbacks = [],
+
+    def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level=True, get_patient_prediction=True,
+                                          return_history=True, test_size=0.1, data_augmentation=False, f_name='emsc',
+                                          f_params=None, save_model=False, model_path="model_saved/model/", save_weights=False,
+                                          weights_path="model_saved/weights/", random_state=42, log_to_wandb=False,
+                                          wandb_project="project_one", wandbconfig={}, wandbcallbacks=[],
                                           reinit=True):
         """
         Train the model with Leave One Patient Out Cross Validation
@@ -208,10 +215,10 @@ class DLModelKeras:
             if log_to_wandb:
                 if wandbconfig == {}:
                     wandbconfig = {
-                               'reinit': reinit,
-                               'epochs': self.epochs,
-                               'batch_size': self.batch_size,
-                               'learning_rate': self.learning_rate}
+                        'reinit': reinit,
+                        'epochs': self.epochs,
+                        'batch_size': self.batch_size,
+                        'learning_rate': self.learning_rate}
                 else:
                     wandbconfig_base = {
                         'reinit': reinit,
@@ -220,7 +227,8 @@ class DLModelKeras:
                         'lr': self.learning_rate}
                     wandbconfig.update(wandbconfig_base)
                 wandb.init(project=wandb_project,
-                           name=wandb_project + str(np.unique(names_test_cv)[0]),
+                           name=wandb_project +
+                           str(np.unique(names_test_cv)[0]),
                            config=wandbconfig)
                 if wandbcallbacks == []:
                     self.callbacks.extend([WandbMetricsLogger()])
@@ -230,14 +238,15 @@ class DLModelKeras:
                     except TypeError as exc:
                         raise TypeError("wandbcallbacks must be a list")
             trained_model = clone_model(self.model)
-            optimizer = copy.deepcopy(self.optimizer)
-            trained_model.compile(optimizer=optimizer, loss = self.loss, metrics = self.metrics)
+            optimizer = get_optimizer(self.optimizer, self.learning_rate)
+            trained_model.compile(optimizer=optimizer,
+                                  loss=self.loss, metrics=self.metrics)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
             y_test_cv = dataset.labels[test_idx]
             X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv, test_size=test_size,
-                                                                    random_state = random_state,
+                                                                    random_state=random_state,
                                                                     stratify=y_train_cv)
             if data_augmentation:
                 da = DataAugmenter(X_train_cv, y_train_cv)
@@ -248,10 +257,10 @@ class DLModelKeras:
             y_train_cv_cat = to_categorical(y_train_cv, number_classes)
             y_val_cat = to_categorical(y_val, number_classes)
             history = trained_model.fit(X_train_cv, y_train_cv_cat,
-                                epochs=self.epochs,
-                                validation_data=(X_val, y_val_cat),
-                                batch_size=self.batch_size, verbose=1,
-                                callbacks=self.callbacks)
+                                        epochs=self.epochs,
+                                        validation_data=(X_val, y_val_cat),
+                                        batch_size=self.batch_size, verbose=1,
+                                        callbacks=self.callbacks)
             histories.append(history)
             names_list.append(np.unique(names_test_cv)[0])
             pred = trained_model.predict(X_test_cv)
@@ -271,21 +280,24 @@ class DLModelKeras:
                 trained_model.save_weights(weights_path+str(names_test_cv[0]))
         dictionary = {}
         if patient_level:
-            nested_dictionary = {'pred_list': pat_pred_list, 'label_list':pat_label_list, 'names_list':pat_names_list}
+            nested_dictionary = {'pred_list': pat_pred_list,
+                                 'label_list': pat_label_list, 'names_list': pat_names_list}
             dictionary['patient_level'] = nested_dictionary
         if get_patient_prediction:
-            nested_dictionary = {'pred_list': tot_pred_list, 'label_list': tot_label_list, 'names_list': tot_names_list}
+            nested_dictionary = {'pred_list': tot_pred_list,
+                                 'label_list': tot_label_list, 'names_list': tot_names_list}
             dictionary['total_prediction'] = nested_dictionary
         if return_history:
-            nested_dictionary = {'histories':histories, 'patients':names_list}
+            nested_dictionary = {
+                'histories': histories, 'patients': names_list}
             dictionary['history'] = nested_dictionary
         return dictionary
 
-    def train_model_cv(self, dataset, number_classes, k = 10, fold_level = True, get_patient_prediction = True, return_history = True,
-                       data_augmentation = False, f_name = 'emsc', f_params = None, save_model = False, model_path = "model_saved/model/",
-                       save_weights = False, weights_path = "model_saved/weights/", random_state = 42, log_to_wandb = False,
-                                          wandb_project="project_one", wandbconfig = {}, wandbcallbacks = [],
-                                          reinit=True, check_users_separated=True):
+    def train_model_cv(self, dataset, number_classes, k=10, fold_level=True, get_patient_prediction=True, return_history=True,
+                       data_augmentation=False, f_name='emsc', f_params=None, save_model=False, model_path="model_saved/model/",
+                       save_weights=False, weights_path="model_saved/weights/", random_state=42, log_to_wandb=False,
+                       wandb_project="project_one", wandbconfig={}, wandbcallbacks=[],
+                       reinit=True, check_users_separated=True):
         """
         Train the model with K-Fold Cross Validation.
         :param dataset: scikit_raman.Dataset
@@ -329,10 +341,10 @@ class DLModelKeras:
                 print("log_to_wandb")
                 if wandbconfig == {}:
                     wandbconfig = {
-                               'reinit': reinit,
-                               'epochs': self.epochs,
-                               'batch_size': self.batch_size,
-                               'learning_rate': self.learning_rate}
+                        'reinit': reinit,
+                        'epochs': self.epochs,
+                        'batch_size': self.batch_size,
+                        'learning_rate': self.learning_rate}
                 else:
                     wandbconfig_base = {
                         'reinit': reinit,
@@ -351,8 +363,9 @@ class DLModelKeras:
                     except TypeError as exc:
                         raise TypeError("wandbcallbacks must be a list")
             trained_model = clone_model(self.model)
-            optimizer = copy.deepcopy(self.optimizer)
-            trained_model.compile(optimizer=optimizer, loss=self.loss, metrics=self.metrics)
+            optimizer = get_optimizer(self.optimizer, self.learning_rate)
+            trained_model.compile(optimizer=optimizer,
+                                  loss=self.loss, metrics=self.metrics)
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
@@ -364,7 +377,7 @@ class DLModelKeras:
                 if len(users_train) + len(user_test) > len(total_users):
                     raise Exception("Mixed train and test")
             X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv, test_size=.1,
-                                                                    random_state = random_state,
+                                                                    random_state=random_state,
                                                                     stratify=y_train_cv)
             if data_augmentation:
                 da = DataAugmenter(X_train_cv, y_train_cv)
@@ -375,10 +388,10 @@ class DLModelKeras:
             y_train_cv_cat = to_categorical(y_train_cv, number_classes)
             y_val_cat = to_categorical(y_val, number_classes)
             history = trained_model.fit(X_train_cv, y_train_cv_cat,
-                                epochs=self.epochs,
-                                validation_data=(X_val, y_val_cat),
-                                batch_size=self.batch_size, verbose=1,
-                                callbacks=self.callbacks)
+                                        epochs=self.epochs,
+                                        validation_data=(X_val, y_val_cat),
+                                        batch_size=self.batch_size, verbose=1,
+                                        callbacks=self.callbacks)
             histories.append(history)
             names_list.append(np.unique(names_test_cv))
             pred = trained_model.predict(X_test_cv)
@@ -416,18 +429,21 @@ class DLModelKeras:
                 trained_model.save_weights(weights_path)
         dictionary = {}
         if fold_level:
-            nested_dictionary = {'pred_list': fold_pred_list, 'label_list': fold_label_list, 'names_list': fold_names_list}
+            nested_dictionary = {'pred_list': fold_pred_list,
+                                 'label_list': fold_label_list, 'names_list': fold_names_list}
             dictionary['fold_level'] = nested_dictionary
         if get_patient_prediction:
-            nested_dictionary = {'pred_list': tot_pred_list, 'label_list': tot_label_list, 'names_list': tot_names_list}
+            nested_dictionary = {'pred_list': tot_pred_list,
+                                 'label_list': tot_label_list, 'names_list': tot_names_list}
             dictionary['total_prediction'] = nested_dictionary
         if return_history:
-            nested_dictionary = {'histories':histories, 'patients':names_list}
+            nested_dictionary = {
+                'histories': histories, 'patients': names_list}
             dictionary['history'] = nested_dictionary
         return dictionary
 
-    def fit_model(self, X_train, y_train, X_val, y_val, return_history = True, model_name = "model", save_model = False,
-                  save_weights = False, model_path = "model_saved/model/", weights_path = "model_saved/weights/"):
+    def fit_model(self, X_train, y_train, X_val, y_val, return_history=True, model_name="model", save_model=False,
+                  save_weights=False, model_path="model_saved/model/", weights_path="model_saved/weights/"):
         """
         Fit a model.
         :param X_train: np.array
@@ -450,7 +466,8 @@ class DLModelKeras:
                                  callbacks=self.callbacks)
         dictionary = {}
         if return_history:
-            nested_dictionary = {'histories': [history], 'patients': [model_name]}
+            nested_dictionary = {'histories': [
+                history], 'patients': [model_name]}
             dictionary['history'] = nested_dictionary
         if save_model:
             self.model.save(model_path)
@@ -479,11 +496,10 @@ class DLModelKeras:
 
         self.model = new_model
 
-    def change_output_tl(self, new_output_dims, new_activation_function = "softmax"):
+    def change_output_tl(self, new_output_dims, new_activation_function="softmax"):
         input_shape = self.model.layers[0].input_shape
         new_model = tf.keras.models.Sequential(self.model.layers[:-1])
         new_model.build(input_shape)
-        new_model.add(Dense(units=new_output_dims, activation = new_activation_function, name="new_output_layer"))
+        new_model.add(Dense(units=new_output_dims,
+                      activation=new_activation_function, name="new_output_layer"))
         self.model = new_model
-
-
