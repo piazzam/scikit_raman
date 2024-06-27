@@ -105,9 +105,9 @@ scikit_raman should work on any platform where Python is supported. The installa
 ### Contributors
 
 - **Name:** Riccardo Frigerio
-- **GitLab:** [RFrig16](https://gitlab.com/RFrig16)
+- **GitLab:** [RFrig16](https://github.com/RFrig16)
 
 ### Author
 
 - **Name:** Marco Piazza
-- **GitLab:** [marcoplaza98](https://gitlab.com/marcoplaza98)
+- **GitLab:** [piazzam](https://github.com/piazzam)
