@@ -25,6 +25,7 @@ def set_seed_random(seed):
     random.seed(seed)
 def set_seed(keras=True, seed_keras=42, scikit_learn = True, seed_scikit_learn=42, numpy_set = True, seed_numpy=42,
              random_set = True, random_seed=42):
+    os.environ['PYTHONHASHSEED'] = str(random_seed)
     if keras:
         set_seed_keras(seed_keras)
     if scikit_learn:
