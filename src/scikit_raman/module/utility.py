@@ -3,6 +3,7 @@ from tensorflow import keras
 import tensorflow as tf
 from sklearn.utils import check_random_state
 import random
+import os
 
 def spectra_to_numpy(df):
     spectra = df.spectra

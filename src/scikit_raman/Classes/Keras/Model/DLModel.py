@@ -11,7 +11,7 @@ from scikit_raman.Classes.DataAugmenter import *
 from scikit_raman.Classes.Keras.Model.utility import get_optimizer
 from tensorflow.keras.models import load_model
 import os
-import scikit_raman.utility as utils
+import scikit_raman.module.utility as utils
 
 class DLModelKeras:
     def __init__(self, model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate):
@@ -104,6 +104,7 @@ class DLModelKeras:
         optimizer = get_optimizer(self.optimizer, self.learning_rate)
         self.model.compile(optimizer=optimizer,
                            loss=self.loss, metrics=self.metrics)
+
 
     def load_weights(self, filename="model_saved/weights"):
         self.model.load_weights(filename, skip_mismatch=True)
