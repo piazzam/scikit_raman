@@ -8,8 +8,9 @@ from tensorflow.keras.models import Sequential
 from keras.models import clone_model
 from tensorflow.keras.utils import to_categorical
 from scikit_raman.Classes.DataAugmenter import *
-from scikit_raman.Classes.Keras.SingleGPU.utility import get_optimizer
+from scikit_raman.Classes.Keras.Model.utility import get_optimizer
 from tensorflow.keras.models import load_model
+import os
 
 
 class DLModelKeras:
@@ -67,7 +68,7 @@ class DLModelKeras:
         model = Sequential()
         if data_augmentation:
             model.add(EMSC(factor, name="EMSC_augmentation"))
-        model.add(InputLayer(input_shape=(n_dims,)))
+        model.add(InputLayer(shape=(n_dims,)))
         model.add(Reshape((n_dims, 1)))
 
         # ----- CNN layers
@@ -154,7 +155,7 @@ class DLModelKeras:
                            loss=self.loss, metrics=self.metrics)
 
     def load_weights(self, filename="model_saved/weights"):
-        self.model.load_weights(filename, compile=False)
+        self.model.load_weights(filename, skip_mismatch=True)
 
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level=True, get_patient_prediction=True,
                                           return_history=True, test_size=0.1, data_augmentation=False, f_name='emsc',
@@ -237,9 +238,17 @@ class DLModelKeras:
                 pat_label_list.append(y_test_cv[0])
                 pat_names_list.append(np.unique(names_test_cv)[0])
             if save_model:
-                trained_model.save(model_path+str(names_test_cv[0]))
+                try:
+                    trained_model.save(model_path+str(names_test_cv[0])+".keras")
+                except FileNotFoundError:
+                    os.makedirs(model_path)
+                    trained_model.save(model_path+str(names_test_cv[0])+".keras")
             if save_weights:
-                trained_model.save_weights(weights_path+str(names_test_cv[0]))
+                try:
+                    trained_model.save_weights(weights_path+str(names_test_cv[0])+'.weights.h5')
+                except FileNotFoundError:
+                    os.makedirs(weights_path)
+                    trained_model.save_weights(weights_path+str(names_test_cv[0])+".weights.h5")
         dictionary = {}
         if patient_level:
             nested_dictionary = {'pred_list': pat_pred_list,
@@ -424,7 +433,7 @@ class DLModelKeras:
 
     def change_input_tl(self, new_input_dims, old_input_dims):
         new_model = Sequential()
-        new_model.add(InputLayer(input_shape=(new_input_dims,)))
+        new_model.add(InputLayer(input=(new_input_dims,)))
         new_model.add(Dense(old_input_dims, name="dense_added"))
         for el in self.model.layers:
             new_model.add(el)
@@ -432,7 +441,7 @@ class DLModelKeras:
         self.model = new_model
 
     def change_output_tl(self, new_output_dims, new_activation_function="softmax"):
-        input_shape = self.model.layers[0].input_shape
+        input_shape = self.model.layers[0].shape
         new_model = tf.keras.models.Sequential(self.model.layers[:-1])
         new_model.build(input_shape)
         new_model.add(Dense(units=new_output_dims,
