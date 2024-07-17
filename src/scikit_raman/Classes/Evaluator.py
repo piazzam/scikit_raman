@@ -434,7 +434,8 @@ class Evaluator:
         plt.close()
 
   
-    def save_results_into_csv(self, filename, name, classification, model, preprocessing, pca, drugs_categories, all_target_names):
+    def save_results_into_csv(self, filename, name, classification, model, preprocessing, pca_or_data_augmentation, drugs_categories,
+                              all_target_names, DLModel=False):
         report_patient_level = classification_report(self.results['patient_level']['pred_list'],
                                                     self.results['patient_level']['label_list'], output_dict=True,
                                                     labels=self.classes, target_names=self.target_names)
@@ -445,7 +446,7 @@ class Evaluator:
         if not os.path.exists(filename):
             with open(filename, 'w', newline='') as file:
                 writer = csv.writer(file)
-                header = ['name', 'classification', 'model', 'preprocessing', 'pca',
+                header = ['name', 'classification', 'model', 'preprocessing', f"{'data_augmentation' if DLModel else 'pca'}",
                           'drugs_categories', 'accuracy_spectra_level', 'accuracy_patient_level']
                 for metric in ['precision', 'recall', 'f1-score']:
                     for target_name in all_target_names:
@@ -456,7 +457,8 @@ class Evaluator:
 
         with open(filename, 'a', newline='') as file:
             writer = csv.writer(file)
-            row = [name, classification, model, preprocessing, pca, drugs_categories if drugs_categories is not None else 'None',
+            row = [name, classification, model, preprocessing, pca_or_data_augmentation,
+                   drugs_categories if drugs_categories is not None else 'None',
                    report_total['accuracy'], report_patient_level['accuracy']]
             for metric in ['precision', 'recall', 'f1-score']:
                 for target_name in all_target_names:
