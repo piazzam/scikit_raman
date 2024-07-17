@@ -47,8 +47,7 @@ class Evaluator:
         report_patient_level = classification_report(self.results['patient_level']['pred_list'],
                                                      self.results['patient_level']['label_list'], output_dict=True,
                                                      labels=self.classes)
-        specificity = self.calculate_specificity_personalized(self.results['patient_level']['pred_list'],
-                                                             self.results['patient_level']['label_list'])
+        specificity = self.calculate_specificity(cm_patient_level, labels=self.classes)
         if len(self.classes) == 2:
             self.create_roc_curve_plot_binary(self.results['patient_level']['pred_list'],
                                                     self.results['patient_level']['label_list'],
@@ -80,25 +79,16 @@ class Evaluator:
         cm_plot.figure.clear()
         return cm_patient_level, report_patient_level
 
-    def calculate_specificty(self):
-        specificity = {}
-        for l in self.classes:
-            prec, recall, _, _ = precision_recall_fscore_support(
-                np.array(self.results['total_prediction']['label_list']) == l,
-                np.array(self.results['total_prediction']['pred_list']) == l,
-                pos_label=True, average=None)
-            specificity[str(l)] = 1-recall[0]
-        return specificity
-
-    def calculate_specificity_personalized(self, y_pred, y_true):
-        specificity = {}
-        for l in self.classes:
-            prec, recall, _, _ = precision_recall_fscore_support(
-                np.array(y_true) == l,
-                np.array(y_pred) == l,
-                pos_label=True, average=None)
-            specificity[str(l)] = 1 - recall[0]
-        return specificity
+    def calculate_specificity(self, confusion_matrix, labels):
+        specificity_dict = {}
+        
+        for i in range(confusion_matrix.shape[0]):
+                tn = np.sum(np.delete(np.delete(confusion_matrix, i, axis=0), i, axis=1)) 
+                fp = np.sum(np.delete(confusion_matrix[:, i], i))  
+                specificity = tn / (tn + fp) if (tn + fp) != 0 else 0
+                specificity_dict[str(labels[i])] = specificity
+                
+        return specificity_dict
 
     def calculate_macro_avg(self, d):
         l = d.values()
@@ -145,7 +135,7 @@ class Evaluator:
             self.create_roc_curve_plot_multiclass(self.results['total_prediction']['pred_list'],
                                               self.results['total_prediction']['label_list'],
                                               show=show, save=save, filename=folder_path + "roc_curve_total.png")
-        specificity = self.calculate_specificty()
+        specificity = self.calculate_specificity(cm_total, labels=self.classes)
         for k in specificity.keys():
             report_total[k]['specificity'] = specificity[k]
         report_total['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
@@ -190,7 +180,7 @@ class Evaluator:
                     prediction.append(self.results['total_prediction']['pred_list'][j])
             cm_model = confusion_matrix(prediction, labels, labels = self.classes)
             report_model = classification_report(prediction, labels, output_dict=True, labels=self.classes)
-            specificity = self.calculate_specificity_personalized(prediction, labels)
+            specificity = self.calculate_specificity(cm_model, labels=self.classes)
             for k in specificity.keys():
                 report_model[k]['specificity'] = specificity[k]
             report_model['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
@@ -241,7 +231,7 @@ class Evaluator:
         report_patient_level = classification_report(predicted,
                                                           labels, output_dict=True,
                                                           labels=self.classes)
-        specificity = self.calculate_specificity_personalized(predicted, labels)
+        specificity = self.calculate_specificity(cm_patient_level, labels=self.classes)
         if len(self.classes) == 2:
             self.create_roc_curve_plot_binary(predicted,
                                               labels,
@@ -304,7 +294,7 @@ class Evaluator:
             predictions_patient_level.append(max(set(prediction), key=prediction.count))
         cm_model = confusion_matrix(predictions_patient_level, labels_patient_level, labels=self.classes)
         report_model = classification_report(predictions_patient_level, labels_patient_level, output_dict=True, labels=self.classes)
-        specificity = self.calculate_specificity_personalized(predictions_patient_level, labels_patient_level,)
+        specificity = self.calculate_specificity(cm_model, labels=self.classes)
         for k in specificity.keys():
             report_model[k]['specificity'] = specificity[k]
         report_model['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
