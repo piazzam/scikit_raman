@@ -1,4 +1,4 @@
-from sklearn.metrics import classification_report, precision_recall_fscore_support
+from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 import pandas as pd
 import seaborn as sn
@@ -41,12 +41,12 @@ class Evaluator:
         :return: list
             Returns the confusion matrix and the report.
         """
-        cm_patient_level = confusion_matrix(self.results['patient_level']['pred_list'],
-                                            self.results['patient_level']['label_list'],
+        cm_patient_level = confusion_matrix(self.results['patient_level']['label_list'],
+                                            self.results['patient_level']['pred_list'],
                                             labels = self.classes)
-        report_patient_level = classification_report(self.results['patient_level']['pred_list'],
-                                                     self.results['patient_level']['label_list'], output_dict=True,
-                                                     labels=self.classes)
+        report_patient_level = classification_report(self.results['patient_level']['label_list'],
+                                                     self.results['patient_level']['pred_list'],
+                                                     output_dict=True, labels=self.classes)
         specificity = self.calculate_specificity(cm_patient_level, labels=self.classes)
         if len(self.classes) == 2:
             self.create_roc_curve_plot_binary(self.results['patient_level']['pred_list'],
@@ -72,9 +72,9 @@ class Evaluator:
             cm_plot.figure.savefig(folder_path + "cm_total_patient.png")
         if show:
             cm_plot.figure.show()
-            print(classification_report(self.results['patient_level']['pred_list'],
-                                                     self.results['patient_level']['label_list'], output_dict=False,
-                                                     labels=self.classes))
+            print(classification_report(self.results['patient_level']['label_list'],
+                                        self.results['patient_level']['pred_list'],
+                                        output_dict=False,labels=self.classes))
             print(cm_patient_level)
         cm_plot.figure.clear()
         return cm_patient_level, report_patient_level
@@ -122,11 +122,12 @@ class Evaluator:
         :return: list
             Returns the confusion matrix and the report.
         """
-        cm_total = confusion_matrix(self.results['total_prediction']['pred_list'],
-                                            self.results['total_prediction']['label_list'], labels = self.classes)
-        report_total = classification_report(self.results['total_prediction']['pred_list'],
-                                                     self.results['total_prediction']['label_list'], output_dict=True,
-                                                     labels=self.classes)
+        cm_total = confusion_matrix(self.results['total_prediction']['label_list'],
+                                    self.results['total_prediction']['pred_list'],
+                                    labels = self.classes)
+        report_total = classification_report(self.results['total_prediction']['label_list'],
+                                             self.results['total_prediction']['pred_list'],
+                                             output_dict=True, labels=self.classes)
         if len(self.classes) == 2:
             self.create_roc_curve_plot_binary(self.results['total_prediction']['pred_list'],
                                                     self.results['total_prediction']['label_list'],
@@ -151,9 +152,9 @@ class Evaluator:
             cm_plot.figure.savefig(folder_path + "cm_total.png")
         if show:
             cm_plot.figure.show()
-            print(classification_report(self.results['total_prediction']['pred_list'],
-                                        self.results['total_prediction']['label_list'], output_dict=False,
-                                        labels=self.classes))
+            print(classification_report(self.results['total_prediction']['label_list'],
+                                        self.results['total_prediction']['pred_list'],
+                                        output_dict=False, labels=self.classes))
             print(cm_total)
         cm_plot.figure.clear()
         return cm_total, report_total
@@ -178,8 +179,8 @@ class Evaluator:
                 if el == total_names_list[j]:
                     labels.append(self.results['total_prediction']['label_list'][j])
                     prediction.append(self.results['total_prediction']['pred_list'][j])
-            cm_model = confusion_matrix(prediction, labels, labels = self.classes)
-            report_model = classification_report(prediction, labels, output_dict=True, labels=self.classes)
+            cm_model = confusion_matrix(labels, prediction, labels = self.classes)
+            report_model = classification_report(labels, prediction, output_dict=True, labels=self.classes)
             specificity = self.calculate_specificity(cm_model, labels=self.classes)
             for k in specificity.keys():
                 report_model[k]['specificity'] = specificity[k]
@@ -197,7 +198,7 @@ class Evaluator:
             if show:
                 print("Result of patient {}" + str(el))
                 print(cm_model)
-                print(classification_report(prediction, labels, output_dict=False, labels=self.classes))
+                print(classification_report(labels, prediction, output_dict=False, labels=self.classes))
                 cm_plot.figure.show()
             cm_plot.figure.clear()
 
@@ -225,12 +226,9 @@ class Evaluator:
             predicted.extend(list)
         for list in self.results['fold_level']['label_list']:
             labels.extend(list)
-        cm_patient_level = confusion_matrix(predicted,
-                                                 labels,
-                                                 labels = self.classes)
-        report_patient_level = classification_report(predicted,
-                                                          labels, output_dict=True,
-                                                          labels=self.classes)
+        cm_patient_level = confusion_matrix(labels, predicted, labels = self.classes)
+        report_patient_level = classification_report(labels, predicted, 
+                                                     output_dict=True, labels=self.classes)
         specificity = self.calculate_specificity(cm_patient_level, labels=self.classes)
         if len(self.classes) == 2:
             self.create_roc_curve_plot_binary(predicted,
@@ -257,9 +255,8 @@ class Evaluator:
             cm_plot.figure.savefig(folder_path + "cm_total_patient.png")
         if show:
             cm_plot.figure.show()
-            print(classification_report(predicted,
-                                        labels, output_dict=False,
-                                        labels=self.classes))
+            print(classification_report(labels, predicted,
+                                        output_dict=False, labels=self.classes))
             print(cm_patient_level)
         cm_plot.figure.clear()
         return cm_patient_level, report_patient_level
@@ -292,8 +289,8 @@ class Evaluator:
                     prediction.append(self.results['total_prediction']['pred_list'][j])
             labels_patient_level.append(max(set(labels), key=labels.count))
             predictions_patient_level.append(max(set(prediction), key=prediction.count))
-        cm_model = confusion_matrix(predictions_patient_level, labels_patient_level, labels=self.classes)
-        report_model = classification_report(predictions_patient_level, labels_patient_level, output_dict=True, labels=self.classes)
+        cm_model = confusion_matrix(labels_patient_level, predictions_patient_level, labels=self.classes)
+        report_model = classification_report(labels_patient_level, predictions_patient_level, output_dict=True, labels=self.classes)
         specificity = self.calculate_specificity(cm_model, labels=self.classes)
         for k in specificity.keys():
             report_model[k]['specificity'] = specificity[k]
@@ -311,7 +308,7 @@ class Evaluator:
         if show:
             print("Result patient level")
             print(cm_model)
-            print(classification_report(predictions_patient_level, labels_patient_level, output_dict=False, labels=self.classes))
+            print(classification_report(labels_patient_level, predictions_patient_level, output_dict=False, labels=self.classes))
             cm_plot.figure.show()
         cm_plot.figure.clear()
 
@@ -426,12 +423,17 @@ class Evaluator:
   
     def save_results_into_csv(self, filename, name, classification, model, preprocessing, pca_or_data_augmentation, drugs_categories,
                               all_target_names, DLModel=False):
-        report_patient_level = classification_report(self.results['patient_level']['pred_list'],
-                                                    self.results['patient_level']['label_list'], output_dict=True,
-                                                    labels=self.classes, target_names=self.target_names)
-        report_total = classification_report(self.results['total_prediction']['pred_list'],
-                                            self.results['total_prediction']['label_list'], output_dict=True,
-                                            labels=self.classes, target_names=self.target_names)
+        report_patient_level = classification_report(self.results['patient_level']['label_list'],
+                                                     self.results['patient_level']['pred_list'], 
+                                                     output_dict=True,
+                                                     labels=self.classes, 
+                                                     target_names=self.target_names)
+        
+        report_total = classification_report(self.results['total_prediction']['label_list'],
+                                             self.results['total_prediction']['pred_list'],
+                                             output_dict=True,
+                                             labels=self.classes, 
+                                             target_names=self.target_names)
         
         if not os.path.exists(filename):
             with open(filename, 'w', newline='') as file:
