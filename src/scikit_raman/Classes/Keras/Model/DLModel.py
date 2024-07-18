@@ -26,7 +26,8 @@ class DLModelKeras:
         self.learning_rate = learning_rate
 
     @classmethod
-    def load_model_benchmark(dlm,  n_dims, number_classes=3, data_augmentation=False, factor=0.5, set_seed=True):
+    def load_model_benchmark(dlm,  n_dims, number_classes=3, data_augmentation=False, factor=0.5, 
+                             set_seed=True, folder_path="models/checkpoint"):
         loss = 'categorical_crossentropy'
         metrics = ['categorical_accuracy']
         learning_rate = 0.00020441990333108206
@@ -89,7 +90,7 @@ class DLModelKeras:
                            restore_best_weights=True)
         lr = ReduceLROnPlateau(monitor="val_categorical_accuracy", factor=0.5, verbose=4, patience=80,
                                cooldown=10)
-        ec = EpochCheckpointSaver(save_interval=39, folder_path="model_saved/model/checkpoint", model_name="benchmark")
+        ec = EpochCheckpointSaver(save_interval=39, folder_path=folder_path, model_name="Benchmark_CNN")
         callbacks = [es, lr, ec]
         if set_seed:
             utils.set_seed()

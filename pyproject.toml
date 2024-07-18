@@ -5,8 +5,10 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "scikit-raman"
 version = "0.0.1"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.9"
 dependencies = [
-  'keras==3.1.1',
   'matplotlib==3.8.3',
   'numpy==1.23.5',
   'optuna==3.6.1',
@@ -16,12 +18,17 @@ dependencies = [
   'scikit_learn==1.4.1.post1',
   'scipy==1.9.1',
   'seaborn==0.13.2',
-  'tensorflow==2.16.1',
   'torch==2.0.1',
   'tqdm==4.66.2',
   'wandb==0.16.5',
 ]
-requires-python = ">=3.8"
 
-readme = "README.md"
-license = {file = "LICENSE"}
+[project.optional-dependencies]
+cpu = [
+  'keras==3.1.1',
+  'tensorflow==2.16.1'
+]
+gpu = [
+  'keras==3.4',
+  'tensorflow[and-cuda]'
+]
