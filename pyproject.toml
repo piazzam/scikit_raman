@@ -19,14 +19,16 @@ dependencies = [
   'scipy==1.9.1',
   'seaborn==0.13.2',
   'tqdm==4.66.2',
-  'wandb==0.16.5',
-  'torch==2.0.1'
+  'wandb==0.16.5'
 ]
 
 [project.optional-dependencies]
-standard = [
+standardKeras = [
   'tensorflow==2.16.1'
 ]
-mindHard = [
+mindHardKeras = [
   'tensorflow[and-cuda]'
+]
+torch = [
+  'torch==2.0.1'
 ]
