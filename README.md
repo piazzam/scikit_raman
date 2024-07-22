@@ -64,7 +64,7 @@ If you only intend to use the library:
 
    This will install scikit_raman along with its dependencies into your virtual environment.
 
-   Replace `installation_option` with `standard` or `mindHard` depending on your desired installation.
+   Replace `installation_option` with `standardKeras`, `mindHardKeras` or `torch` depending on your desired installation.
 
    **Note**: For a correct usage of the library is fondumental to set one of the two installation options!!!
 
@@ -82,7 +82,7 @@ If you intend to contribute to the library or need to work on it:
    pip install -e .[installation_option]
    ```
 
-   Replace `installation_option` with `standard` or `mindHard` depending on your desired installation.
+   Replace `installation_option` with `standardKeras`, `mindHardKeras` or `torch` depending on your desired installation.
 
    **Note**: For a correct usage of the library is fondumental to set one of the two installation options!!!
 
