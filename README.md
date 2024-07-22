@@ -64,9 +64,11 @@ If you only intend to use the library:
 
    This will install scikit_raman along with its dependencies into your virtual environment.
 
-   Replace `installation_option` with `cpu` or `gpu` depending on your desired installation (CPU or GPU support).
+   Replace `installation_option` with `standard` or `mindHard` depending on your desired installation.
 
    **Note**: For a correct usage of the library is fondumental to set one of the two installation options!!!
+
+   For more details, please refer to the [Tensorflow Documentation](https://www.tensorflow.org/install/source?hl=en#gpu)
 
 #### Editable Installation (For Developers):
 
@@ -80,9 +82,11 @@ If you intend to contribute to the library or need to work on it:
    pip install -e .[installation_option]
    ```
 
-   Replace `installation_option` with `cpu` or `gpu` depending on your desired installation (CPU or GPU support).
+   Replace `installation_option` with `standard` or `mindHard` depending on your desired installation.
 
    **Note**: For a correct usage of the library is fondumental to set one of the two installation options!!!
+
+   For more details, please refer to the [Tensorflow Documentation](https://www.tensorflow.org/install/source?hl=en#gpu)
 
    If installation in editable mode fails, ensure your setuptools version is up to date. You can upgrade it with the following commands:
 

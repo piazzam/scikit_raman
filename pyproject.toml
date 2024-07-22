@@ -18,17 +18,15 @@ dependencies = [
   'scikit_learn==1.4.1.post1',
   'scipy==1.9.1',
   'seaborn==0.13.2',
-  'torch==2.0.1',
   'tqdm==4.66.2',
   'wandb==0.16.5',
+  'torch==2.0.1'
 ]
 
 [project.optional-dependencies]
-cpu = [
-  'keras==3.1.1',
+standard = [
   'tensorflow==2.16.1'
 ]
-gpu = [
-  'keras==3.4',
+mindHard = [
   'tensorflow[and-cuda]'
 ]
