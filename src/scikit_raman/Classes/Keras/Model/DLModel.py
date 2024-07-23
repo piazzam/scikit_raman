@@ -1,3 +1,4 @@
+import os
 import copy
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
@@ -10,8 +11,8 @@ from tensorflow.keras.utils import to_categorical
 from scikit_raman.Classes.DataAugmenter import *
 from scikit_raman.Classes.Keras.Model.utility import get_optimizer
 from tensorflow.keras.models import load_model
-import os
 import scikit_raman.module.utility as utils
+from scikit_raman.Classes.Keras.Model.callbacks import EpochCheckpointSaver
 
 class DLModelKeras:
     def __init__(self, model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate):
@@ -25,7 +26,8 @@ class DLModelKeras:
         self.learning_rate = learning_rate
 
     @classmethod
-    def load_model_benchmark(dlm,  n_dims, number_classes=3, data_augmentation=False, factor=0.5, set_seed=True):
+    def load_model_benchmark(dlm,  n_dims, number_classes=3, data_augmentation=False, factor=0.5, 
+                             set_seed=True, folder_path="models/checkpoint"):
         loss = 'categorical_crossentropy'
         metrics = ['categorical_accuracy']
         learning_rate = 0.00020441990333108206
@@ -88,7 +90,8 @@ class DLModelKeras:
                            restore_best_weights=True)
         lr = ReduceLROnPlateau(monitor="val_categorical_accuracy", factor=0.5, verbose=4, patience=80,
                                cooldown=10)
-        callbacks = [es, lr]
+        ec = EpochCheckpointSaver(save_interval=39, folder_path=folder_path, model_name="Benchmark_CNN")
+        callbacks = [es, lr, ec]
         if set_seed:
             utils.set_seed()
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)

@@ -5,7 +5,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import tensorflow as tf
-from scikit_raman.Classes.Keras.SingleGPU.DLModel import DLModelKeras
+from scikit_raman.Classes.Keras.Model.DLModel import DLModelKeras
 
 
 def create_model(n_dims, n_classes):
