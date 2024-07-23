@@ -221,7 +221,7 @@ class DLModelKeras:
         histories = []
         names_list = []
         total_users = np.unique(dataset.user)
-        for j, (train_idx, test_idx) in enumerate(folds):
+        for j, (train_idx, test_idx) in enumerate(folds, start=1):
             names_test_cv = dataset.user[test_idx]
             patient_name = np.unique(names_test_cv)[0]
             print(f'\n[*] Patient {j}: {patient_name}')
