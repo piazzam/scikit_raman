@@ -123,7 +123,7 @@ class DLModelKeras:
                                           return_history=True, test_size=0.1, data_augmentation=False, f_name='emsc',
                                           f_params=None, save_model=False, model_path="model_saved/models/final", save_weights=False,
                                           weights_path="model_saved/weights/", random_state=42, set_seed=True, model_name="Benchmark_CNN",
-                                          checkpoint_folder_path="model_saved/models/checkpoint",):
+                                          checkpoint_folder_path="model_saved/models/checkpoint"):
         if set_seed:
             utils.set_seed(random_state)
         folds = dataset.leave_one_patient_cv()
@@ -206,8 +206,9 @@ class DLModelKeras:
         return dictionary
 
     def train_model_cv(self, dataset, number_classes, k=10, fold_level=True, get_patient_prediction=True, return_history=True,
-                       data_augmentation=False, f_name='emsc', f_params=None, save_model=False, model_path="model_saved/model/",
-                       save_weights=False, weights_path="model_saved/weights/", random_state=42, check_users_separated=True):
+                       data_augmentation=False, f_name='emsc', f_params=None, save_model=False, model_path="model_saved/models/",
+                       save_weights=False, weights_path="model_saved/weights/", random_state=42, check_users_separated=True, 
+                       model_name="Benchmark_CNN", checkpoint_folder_path="model_saved/models/checkpoint"):
         if set_seed:
             utils.set_seed(random_state)
         folds = dataset.k_fold(k)
