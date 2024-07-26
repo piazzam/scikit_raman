@@ -3,8 +3,6 @@ import scikit_raman.Classes.Keras.Model.DLModel as DLModel
 import scikit_raman.Classes.Preprocessing.Processor as preprocessing
 import scikit_raman.Classes.Experiment.dl_model_keras as dl_model_keras
 import scikit_raman.Classes.Experiment.utils as utils
-import os
-import scikit_raman.Classes.Evaluator as ev
 
 class DLExperiment(ExperimentBase.Experiment):
 

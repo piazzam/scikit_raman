@@ -2,10 +2,8 @@ import pickle
 import scikit_raman.Classes.Experiment.ml_model_sklearn as ml_model_sklearn
 import scikit_raman.Classes.Experiment.ExperimentBase as ExperimentBase
 import scikit_raman.Classes.Preprocessing.Processor as preprocessing
-import scikit_raman.Classes.Evaluator as ev
 import sklearn.decomposition as decomposition
 import scikit_raman.Classes.Experiment.utils as utils
-import os
 
 class MLExperiment(ExperimentBase.Experiment):
 
