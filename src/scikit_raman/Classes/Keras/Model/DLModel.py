@@ -195,7 +195,8 @@ class DLModelKeras:
 
     def train_model_cv(self, dataset, number_classes, k=10, fold_level=True, get_patient_prediction=True, return_history=True,
                        data_augmentation=False, f_name='emsc', f_params=None, save_model=False, model_path="model_saved/model/",
-                       save_weights=False, weights_path="model_saved/weights/", random_state=42, check_users_separated=True):
+                       save_weights=False, weights_path="model_saved/weights/", random_state=42, check_users_separated=True,
+                       set_seed=True):
         if set_seed:
             utils.set_seed(random_state)
         folds = dataset.k_fold(k)

@@ -1,8 +1,8 @@
 import scikit_raman.Classes.Experiment.ExperimentBase as ExperimentBase
 import scikit_raman.Classes.Keras.Model.DLModel as DLModel
 import scikit_raman.Classes.Preprocessing.Processor as preprocessing
-import dl_model_keras
-import utils
+import scikit_raman.Classes.Experiment.dl_model_keras as dl_model_keras
+import scikit_raman.Classes.Experiment.utils as utils
 import os
 import scikit_raman.Classes.Evaluator as ev
 
@@ -15,7 +15,8 @@ class DLExperiment(ExperimentBase.Experiment):
 
     def load_model(self):
         if self.configurations['model_name'] == 'benchmark':
-            model = DLModel.DLModelKeras.load_model_benchmark(self.configurations['n_dims'])
+            model = DLModel.DLModelKeras.load_model_benchmark(self.configurations['n_dims'],
+                                                              number_classes=self.configurations['n_classes'])
         else:
             base_model = dl_model_keras.load_model(self.configurations['model_name'])
             model_configuration_file = utils.parse_yaml_file(self.configurations['base_path_yaml']
@@ -30,9 +31,13 @@ class DLExperiment(ExperimentBase.Experiment):
         proc = preprocessing.Processor(ds)
         if experiment_with_preprocessing:
             preprocessing_steps = self.load_preprocessing()
-            for step in preprocessing_steps:
-                func = getattr(proc, step)
-                func()
+            for step in preprocessing_steps['preprocessing_steps']:
+                if step in preprocessing_steps['parameters']:
+                    func = getattr(proc, step)
+                    func(**preprocessing_steps['parameters'][step])
+                else:
+                    func = getattr(proc, step)
+                    func()
         experiment_with_drugs = self.configurations['with_drugs']
         if experiment_with_drugs:
             df_drugs, ds_drugs = self.load_drugs()
@@ -55,28 +60,41 @@ class DLExperiment(ExperimentBase.Experiment):
             raise ("Evaluation procedure not defined")
 
     def k_fold(self, ds, model):
-        k_fold_parameters_file = self.configurations['base_path_yaml']+self.configurations['k_fold_parameter_file']
-        k_fold_parameters = utils.parse_yaml_file(k_fold_parameters_file)
+        k_fold_parameters_file = self.configurations['base_path_yaml'] + self.configurations['k_fold_parameter_file']
+        # k_fold_parameters = utils.parse_yaml_file(k_fold_parameters_file)
+        k_fold_parameters = self.load_file_yaml(k_fold_parameters_file)
         n_classes = self.configurations['n_classes']
-        r = model.train_model_cv(ds, n_classes, **k_fold_parameters)
+        if k_fold_parameters is None:
+            r = model.train_model_cv(ds, n_classes)
+        else:
+            r = model.train_model_cv(ds, n_classes, **k_fold_parameters)
         return r
 
     def loocv(self, ds, model):
-        k_fold_parameters_file = self.configurations['base_path_yaml']+self.configurations['loocv_parameter_file']
-        k_fold_parameters = utils.parse_yaml_file(k_fold_parameters_file)
+        loocv_fold_parameters_file = self.configurations['base_path_yaml'] + self.configurations['loocv_parameter_file']
+        # k_fold_parameters = utils.parse_yaml_file(k_fold_parameters_file)
+        loocv_fold_parameters = self.load_file_yaml(loocv_fold_parameters_file)
         n_classes = self.configurations['n_classes']
-        r = model.train_model_leave_one_patient_out(ds, n_classes, **k_fold_parameters)
+        if loocv_fold_parameters is None:
+            r = model.train_model_leave_one_patient_out(ds, n_classes)
+        else:
+            r = model.train_model_leave_one_patient_out(ds, n_classes, **loocv_fold_parameters)
         return r
 
     def store_results(self, r):
         target_names = self.configurations['target_names']
         path = self.configurations['path_out']
-        evaluator_file = self.configurations['base_path_yaml']+self.configurations['evaluator_file']
-        evaluator_steps = utils.parse_yaml_file(evaluator_file)
+        evaluator_file = self.configurations['base_path_yaml'] + self.configurations['evaluator_file']
+        evaluator_data = utils.parse_yaml_file(evaluator_file)
+        evaluator_steps = utils.parse_yaml_file(evaluator_file)['evaluator_steps']
         if not (os.path.exists(path)):
             os.mkdir(path)
         classes = self.configurations['classes']
         evaluator = ev.Evaluator(r, classes, target_names)
         for step in evaluator_steps:
-            func = getattr(evaluator, step)
-            func(folder_path=path)
+            if step in evaluator_data['parameters']:
+                func = getattr(evaluator, step)
+                func(folder_path=path, **evaluator_data['parameters'][step])
+            else:
+                func = getattr(evaluator, step)
+                func(folder_path=path)
