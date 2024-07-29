@@ -9,8 +9,8 @@ class MLExperiment(ExperimentBase.Experiment):
 
 	def __init__(self, configuration_file):
 		super().__init__(configuration_file)
-		if self.configurations['experiment_type'] == 'dl':
-			raise Exception("Try to perform a DL experiments on a ML object")
+		# if self.configurations['experiment_type'] == 'dl':
+		# 	raise Exception("Try to perform a DL experiments on a ML object")
 
 	def load_model(self):
 		try:

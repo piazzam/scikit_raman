@@ -9,4 +9,4 @@ def name_to_object(name, seed=42):
 	elif name == 'svm':
 		return MLModel.MLModel(svm.SVC(probability=True, random_state=seed))
 	elif name == 'lda':
-		return MLModel.MLModel(da.LinearDiscriminantAnalysis(random_state=seed))
+		return MLModel.MLModel(da.LinearDiscriminantAnalysis())
