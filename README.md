@@ -2,11 +2,9 @@
 
 scikit_raman is a Python library designed for manipulation and analysis of Raman Spectral Data. This project originated from the author's thesis during their Master's degree in Computer Science at the University of Milan-Bicocca.
 
-## Getting Started
+## Installation
 
-### Installation
-
-#### Prerequisites
+### Prerequisites
 
 Before installing scikit_raman, ensure you have the following prerequisites installed:
 
@@ -14,7 +12,7 @@ Before installing scikit_raman, ensure you have the following prerequisites inst
 - Pip version 24.0 or higher
 - Git (for cloning the repository)
 
-#### Installation Steps
+### Installation Steps
 
 To keep your project environment clean and isolated, it's recommended to install scikit_raman within a virtual environment.
 
@@ -102,7 +100,7 @@ Whenever you're finished working with scikit_raman, you can deactivate the virtu
 deactivate
 ```
 
-### Quick Start
+## Quick Start
 
 #### Using the Python API
 
