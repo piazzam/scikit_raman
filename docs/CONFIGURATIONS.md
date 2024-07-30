@@ -17,9 +17,10 @@ The `config.yaml` file is the main configuration file that references other conf
 - **label_dictionary** (dict): Mapping of labels to numeric values.
   - Example:
     ```yaml
-    label_dictionary:
-      'ASMA': 0
-      'BPCO': 1
+    label_dictionary: 
+    {
+      'ASMA':0,
+      'BPCO':1}
     ```
 - **with_drugs** (bool): Whether to include drug data.
 - **drug_names** (list): List of drug names.
@@ -28,17 +29,16 @@ The `config.yaml` file is the main configuration file that references other conf
 - **farmaci_files** (list): List of paths to CSV files containing drug informations about patients.
   - Example:
     ```yaml
-    farmaci_files:
-      - ../new_dataset/therapy_bpco.csv
-      - ../new_dataset/asma_farmaci.csv
+    farmaci_files: [../new_dataset/therapy_bpco.csv, ../new_dataset/asma_farmaci.csv]
     ```
 - **farmaci_ds_filename** (string): Path to the drug spectral dataset.
 - **label_dictionary_drugs** (dict): Mapping of drug labels to numeric values.
   - Example:
     ```yaml
     label_dictionary_drugs:
-      polvere: 0
-      in_fisio: 1
+    {
+      polvere: 0,
+      in_fisio: 1}
     ```
 - **with_preprocessing** (bool): Whether to apply preprocessing.
 - **preprocessing_file** (string): Path to the preprocessing configuration file. Default is `preprocessing.yaml`. Click [here](#preprocessing-configuration-file-preprocessingyaml) for more details.
@@ -46,7 +46,7 @@ The `config.yaml` file is the main configuration file that references other conf
 - **pca_components** (int): Number of PCA components if PCA is applied.
 - **model_name** (string): Name of the model. The type of experiment determines the available options.
   - **dl (Deep Learning)**:
-    - If `model_name` is `benchmark`, a benchmark model developed in the library is used. It is also necessary to define the `n_dims` option of the model, which is critical for correctly defining the model in order to respect the number of points (or length) of the spectral data.
+    - If `model_name` is `benchmark`, the benchmark model developed in the library is used. It is also necessary to define the `n_dims` option of the model, which is critical for correctly defining the model in order to respect the number of points (or length) of the spectral data.
       - Example:
         ```yaml
         model_name: benchmark
@@ -97,16 +97,18 @@ The `config.yaml` file is the main configuration file that references other conf
 file_name: ../new_dataset/pickle_old/data_asma_bpco.pkl
 seed: 42
 label_dictionary:
-  {'ASMA':0,
-  'BPCO':1}
+  {
+    'ASMA':0,
+    'BPCO':1}
 with_drugs: True
 drug_names: [ASMA, BPCO]
 polvere: True
 farmaci_files: [../new_dataset/therapy_bpco.csv, ../new_dataset/asma_farmaci.csv]
 farmaci_ds_filename: ../new_dataset/pickle_old/farmaci_tipo_soluzione.pkl
 label_dictionary_drugs:
-  {polvere: 0,
-  in_fisio: 1}
+  {
+    polvere: 0,
+    in_fisio: 1}
 with_preprocessing: True
 preprocessing_file: preprocessing.yaml
 with_pca: False
