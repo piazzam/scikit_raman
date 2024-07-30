@@ -17,7 +17,7 @@ class DLExperiment(ExperimentBase.Experiment):
             model = DLModel.DLModelKeras.load_model_benchmark(self.configurations['n_dims'],
                                                               number_classes=self.configurations['n_classes'])
         else:
-            base_model = dl_model_keras.load_model(self.configurations['model_name'])
+            base_model = dl_model_keras.load_model(self.configurations['model_name']) #Qui credo ci sia un errore. L'opzione da riferisirsi non è model_path?
             model_configuration_file = utils.parse_yaml_file(os.path.join(self.base_path,
                                                                           self.configurations['model_configuration']))
             model = DLModel.DLModelKeras(base_model, **model_configuration_file)

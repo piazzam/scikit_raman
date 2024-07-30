@@ -102,13 +102,41 @@ Whenever you're finished working with scikit_raman, you can deactivate the virtu
 deactivate
 ```
 
-### Usage
+### Quick Start
 
-Once installed, you can start using scikit_raman in your Python projects. Import the necessary modules and functions as needed:
+#### Using the Python API
 
+```python
+import scikit_raman.Classes.Experiment.DLExperiment as DLE
+import scikit_raman.Classes.Experiment.MLExperiment as MLE
+
+# Load and run a DL experiment
+dl_experiment = DLE.DLExperiment('dl_config.yaml')
+dl_experiment.experiment()
+
+# Load and run an ML experiment
+ml_experiment = MLE.MLExperiment('ml_config.yaml')
+ml_experiment.experiment()
 ```
-import scikit_raman
+#### Using the CLI
+
+```bash
+# Display help
+scikit-raman-cli --help
+
+# Process a DL experiment using a configuration file
+scikit-raman-cli -p dl_config.yaml -t dl
+
+# Process an ML experiment using a configuration file
+scikit-raman-cli -p ml_config.yaml -t ml
 ```
+### Configuration
+
+The library uses a main `config.yaml` file that references additional configuration files. For detailed information on all avaiable options and how to structure these files, please refer to [CONFIGURATION.md](docs/CONFIGURATIONS.md)
+
+### CLI Usage
+
+The CLI provides commands for processing spectral data and managing configurations. For detailed CLI usage, see [CLI.md](docs/CLI.md)
 
 ### Supported Platforms
 
