@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization, InputLayer, Conv1D, MaxPooling1D, \
     Reshape
+from tensorflow.keras.initializers import HeUniform
 from tensorflow.keras.layers import LeakyReLU
 from tensorflow.keras.models import Sequential
 from keras.models import clone_model
@@ -32,6 +33,7 @@ class DLModelKeras:
         metrics = ['categorical_accuracy']
         learning_rate = 0.00020441990333108206
         optimizer = 'adam'
+        initializer = HeUniform()
 
         # ----- init model
         model = Sequential()
@@ -43,13 +45,15 @@ class DLModelKeras:
                          kernel_size=100,
                          strides=1,
                          padding='same',
-                         activation='relu'))
+                         activation='relu',
+                         kernel_initializer=initializer))
         model.add(BatchNormalization(momentum=0.99, epsilon=0.01))
         model.add(Conv1D(filters=100,
                          kernel_size=5,
                          strides=2,
                          padding='same',
-                         activation='relu'))
+                         activation='relu',
+                         kernel_initializer=initializer))
         model.add(MaxPooling1D(pool_size=6,
                                strides=3,
                                padding='same'))
@@ -58,7 +62,8 @@ class DLModelKeras:
                          kernel_size=9,
                          strides=5,
                          padding='same',
-                         activation='relu'))
+                         activation='relu',
+                         kernel_initializer=initializer))
         model.add(MaxPooling1D(pool_size=3,
                                strides=2,
                                padding='same'))
@@ -88,8 +93,7 @@ class DLModelKeras:
                            restore_best_weights=True)
         lr = ReduceLROnPlateau(monitor="val_categorical_accuracy", factor=0.5, verbose=4, patience=80,
                                cooldown=10)
-        ec = EpochCheckpointSaver(save_interval=39, folder_path=folder_path, model_name="Benchmark_CNN")
-        callbacks = [es, lr, ec]
+        callbacks = [es, lr]
         if set_seed:
             utils.set_seed()
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
@@ -109,11 +113,16 @@ class DLModelKeras:
 
     def load_weights(self, filename="model_saved/weights"):
         self.model.load_weights(filename, skip_mismatch=True)
+        
+    def add_callback(self, callback):
+        self.callbacks = [cb for cb in self.callbacks if not isinstance(cb, type(callback))]
+        self.callbacks.append(callback)
 
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level=True, get_patient_prediction=True,
                                           return_history=True, test_size=0.1, data_augmentation=False, f_name='emsc',
-                                          f_params=None, save_model=False, model_path="model_saved/model/", save_weights=False,
-                                          weights_path="model_saved/weights/", random_state=42, set_seed=True):
+                                          f_params=None, save_model=False, model_path="model_saved/models/final", save_weights=False,
+                                          weights_path="model_saved/weights/", random_state=42, set_seed=True, model_name="Benchmark_CNN",
+                                          checkpoint_folder_path="model_saved/models/checkpoint"):
         if set_seed:
             utils.set_seed(random_state)
         folds = dataset.leave_one_patient_cv()
@@ -125,8 +134,12 @@ class DLModelKeras:
         pat_names_list = []
         histories = []
         names_list = []
-        for j, (train_idx, test_idx) in enumerate(folds):
+        for j, (train_idx, test_idx) in enumerate(folds, start=1):
             names_test_cv = dataset.user[test_idx]
+            patient_name = np.unique(names_test_cv)[0]
+            print(f'\n[*] Patient {j}: {patient_name}')
+            ec = EpochCheckpointSaver(save_interval=39, folder_path=checkpoint_folder_path, model_name=model_name, fold=patient_name)
+            self.add_callback(ec)
             trained_model = clone_model(self.model)
             optimizer = get_optimizer(self.optimizer, self.learning_rate)
             trained_model.compile(optimizer=optimizer,
@@ -152,7 +165,7 @@ class DLModelKeras:
                                         batch_size=self.batch_size, verbose=1,
                                         callbacks=self.callbacks)
             histories.append(history)
-            names_list.append(np.unique(names_test_cv)[0])
+            names_list.append(patient_name)
             pred = trained_model.predict(X_test_cv)
             y_pred = np.argmax(pred, axis=-1)
             if get_patient_prediction:
@@ -192,9 +205,9 @@ class DLModelKeras:
         return dictionary
 
     def train_model_cv(self, dataset, number_classes, k=10, fold_level=True, get_patient_prediction=True, return_history=True,
-                       data_augmentation=False, f_name='emsc', f_params=None, save_model=False, model_path="model_saved/model/",
-                       save_weights=False, weights_path="model_saved/weights/", random_state=42, check_users_separated=True,
-                       set_seed=True):
+                       data_augmentation=False, f_name='emsc', f_params=None, save_model=False, model_path="model_saved/models/",
+                       save_weights=False, weights_path="model_saved/weights/", random_state=42, check_users_separated=True, 
+                       model_name="Benchmark_CNN", checkpoint_folder_path="model_saved/models/checkpoint"):
         if set_seed:
             utils.set_seed(random_state)
         folds = dataset.k_fold(k)
@@ -207,7 +220,12 @@ class DLModelKeras:
         histories = []
         names_list = []
         total_users = np.unique(dataset.user)
-        for j, (train_idx, test_idx) in enumerate(folds):
+        for j, (train_idx, test_idx) in enumerate(folds, start=1):
+            names_test_cv = dataset.user[test_idx]
+            patient_name = np.unique(names_test_cv)[0]
+            print(f'\n[*] Patient {j}: {patient_name}')
+            ec = EpochCheckpointSaver(save_interval=39, folder_path=checkpoint_folder_path, model_name=model_name, fold=patient_name)
+            self.add_callback(ec)
             trained_model = clone_model(self.model)
             optimizer = get_optimizer(self.optimizer, self.learning_rate)
             trained_model.compile(optimizer=optimizer,
@@ -216,7 +234,6 @@ class DLModelKeras:
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
             y_test_cv = dataset.labels[test_idx]
-            names_test_cv = dataset.user[test_idx]
             users_train = np.unique(dataset.user[train_idx])
             user_test = np.unique(dataset.user[test_idx])
             if check_users_separated:
@@ -239,7 +256,7 @@ class DLModelKeras:
                                         batch_size=self.batch_size, verbose=1,
                                         callbacks=self.callbacks)
             histories.append(history)
-            names_list.append(np.unique(names_test_cv))
+            names_list.append(patient_name)
             pred = trained_model.predict(X_test_cv)
             y_pred = np.argmax(pred, axis=-1)
             if get_patient_prediction:
