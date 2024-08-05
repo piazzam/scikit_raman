@@ -167,7 +167,7 @@ class MLModel:
         """
         self.model.fit(X_train, y_train)
 
-    def test_model(self, X_test, y_test):
+    def test_model(self, X_test):
         """
         Test the model. Print the performances and the confusion matrix of the model.
         :param X_test: np.array
@@ -176,14 +176,15 @@ class MLModel:
             Labels.
         """
         y_pred = self.model.predict(X_test)
-        print(y_pred)
-        print(y_test)
-
-        cm_model = confusion_matrix(y_pred, y_test)
-        report = classification_report(y_pred, y_test)
-
-        print(cm_model)
-        print(report)
+        return y_pred
+        # print(y_pred)
+        # print(y_test)
+        #
+        # cm_model = confusion_matrix(y_pred, y_test)
+        # report = classification_report(y_pred, y_test)
+        #
+        # print(cm_model)
+        # print(report)
 
     def grid_search_parameters(self, dataset, space, k_fold = True, k = 10, scoring = 'accuracy', n_jobs = 1):
         """

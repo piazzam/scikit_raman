@@ -52,9 +52,6 @@ class Experiment:
 	def load_preprocessing(self):
 		return self.load_file_yaml(os.path.join(self.base_path, 
                                           self.configurations['preprocessing_file']))
-		#with open(self.configurations['preprocessing_file'], 'r') as f:
-		#	data = yaml.load(f, Loader=yaml.FullLoader)
-		#return data
 
 	def k_fold(self, ds, model):
 		k_fold_parameters_file = os.path.join(self.base_path, self.configurations['k_fold_parameter_file'])
