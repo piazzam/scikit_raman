@@ -1,5 +1,4 @@
 import os
-import copy
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization, InputLayer, Conv1D, MaxPooling1D, \
@@ -14,6 +13,8 @@ from scikit_raman.Classes.Keras.Model.utility import get_optimizer
 from tensorflow.keras.models import load_model
 import scikit_raman.module.utility as utils
 from scikit_raman.Classes.Keras.Model.callbacks import EpochCheckpointSaver
+import numpy as np
+import tensorflow as tf
 
 class DLModelKeras:
     def __init__(self, model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate):
@@ -27,7 +28,7 @@ class DLModelKeras:
         self.learning_rate = learning_rate
 
     @classmethod
-    def load_model_benchmark(dlm,  n_dims, number_classes=3, data_augmentation=False, factor=0.5, set_seed=True):
+    def load_model_benchmark(dlm,  n_dims, number_classes=3, set_seed=True, folder_path="models/checkpoint"):
         loss = 'categorical_crossentropy'
         metrics = ['categorical_accuracy']
         learning_rate = 0.00020441990333108206
@@ -36,8 +37,6 @@ class DLModelKeras:
 
         # ----- init model
         model = Sequential()
-        if data_augmentation:
-            model.add(EMSC(factor, name="EMSC_augmentation"))
         model.add(InputLayer(shape=(n_dims,)))
         model.add(Reshape((n_dims, 1)))
 
@@ -182,13 +181,13 @@ class DLModelKeras:
                 try:
                     trained_model.save(model_path+str(names_test_cv[0])+".keras")
                 except FileNotFoundError:
-                    os.makedirs(model_path)
+                    os.makedirs(model_path, exist_ok=True)
                     trained_model.save(model_path+str(names_test_cv[0])+".keras")
             if save_weights:
                 try:
                     trained_model.save_weights(weights_path+str(names_test_cv[0])+'.weights.h5')
                 except FileNotFoundError:
-                    os.makedirs(weights_path)
+                    os.makedirs(weights_path, exist_ok=True)
                     trained_model.save_weights(weights_path+str(names_test_cv[0])+".weights.h5")
         dictionary = {}
         if patient_level:
@@ -289,16 +288,16 @@ class DLModelKeras:
                 fold_names_list.append(np.unique(names_test_cv))
             if save_model:
                 try:
-                    trained_model.save(model_path+str(names_test_cv[0])+".keras")
+                    trained_model.save(model_path + "fold_"+str(j) + ".keras")
                 except FileNotFoundError:
-                    os.makedirs(model_path)
-                    trained_model.save(model_path+str(names_test_cv[0])+".keras")
+                    os.makedirs(model_path, exist_ok=True)
+                    trained_model.save(model_path + "fold_"+str(j) + ".keras")
             if save_weights:
                 try:
-                    trained_model.save_weights(weights_path+str(names_test_cv[0])+'.weights.h5')
+                    trained_model.save_weights(weights_path + str(names_test_cv[0]) + '.weights.h5')
                 except FileNotFoundError:
-                    os.makedirs(weights_path)
-                    trained_model.save_weights(weights_path+str(names_test_cv[0])+".weights.h5")
+                    os.makedirs(weights_path, exist_ok=True)
+                    trained_model.save_weights(weights_path + str(names_test_cv[0]) + ".weights.h5")
         dictionary = {}
         if fold_level:
             nested_dictionary = {'pred_list': fold_pred_list,
@@ -315,7 +314,8 @@ class DLModelKeras:
         return dictionary
 
     def fit_model(self, X_train, y_train, X_val, y_val, return_history=True, model_name="model", save_model=False,
-                  save_weights=False, model_path="model_saved/model/", weights_path="model_saved/weights/", random_state=42):
+                  save_weights=False, model_path="model_saved/model/", weights_path="model_saved/weights/",
+                  random_state=42, set_seed=True):
         if set_seed:
             utils.set_seed(random_state)
         history = self.model.fit(X_train, y_train,

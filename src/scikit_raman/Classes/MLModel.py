@@ -4,6 +4,9 @@ import numpy as np
 from sklearn.metrics import classification_report
 from sklearn.metrics import confusion_matrix
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
+import scikit_raman.module.utility as utils
+import pickle
+import os
 
 class MLModel:
     """
@@ -21,7 +24,8 @@ class MLModel:
     def __init__(self, model):
         self.model = model
 
-    def train_model_cv(self, dataset, k = 10, fold_level = True, get_patient_prediction = True, check_users_separated=True):
+    def train_model_cv(self, dataset, k = 10, fold_level = True, get_patient_prediction = True, check_users_separated=True,
+                       set_seed=True, random_state=42, save_model=False, model_path="model_saved/model/"):
         """
         Train a model with k-fold cross validation. Print the confusion matrix and the performances
         at every fold and after all folds.
@@ -36,6 +40,8 @@ class MLModel:
         :return dict
             a dictionary is returned, based on the user choiches.
         """
+        if set_seed:
+            utils.set_seed(random_state)
         folds = dataset.k_fold(k)
         tot_pred_list = []
         tot_label_list = []
@@ -58,12 +64,8 @@ class MLModel:
             y_test_cv = dataset.labels[test_idx]
             names_test_cv = dataset.user[test_idx]
             names_list.append(np.unique(names_test_cv))
-
-            #self.model.fit(X_train_cv, y_train_cv)
             trained_model.fit(X_train_cv, y_train_cv)
             y_pred = trained_model.predict(X_test_cv)
-            #y_pred = self.model.predict(X_test_cv)
-
             if get_patient_prediction:
                 tot_pred_list.extend(y_pred)
                 tot_label_list.extend(y_test_cv)
@@ -92,6 +94,14 @@ class MLModel:
                 fold_pred_list.append(patient_level)
                 fold_label_list.append(labels_patient_level)
                 fold_names_list.append(np.unique(names_test_cv))
+                if save_model:
+                    try:
+                        with open(model_path + "fold_"+str(j) + ".pkl", 'wb') as outp:
+                            pickle.dump(trained_model, outp, pickle.HIGHEST_PROTOCOL)
+                    except FileNotFoundError:
+                        os.makedirs(model_path, exist_ok=True)
+                        with open(model_path + "fold_" + str(j) + ".pkl", 'wb') as outp:
+                            pickle.dump(trained_model, outp, pickle.HIGHEST_PROTOCOL)
         dictionary = {}
         if fold_level:
             nested_dictionary = {'pred_list': fold_pred_list, 'label_list': fold_label_list,
@@ -102,7 +112,8 @@ class MLModel:
             dictionary['total_prediction'] = nested_dictionary
         return dictionary
 
-    def train_model_leave_one_patient_out(self, dataset, get_patient_prediction = True, patient_level = True):
+    def train_model_leave_one_patient_out(self, dataset, get_patient_prediction = True, patient_level = True, set_seed=True,
+                                          random_state=42, save_model=False, model_path="model_saved/model/"):
         """
         Train the model with leave_one_patient_out cross validation. Print the confusion matrix
         and the performances at every fold and after all folds.
@@ -115,6 +126,8 @@ class MLModel:
         :return dict
             dictionary based on the user choiches.
         """
+        if set_seed:
+            utils.set_seed(random_state)
         folds = dataset.leave_one_patient_cv()
         tot_pred_list = []
         tot_label_list = []
@@ -128,17 +141,11 @@ class MLModel:
             X_train_cv = dataset.spectra[train_idx]
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
-            #names_train_cv = dataset.user[train_idx]
             y_test_cv = dataset.labels[test_idx]
             names_test_cv = dataset.user[test_idx]
             names_list.append(names_test_cv)
-
             trained_model.fit(X_train_cv, y_train_cv)
             y_pred = trained_model.predict(X_test_cv)
-            # self.model.fit(X_train_cv, y_train_cv)
-            #
-            # y_pred = self.model.predict(X_test_cv)
-
             if get_patient_prediction:
                 tot_pred_list.extend(y_pred)
                 tot_label_list.extend(y_test_cv)
@@ -148,6 +155,14 @@ class MLModel:
                 pat_pred_list.append(np.argmax(counts))
                 pat_label_list.append(y_test_cv[0])
                 pat_names_list.append(np.unique(names_test_cv)[0])
+            if save_model:
+                try:
+                    with open(model_path + str(names_test_cv[0]) + ".pkl", 'wb') as outp:
+                        pickle.dump(trained_model, outp, pickle.HIGHEST_PROTOCOL)
+                except FileNotFoundError:
+                    os.makedirs(model_path, exist_ok=True)
+                    with open(model_path + str(names_test_cv[0]) + ".pkl", 'wb') as outp:
+                        pickle.dump(trained_model, outp, pickle.HIGHEST_PROTOCOL)
         dictionary = {}
         if patient_level:
             nested_dictionary = {'pred_list': pat_pred_list, 'label_list': pat_label_list, 'names_list': pat_names_list}
@@ -157,7 +172,7 @@ class MLModel:
             dictionary['total_prediction'] = nested_dictionary
         return dictionary
 
-    def fit_model(self, X_train, y_train):
+    def fit_model(self, X_train, y_train, set_seed=True, random_state=42):
         """
         Fit the model.
         :param X_train: np.array
@@ -165,6 +180,8 @@ class MLModel:
         :param y_train: np.array
             Labels used for the training
         """
+        if set_seed:
+            utils.set_seed(random_state)
         self.model.fit(X_train, y_train)
 
     def test_model(self, X_test, y_test):
