@@ -1,3 +1,4 @@
+import os
 import scikit_raman.Classes.Experiment.ExperimentBase as ExperimentBase
 import scikit_raman.Classes.Keras.Model.DLModel as DLModel
 import scikit_raman.Classes.Preprocessing.Processor as preprocessing
@@ -8,17 +9,17 @@ class DLExperiment(ExperimentBase.Experiment):
 
     def __init__(self, configuration_file):
         super().__init__(configuration_file)
-        if self.configurations['experiment_type'] == 'ml':
-            raise Exception("Try to perform a ML experiments on a DL object")
+        # if self.configurations['experiment_type'] == 'ml':
+        #     raise Exception("Try to perform a ML experiments on a DL object")
 
     def load_model(self):
         if self.configurations['model_name'] == 'benchmark':
             model = DLModel.DLModelKeras.load_model_benchmark(self.configurations['n_dims'],
                                                               number_classes=self.configurations['n_classes'])
         else:
-            base_model = dl_model_keras.load_model(self.configurations['model_name'])
-            model_configuration_file = utils.parse_yaml_file(self.configurations['base_path_yaml']
-                                                             +self.configurations['model_configuration'])
+            base_model = dl_model_keras.load_model(self.configurations['model_name']) #Qui credo ci sia un errore. L'opzione da riferisirsi non è model_path?
+            model_configuration_file = utils.parse_yaml_file(os.path.join(self.base_path,
+                                                                          self.configurations['model_configuration']))
             model = DLModel.DLModelKeras(base_model, **model_configuration_file)
         return model
 

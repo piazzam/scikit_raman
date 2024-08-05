@@ -8,9 +8,11 @@ import scikit_raman.Classes.Evaluator as ev
 class Experiment:
 
 	def __init__(self, configuration_file):
+		base_directory, _ = os.path.split(configuration_file)
 		_, file_extension = os.path.splitext(configuration_file)
 		if file_extension == '.yaml':
 			self.configuration_file = configuration_file
+			self.base_path = base_directory
 			self.configurations = self.load_file_yaml(configuration_file)
 		else:
 			raise Exception("Configuration file type not supported")
@@ -48,14 +50,14 @@ class Experiment:
 		return df_drugs, ds_drugs
 
 	def load_preprocessing(self):
-		return self.load_file_yaml(self.configurations['base_path_yaml']+
-								   self.configurations['preprocessing_file'])
+		return self.load_file_yaml(os.path.join(self.base_path, 
+                                          self.configurations['preprocessing_file']))
 		#with open(self.configurations['preprocessing_file'], 'r') as f:
 		#	data = yaml.load(f, Loader=yaml.FullLoader)
 		#return data
 
 	def k_fold(self, ds, model):
-		k_fold_parameters_file = self.configurations['base_path_yaml'] + self.configurations['k_fold_parameter_file']
+		k_fold_parameters_file = os.path.join(self.base_path, self.configurations['k_fold_parameter_file'])
 		# k_fold_parameters = utils.parse_yaml_file(k_fold_parameters_file)
 		k_fold_parameters = self.load_file_yaml(k_fold_parameters_file)
 		n_classes = self.configurations['n_classes']
@@ -66,7 +68,7 @@ class Experiment:
 		return r
 
 	def loocv(self, ds, model):
-		loocv_fold_parameters_file = self.configurations['base_path_yaml'] + self.configurations['loocv_parameter_file']
+		loocv_fold_parameters_file = os.path.join(self.base_path, self.configurations['loocv_parameter_file'])
 		# k_fold_parameters = utils.parse_yaml_file(k_fold_parameters_file)
 		loocv_fold_parameters = self.load_file_yaml(loocv_fold_parameters_file)
 		n_classes = self.configurations['n_classes']
@@ -79,7 +81,7 @@ class Experiment:
 	def store_results(self, r):
 		target_names = self.configurations['target_names']
 		path = self.configurations['path_out']
-		evaluator_file = self.configurations['base_path_yaml'] + self.configurations['evaluator_file']
+		evaluator_file = os.path.join(self.base_path, self.configurations['evaluator_file'])
 		evaluator_data = utils.parse_yaml_file(evaluator_file)
 		evaluator_steps = utils.parse_yaml_file(evaluator_file)['evaluator_steps']
 		if not (os.path.exists(path)):

@@ -32,3 +32,6 @@ mindHardKeras = [
 torch = [
   'torch==2.0.1'
 ]
+
+[project.scripts]
+scikit-raman-cli = "scikit_raman.cli:main"

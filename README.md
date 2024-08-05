@@ -2,25 +2,34 @@
 
 scikit_raman is a Python library designed for manipulation and analysis of Raman Spectral Data. This project originated from the author's thesis during their Master's degree in Computer Science at the University of Milan-Bicocca.
 
-## Getting Started
+## 📌 Table of Contents
 
-### Installation
+- [scikit\_raman](#scikit_raman)
+  - [📌 Table of Contents](#-table-of-contents)
+  - [🔗 Dependencies](#-dependencies)
+  - [⚙️ Installation](#️-installation)
+    - [Method 1: Standard Installation](#method-1-standard-installation)
+    - [Method 2: Editable Installation](#method-2-editable-installation)
+    - [Installation options](#installation-options)
+  - [🛠️ Configuration](#️-configuration)
+  - [📖 Usage](#-usage)
+    - [Python API](#python-api)
+    - [CLI](#cli)
+  - [🌎 Supported Platforms](#-supported-platforms)
+  - [🙏 Acknowledgments](#-acknowledgments)
 
-#### Prerequisites
+## 🔗 Dependencies
 
 Before installing scikit_raman, ensure you have the following prerequisites installed:
 
-- Python 3.9 or higher
-- Pip version 24.0 or higher
-- Git (for cloning the repository)
+- [Git](https://git-scm.com): Required for cloning the repository.
+- [Python 3.9+](https://www.python.org): Make sure you have Python version 3.9 or higher.
+- [pip](https://pypi.org/project/pip/): Have the latest version of pip installed.
+- [setuptools](https://pypi.org/project/setuptools/): Have the latest version of setuptools installed.
 
-#### Installation Steps
+## ⚙️ Installation
 
 To keep your project environment clean and isolated, it's recommended to install scikit_raman within a virtual environment.
-
-#### Standard Installation (For Users):
-
-If you only intend to use the library:
 
 1. Create a virtual environment for your project:
 
@@ -56,70 +65,70 @@ If you only intend to use the library:
    cd scikit_raman
    ``` 
 
-5. Install scikit_raman using pip:
+### Method 1: Standard Installation
 
    ```
    pip install .[installation_option]
    ```
 
-   This will install scikit_raman along with its dependencies into your virtual environment.
-
-   Replace `installation_option` with `standardKeras`, `mindHardKeras` or `torch` depending on your desired installation.
-
-   **Note**: For a correct usage of the library is fondumental to set one of the two installation options!!!
-
-   For more details, please refer to the [Tensorflow Documentation](https://www.tensorflow.org/install/source?hl=en#gpu)
-
-#### Editable Installation (For Developers):
-
-If you intend to contribute to the library or need to work on it:
-
-1. Follow steps 1 to 4 from the standard installation instructions above.
-
-2. Install scikit_raman in editable mode using pip:
+### Method 2: Editable Installation
 
    ```
    pip install -e .[installation_option]
    ```
-
-   Replace `installation_option` with `standardKeras`, `mindHardKeras` or `torch` depending on your desired installation.
-
-   **Note**: For a correct usage of the library is fondumental to set one of the two installation options!!!
-
-   For more details, please refer to the [Tensorflow Documentation](https://www.tensorflow.org/install/source?hl=en#gpu)
-
-   If installation in editable mode fails, ensure your setuptools version is up to date. You can upgrade it with the following commands:
-
-   ```
-   pip install --upgrade setuptools
-   ```
    
-You're all set! You can now start using scikit_raman within your project.
+### Installation options
 
-Whenever you're finished working with scikit_raman, you can deactivate the virtual environment by running:
+   Replace `installation_option` with one of the following depending on your needs:
 
+   - `standardKeras`: This option installs the library and its dependencies for general purposes using Keras with CPU support.
+   - `mindhardKeras`: This option installs the specific dependencies required to use the library with the GPU configuration of the mindHard virtual machine (the one in the MIND laboratory).
+   - `torch`: For using the PyTorch implementation of the methods instead of the Keras version. 
+
+   If you intend to use the library on your machine with a specific GPU configuration, we recommend referring to the [Tensorflow Documentation](https://www.tensorflow.org/install/source?hl=en#gpu) to understand what you need to install.
+
+## 🛠️ Configuration
+
+The library uses a main `config.yaml` file that references additional configuration files. For detailed information on all avaiable options and how to structure these files, please refer to [CONFIGURATION.md](docs/CONFIGURATIONS.md)
+
+## 📖 Usage
+
+### Python API
+
+```python
+import scikit_raman.Classes.Experiment.DLExperiment as DLE
+import scikit_raman.Classes.Experiment.MLExperiment as MLE
+
+# Load and run a DL experiment
+dl_experiment = DLE.DLExperiment('dl_config.yaml')
+dl_experiment.experiment()
+
+# Load and run an ML experiment
+ml_experiment = MLE.MLExperiment('ml_config.yaml')
+ml_experiment.experiment()
 ```
-deactivate
+### CLI
+
+The CLI provides commands for processing spectral data and managing configurations. For detailed CLI usage, see [CLI.md](docs/CLI.md)
+
+```bash
+# Display help
+scikit-raman-cli --help
+
+# Process a DL experiment using a configuration file
+scikit-raman-cli -p dl_config.yaml -t dl
+
+# Process an ML experiment using a configuration file
+scikit-raman-cli -p ml_config.yaml -t ml
 ```
 
-### Usage
-
-Once installed, you can start using scikit_raman in your Python projects. Import the necessary modules and functions as needed:
-
-```
-import scikit_raman
-```
-
-### Supported Platforms
+## 🌎 Supported Platforms
 
 scikit_raman should work on any platform where Python is supported. The installation steps provided above are applicable to most Unix-like systems (Linux, macOS). For Windows users, you may need to adjust the commands slightly to accommodate differences in command line interfaces.
 
-### Contributors
+## 🙏 Acknowledgments
 
-- **Name:** Riccardo Frigerio
-- **GitHub:** [RFrig16](https://github.com/RFrig16)
+We extend our gratitude to the following individuals for their contributions to this project:
 
-### Author
-
-- **Name:** Marco Piazza
-- **GitHub:** [piazzam](https://github.com/piazzam)
+- **Marco Piazza** ([piazzam](https://github.com/piazzam))
+- **Riccardo Frigerio** ([RFrig16](https://github.com/RFrig16))

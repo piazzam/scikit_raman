@@ -51,12 +51,15 @@ class Evaluator:
         if len(self.classes) == 2:
             self.create_roc_curve_plot_binary(self.results['patient_level']['pred_list'],
                                                     self.results['patient_level']['label_list'],
-                                                    show=show, save=save, filename=folder_path + "roc_curve_total_patient.png")
+                                                    show=show, 
+                                                    save=save, 
+                                                    filename=os.path.join(folder_path, "roc_curve_total_patient.png"))
         else:
             self.create_roc_curve_plot_multiclass(self.results['patient_level']['pred_list'],
                                               self.results['patient_level']['label_list'],
-                                              show=show, save=save,
-                                              filename=folder_path + "roc_curve_total_patient.png")
+                                              show=show, 
+                                              save=save,
+                                              filename=os.path.join(folder_path, "roc_curve_total_patient.png"))
         for k in specificity.keys():
             report_patient_level[k]['specificity'] = specificity[k]
         report_patient_level['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
@@ -67,9 +70,9 @@ class Evaluator:
         cm_plot = sn.heatmap(df_patient_level, annot=True, fmt='d', annot_kws={"fontsize":24})
         if save:
             os.makedirs(os.path.dirname(folder_path), exist_ok=True)
-            df_patient_level.to_csv(folder_path + "cm_total_patient.csv")
-            df_report.to_csv(folder_path + "report_total_patient.csv")
-            cm_plot.figure.savefig(folder_path + "cm_total_patient.png")
+            df_patient_level.to_csv(os.path.join(folder_path,"cm_total_patient.csv"))
+            df_report.to_csv(os.path.join(folder_path,"report_total_patient.csv"))
+            cm_plot.figure.savefig(os.path.join(folder_path,"cm_total_patient.png"))
         if show:
             cm_plot.figure.show()
             print(classification_report(self.results['patient_level']['label_list'],
@@ -131,11 +134,15 @@ class Evaluator:
         if len(self.classes) == 2:
             self.create_roc_curve_plot_binary(self.results['total_prediction']['pred_list'],
                                                     self.results['total_prediction']['label_list'],
-                                                    show=show, save=save, filename=folder_path + "roc_curve_total.png")
+                                                    show=show, 
+                                                    save=save, 
+                                                    filename=os.path.join(folder_path, "roc_curve_total.png"))
         else:
             self.create_roc_curve_plot_multiclass(self.results['total_prediction']['pred_list'],
                                               self.results['total_prediction']['label_list'],
-                                              show=show, save=save, filename=folder_path + "roc_curve_total.png")
+                                              show=show, save=save, 
+                                              filename=os.path.join(folder_path, "roc_curve_total.png"))
+            
         specificity = self.calculate_specificity(cm_total, labels=self.classes)
         for k in specificity.keys():
             report_total[k]['specificity'] = specificity[k]
@@ -147,9 +154,9 @@ class Evaluator:
         cm_plot = sn.heatmap(df_total, annot=True, fmt='d', annot_kws={"fontsize":24})
         if save:
             os.makedirs(os.path.dirname(folder_path), exist_ok=True)
-            df_total.to_csv(folder_path + "cm_total.csv")
-            df_report.to_csv(folder_path + "report_total.csv")
-            cm_plot.figure.savefig(folder_path + "cm_total.png")
+            df_total.to_csv(os.path.join(folder_path,"cm_total.csv"))
+            df_report.to_csv(os.path.join(folder_path,"report_total.csv"))
+            cm_plot.figure.savefig(os.path.join(folder_path,"cm_total.png"))
         if show:
             cm_plot.figure.show()
             print(classification_report(self.results['total_prediction']['label_list'],
@@ -192,9 +199,9 @@ class Evaluator:
             cm_plot = sn.heatmap(df_cm_model, annot=True, fmt='d', annot_kws={"fontsize":24})
             if save:
                 os.makedirs(os.path.dirname(folder_path), exist_ok=True)
-                df_cm_model.to_csv(folder_path + str(el) + ".csv")
-                cm_plot.figure.savefig(folder_path + str(el) + ".png")
-                df_report_model.to_csv(folder_path + str(el) + ".csv")
+                df_cm_model.to_csv(os.path.join(folder_path, str(el) + ".csv"))
+                cm_plot.figure.savefig(os.path.join(folder_path, str(el) + ".png"))
+                df_report_model.to_csv(os.path.join(folder_path, str(el) + ".csv"))
             if show:
                 print("Result of patient {}" + str(el))
                 print(cm_model)
@@ -211,13 +218,13 @@ class Evaluator:
         os.makedirs(os.path.dirname(folder_path), exist_ok=True)
         for el in self.results:
             df = pd.DataFrame.from_dict(self.results[el])
-            df.to_csv(folder_path+str(el)+'.csv')
+            df.to_csv(os.path.join(folder_path, str(el)+'.csv'))
 
     def save_prediction_pkl(self, folder_path = "results/"):
         os.makedirs(os.path.dirname(folder_path), exist_ok=True)
         for el in self.results:
             df = pd.DataFrame.from_dict(self.results[el])
-            df.to_pickle(folder_path+str(el)+'.pkl')
+            df.to_pickle(os.path.join(folder_path, str(el)+'.pkl'))
 
     def total_result_patient_k_fold(self, show=True, save=True, folder_path="results"):
         predicted = []
@@ -233,13 +240,15 @@ class Evaluator:
         if len(self.classes) == 2:
             self.create_roc_curve_plot_binary(predicted,
                                               labels,
-                                              show=show, save=save,
-                                              filename=folder_path + "roc_curve_total_patient.png")
+                                              show=show, 
+                                              save=save,
+                                              filename=os.path.join(folder_path, "roc_curve_total_patient.png"))
         else:
             self.create_roc_curve_plot_binary(predicted,
                                               labels,
-                                              show=show, save=save,
-                                              filename=folder_path + "roc_curve_total_patient.png")
+                                              show=show, 
+                                              save=save,
+                                              filename=os.path.join(folder_path, "roc_curve_total_patient.png"))
         for k in specificity.keys():
             report_patient_level[k]['specificity'] = specificity[k]
         report_patient_level['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
@@ -250,9 +259,9 @@ class Evaluator:
         cm_plot = sn.heatmap(df_patient_level, annot=True, fmt='d', annot_kws={"fontsize":24})
         if save:
             os.makedirs(os.path.dirname(folder_path), exist_ok=True)
-            df_patient_level.to_csv(folder_path + "cm_total_patient.csv")
-            df_report.to_csv(folder_path + "report_total_patient.csv")
-            cm_plot.figure.savefig(folder_path + "cm_total_patient.png")
+            df_patient_level.to_csv(os.path.join(folder_path,"cm_total_patient.csv"))
+            df_report.to_csv(os.path.join(folder_path, "report_total_patient.csv"))
+            cm_plot.figure.savefig(os.path.join(folder_path, "cm_total_patient.png"))
         if show:
             cm_plot.figure.show()
             print(classification_report(labels, predicted,
@@ -302,9 +311,9 @@ class Evaluator:
         cm_plot = sn.heatmap(df_cm_model, annot=True, fmt='d', annot_kws={"fontsize": 24})
         if save:
             os.makedirs(os.path.dirname(folder_path), exist_ok=True)
-            df_cm_model.to_csv(folder_path + str(el) + ".csv")
-            cm_plot.figure.savefig(folder_path + str(el) + ".png")
-            df_report_model.to_csv(folder_path + str(el) + ".csv")
+            df_cm_model.to_csv(os.path.join(folder_path, str(el) + ".csv"))
+            cm_plot.figure.savefig(os.path.join(folder_path, str(el) + ".png"))
+            df_report_model.to_csv(os.path.join(folder_path, str(el) + ".csv"))
         if show:
             print("Result patient level")
             print(cm_model)
@@ -325,7 +334,7 @@ class Evaluator:
             plt.show()
         if save:
             os.makedirs(os.path.dirname(folder_path+"/loss/"), exist_ok=True)
-            plt.savefig(folder_path+"/loss/" + str(patient_name) + ".png")
+            plt.savefig(os.path.join(folder_path, "loss", str(patient_name) + ".png"))
 
         plt.figure()
         plt.xlabel('Epochs')
@@ -337,7 +346,7 @@ class Evaluator:
             plt.show()
         if save:
             os.makedirs(os.path.dirname(folder_path + "/accuracy/"), exist_ok=True)
-            plt.savefig(folder_path+"/accuracy/" + str(patient_name) + ".png")
+            plt.savefig(os.path.join(folder_path, "accuracy", str(patient_name) + ".png"))
         plt.close()
 
     def plot_history_binary(self, network_history, patient_name, folder_path = "results/training" , save = True, show = True):
@@ -353,7 +362,7 @@ class Evaluator:
             plt.show()
         if save:
             os.makedirs(os.path.dirname(folder_path+"/loss/"), exist_ok=True)
-            plt.savefig(folder_path+"/loss/" + str(patient_name) + ".png")
+            plt.savefig(os.path.join(folder_path, "loss", str(patient_name) + ".png"))
 
         plt.figure()
         plt.xlabel('Epochs')
@@ -365,7 +374,7 @@ class Evaluator:
             plt.show()
         if save:
             os.makedirs(os.path.dirname(folder_path + "/accuracy/"), exist_ok=True)
-            plt.savefig(folder_path+"/accuracy/" + str(patient_name) + ".png")
+            plt.savefig(os.path.join(folder_path, "accuracy", str(patient_name) + ".png"))
         plt.close()
     def result_training_history(self, folder_path = "results/training", save = True, show = True):
         patient_names = self.results['history']['patients']
