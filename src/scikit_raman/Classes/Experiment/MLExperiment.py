@@ -5,6 +5,7 @@ import scikit_raman.Classes.Preprocessing.Processor as preprocessing
 import scikit_raman.Classes.MLModel as MLModel
 import sklearn.decomposition as decomposition
 import scikit_raman.Classes.Experiment.utils as utils
+import os
 
 class MLExperiment(ExperimentBase.Experiment):
 
@@ -14,8 +15,8 @@ class MLExperiment(ExperimentBase.Experiment):
 			raise Exception("Try to perform a DL experiments on a ML object")
 
 	def load_model(self):
-		try:
-			_, file_extension = self.configurations['model_name']
+		if self.configurations['model_name'] == 'load_model':
+			_, file_extension = os.path.splitext(self.configurations['model_path'])
 			if file_extension == '.pkl':
 				with open(self.configurations['model_path'], 'rb') as f:
 					model = pickle.load(f)
@@ -23,8 +24,8 @@ class MLExperiment(ExperimentBase.Experiment):
 						model = MLModel.MLModel(model)
 			else:
 				raise Exception("File type not supported")
-		except Exception as exc:
-			model = ml_model_sklearn.name_to_object(self.configurations['model_name'], self.configurations['seed'])
+		else:
+			model = ml_model_sklearn.name_to_object(self.configurations['model_path'], self.configurations['seed'])
 		return model
 
 	def experiment(self):

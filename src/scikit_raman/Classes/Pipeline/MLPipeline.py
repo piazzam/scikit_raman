@@ -15,17 +15,17 @@ class MLPipeline(PipelineBase.PipelineBase):
             raise Exception("Try to perform a DL pipeline on a ML object")
 
     def load_model(self):
-        try:
-            _, file_extension = os.path.splitext(self.configurations['model_name'])
+        if self.configurations['model_name'] == 'load_model':
+            _, file_extension = os.path.splitext(self.configurations['model_path'])
             if file_extension == '.pkl':
-                with open(self.configurations['model_name'], 'rb') as f:
+                with open(self.configurations['model_path'], 'rb') as f:
                     model = pickle.load(f)
                     if not isinstance(model, MLModel.MLModel):
                         model = MLModel.MLModel(model)
             else:
                 raise Exception("File type not supported")
-        except Exception as exc:
-            model = ml_model_sklearn.name_to_object(self.configurations['model_name'], self.configurations['seed'])
+        else:
+            model = ml_model_sklearn.name_to_object(self.configurations['model_path'], self.configurations['seed'])
         return model
 
     def pipeline(self):
