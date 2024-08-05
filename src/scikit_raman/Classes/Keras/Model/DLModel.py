@@ -168,13 +168,13 @@ class DLModelKeras:
                 try:
                     trained_model.save(model_path+str(names_test_cv[0])+".keras")
                 except FileNotFoundError:
-                    os.makedirs(model_path)
+                    os.makedirs(model_path, exist_ok=True)
                     trained_model.save(model_path+str(names_test_cv[0])+".keras")
             if save_weights:
                 try:
                     trained_model.save_weights(weights_path+str(names_test_cv[0])+'.weights.h5')
                 except FileNotFoundError:
-                    os.makedirs(weights_path)
+                    os.makedirs(weights_path, exist_ok=True)
                     trained_model.save_weights(weights_path+str(names_test_cv[0])+".weights.h5")
         dictionary = {}
         if patient_level:
@@ -271,15 +271,15 @@ class DLModelKeras:
                 fold_names_list.append(np.unique(names_test_cv))
             if save_model:
                 try:
-                    trained_model.save(model_path + str(names_test_cv[0]) + ".keras")
+                    trained_model.save(model_path + "fold_"+str(j) + ".keras")
                 except FileNotFoundError:
-                    os.makedirs(model_path)
-                    trained_model.save(model_path + str(names_test_cv[0]) + ".keras")
+                    os.makedirs(model_path, exist_ok=True)
+                    trained_model.save(model_path + "fold_"+str(j) + ".keras")
             if save_weights:
                 try:
                     trained_model.save_weights(weights_path + str(names_test_cv[0]) + '.weights.h5')
                 except FileNotFoundError:
-                    os.makedirs(weights_path)
+                    os.makedirs(weights_path, exist_ok=True)
                     trained_model.save_weights(weights_path + str(names_test_cv[0]) + ".weights.h5")
         dictionary = {}
         if fold_level:
