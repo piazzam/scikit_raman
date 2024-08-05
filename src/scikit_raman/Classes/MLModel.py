@@ -157,11 +157,11 @@ class MLModel:
                 pat_names_list.append(np.unique(names_test_cv)[0])
             if save_model:
                 try:
-                    with open(model_path + str(names_test_cv[j]) + ".pkl", 'wb') as outp:
+                    with open(model_path + str(names_test_cv[0]) + ".pkl", 'wb') as outp:
                         pickle.dump(trained_model, outp, pickle.HIGHEST_PROTOCOL)
                 except FileNotFoundError:
                     os.makedirs(model_path, exist_ok=True)
-                    with open(model_path + str(names_test_cv[j]) + ".pkl", 'wb') as outp:
+                    with open(model_path + str(names_test_cv[0]) + ".pkl", 'wb') as outp:
                         pickle.dump(trained_model, outp, pickle.HIGHEST_PROTOCOL)
         dictionary = {}
         if patient_level:
