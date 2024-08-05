@@ -1,5 +1,4 @@
 import os
-import copy
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization, InputLayer, Conv1D, MaxPooling1D, \
@@ -13,6 +12,7 @@ from scikit_raman.Classes.Keras.Model.utility import get_optimizer
 from tensorflow.keras.models import load_model
 import scikit_raman.module.utility as utils
 from scikit_raman.Classes.Keras.Model.callbacks import EpochCheckpointSaver
+import tensorflow as tf
 
 class DLModelKeras:
     def __init__(self, model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate):
@@ -291,7 +291,8 @@ class DLModelKeras:
         return dictionary
 
     def fit_model(self, X_train, y_train, X_val, y_val, return_history=True, model_name="model", save_model=False,
-                  save_weights=False, model_path="model_saved/model/", weights_path="model_saved/weights/", random_state=42):
+                  save_weights=False, model_path="model_saved/model/", weights_path="model_saved/weights/", random_state=42,
+                  set_seed=True):
         if set_seed:
             utils.set_seed(random_state)
         history = self.model.fit(X_train, y_train,
