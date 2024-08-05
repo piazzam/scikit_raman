@@ -2,6 +2,7 @@ import pickle
 import scikit_raman.Classes.Experiment.ml_model_sklearn as ml_model_sklearn
 import scikit_raman.Classes.Experiment.ExperimentBase as ExperimentBase
 import scikit_raman.Classes.Preprocessing.Processor as preprocessing
+import scikit_raman.Classes.MLModel as MLModel
 import sklearn.decomposition as decomposition
 import scikit_raman.Classes.Experiment.utils as utils
 
@@ -9,8 +10,8 @@ class MLExperiment(ExperimentBase.Experiment):
 
 	def __init__(self, configuration_file):
 		super().__init__(configuration_file)
-		# if self.configurations['experiment_type'] == 'dl':
-		# 	raise Exception("Try to perform a DL experiments on a ML object")
+		if self.configurations['experiment_type'] == 'dl':
+			raise Exception("Try to perform a DL experiments on a ML object")
 
 	def load_model(self):
 		try:
@@ -18,6 +19,8 @@ class MLExperiment(ExperimentBase.Experiment):
 			if file_extension == '.pkl':
 				with open(self.configurations['model_path'], 'rb') as f:
 					model = pickle.load(f)
+					if not isinstance(model, MLModel.MLModel):
+						model = MLModel.MLModel(model)
 			else:
 				raise Exception("File type not supported")
 		except Exception as exc:
@@ -57,7 +60,6 @@ class MLExperiment(ExperimentBase.Experiment):
 			ds.spectra = result
 		evaluation_procedure = self.configurations['evaluation_procedure']
 		if evaluation_procedure == 'k_fold':
-			print('ok')
 			r = self.k_fold(ds, model)
 			self.store_results(r)
 		elif evaluation_procedure == 'loocv':

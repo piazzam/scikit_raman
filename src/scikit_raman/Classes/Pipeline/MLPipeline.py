@@ -2,8 +2,10 @@ import scikit_raman.Classes.Pipeline.PipelineBase as PipelineBase
 import scikit_raman.Classes.Preprocessing.Processor as preprocessing
 import scikit_raman.Classes.Pipeline.ml_model_sklearn as ml_model_sklearn
 import scikit_raman.Classes.Experiment.utils as utils
+import scikit_raman.Classes.MLModel as MLModel
 import pickle
 import sklearn.decomposition as decomposition
+import os
 
 class MLPipeline(PipelineBase.PipelineBase):
 
@@ -14,10 +16,12 @@ class MLPipeline(PipelineBase.PipelineBase):
 
     def load_model(self):
         try:
-            _, file_extension = self.configurations['model_name']
+            _, file_extension = os.path.splitext(self.configurations['model_name'])
             if file_extension == '.pkl':
-                with open(self.configurations['model_path'], 'rb') as f:
+                with open(self.configurations['model_name'], 'rb') as f:
                     model = pickle.load(f)
+                    if not isinstance(model, MLModel.MLModel):
+                        model = MLModel.MLModel(model)
             else:
                 raise Exception("File type not supported")
         except Exception as exc:
