@@ -26,8 +26,7 @@ class DLModelKeras:
         self.learning_rate = learning_rate
 
     @classmethod
-    def load_model_benchmark(dlm,  n_dims, number_classes=3, data_augmentation=False, factor=0.5, 
-                             set_seed=True, folder_path="models/checkpoint"):
+    def load_model_benchmark(dlm,  n_dims, number_classes=3, set_seed=True, folder_path="models/checkpoint"):
         loss = 'categorical_crossentropy'
         metrics = ['categorical_accuracy']
         learning_rate = 0.00020441990333108206
@@ -35,8 +34,6 @@ class DLModelKeras:
 
         # ----- init model
         model = Sequential()
-        if data_augmentation:
-            model.add(EMSC(factor, name="EMSC_augmentation"))
         model.add(InputLayer(shape=(n_dims,)))
         model.add(Reshape((n_dims, 1)))
 
