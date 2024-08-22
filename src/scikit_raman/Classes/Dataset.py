@@ -232,6 +232,17 @@ class Dataset:
             new_category.append(dictionary[el])
         self.category = np.array(new_category)
 
+    def change_label_name(self, dictionary):
+        """
+        Change the name of the category in string form based on dictionary.
+        :param dictionary: dict
+            Map old names with new names.
+        """
+        new_label = []
+        for el in self.labels:
+            new_label.append(dictionary[el])
+        self.labels = np.array(new_label)
+
     def change_user_name_string(self, dictionary):
         """
         Change the name of the user name based on dictionary.
