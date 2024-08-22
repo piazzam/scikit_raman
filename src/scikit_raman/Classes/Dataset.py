@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import GroupKFold, LeaveOneGroupOut, StratifiedGroupKFold, KFold
 import pickle
+import scikit_raman.module.utility as utility
 
 
 class Dataset:
@@ -515,3 +516,11 @@ class Dataset:
             labels.append(ds_user.labels[0])
         return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user_list), np.array(name),
                        np.array(category), np.array(labels))
+
+    def cut_based_xaxis(self, start, end):
+        new_spectra = []
+        for x, y in zip(self.x_axis, self.spectra):
+            _, idx_start = utility.find_nearest(x, start)
+            _, idx_end = utility.find_nearest(x, end)
+            new_spectra.append(y[idx_start:idx_end])
+        self.spectra = np.array(new_spectra)
