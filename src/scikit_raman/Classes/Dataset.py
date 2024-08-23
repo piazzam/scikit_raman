@@ -519,8 +519,11 @@ class Dataset:
 
     def cut_based_xaxis(self, start, end):
         new_spectra = []
+        new_x_axis = []
         for x, y in zip(self.x_axis, self.spectra):
             _, idx_start = utility.find_nearest(x, start)
             _, idx_end = utility.find_nearest(x, end)
             new_spectra.append(y[idx_start:idx_end])
+            new_x_axis.append(x[idx_start:idx_end])
         self.spectra = np.array(new_spectra)
+        self.x_axis = np.array(new_x_axis)
