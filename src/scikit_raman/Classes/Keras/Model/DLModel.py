@@ -89,13 +89,12 @@ class DLModelKeras:
 
         epochs = 273
         batch_size = 338
-        es = EarlyStopping(monitor="val_categorical_accuracy", patience=100, verbose=1,
-                           restore_best_weights=True)
-        lr = ReduceLROnPlateau(monitor="val_categorical_accuracy", factor=0.5, verbose=4, patience=80,
-                               cooldown=10)
-        callbacks = [es, lr]
-        if set_seed:
-            utils.set_seed()
+        # es = EarlyStopping(monitor="val_categorical_accuracy", patience=100, verbose=1,
+        #                    restore_best_weights=True)
+        # lr = ReduceLROnPlateau(monitor="val_categorical_accuracy", factor=0.5, verbose=4, patience=80,
+        #                        cooldown=10)
+        # callbacks = [es, lr]
+        callbacks = []
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
 
     @classmethod
@@ -135,11 +134,15 @@ class DLModelKeras:
         histories = []
         names_list = []
         for j, (train_idx, test_idx) in enumerate(folds, start=1):
+            es = EarlyStopping(monitor="val_categorical_accuracy", patience=100, verbose=1,
+                               restore_best_weights=True)
+            lr = ReduceLROnPlateau(monitor="val_categorical_accuracy", factor=0.5, verbose=4, patience=80,
+                                   cooldown=10)
             names_test_cv = dataset.user[test_idx]
             patient_name = np.unique(names_test_cv)[0]
             print(f'\n[*] Patient {j}: {patient_name}')
             ec = EpochCheckpointSaver(save_interval=39, folder_path=checkpoint_folder_path, model_name=model_name, fold=patient_name)
-            self.add_callback(ec)
+            callbacks = [es, lr, ec]
             trained_model = clone_model(self.model)
             optimizer = get_optimizer(self.optimizer, self.learning_rate)
             trained_model.compile(optimizer=optimizer,
@@ -163,7 +166,7 @@ class DLModelKeras:
                                         epochs=self.epochs,
                                         validation_data=(X_val, y_val_cat),
                                         batch_size=self.batch_size, verbose=1,
-                                        callbacks=self.callbacks)
+                                        callbacks=callbacks)
             histories.append(history)
             names_list.append(patient_name)
             pred = trained_model.predict(X_test_cv)
