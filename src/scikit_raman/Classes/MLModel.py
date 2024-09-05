@@ -10,35 +10,76 @@ import os
 
 class MLModel:
     """
-    A class that represent a MLModel for raman spectra analysis
+    A class used to represent a Machine Learning model.
 
     ...
 
     Attributes
     ----------
-    model: sklearn model
-        The model used for classification - training. This class is compatible with
-        sklearn models.
+    model : sklearn
+        An object of whatevere Machine Learning model of sklearn library.
+
+    Methods
+    -------
+    train_model_cv(self, dataset, k = 10, fold_level = True, get_patient_prediction = True, check_users_separated=True,
+                       set_seed=True, random_state=42, save_model=False, model_path="model_saved/model/")
+        Train a model with k-fold cross validation and stores the results
+
+    train_model_leave_one_patient_out(self, dataset, get_patient_prediction = True, patient_level = True, set_seed=True,
+                                          random_state=42, save_model=False, model_path="model_saved/model/")
+        Train a model with leave-one-patient-out cross-validation and stores the results
+
+    fit_model(self, X_train, y_train, set_seed=True, random_state=42)
+        Given a training set it trains the model
+
+    test_model(self, X_test)
+        Given a test set it test the model and return the predictions
+
+
     """
 
     def __init__(self, model):
+        """
+        Creates an MLModel object
+
+        Parameters
+        ----------
+        model: sklearn object
+            A sklearn object to be trained and experimented.
+        """
         self.model = model
 
     def train_model_cv(self, dataset, k = 10, fold_level = True, get_patient_prediction = True, check_users_separated=True,
                        set_seed=True, random_state=42, save_model=False, model_path="model_saved/model/"):
         """
-        Train a model with k-fold cross validation. Print the confusion matrix and the performances
-        at every fold and after all folds.
-        :param dataset: scikit_raman.Dataset
-            A dataset object from scikit_raman class.
-        :param k: int, optional.
-            Number of folds. The default value is 10.
-        :param fold_level, optional.
-            if true results are returned as fold level. The default values is True.
-        :param get_patient_prediction, optional.
-            if true results are returned for every patient. The default value is True.
-        :return dict
-            a dictionary is returned, based on the user choiches.
+        It trains a sklearn object with k-fold cross validation and it returns the results as a dictionary.
+        Parameters
+        ----------
+        dataset : scikit_raman.Dataset
+            Dataset object on which apply the k-fold
+        k : int, optional (default is 10)
+            Number of folds
+        fold_level : bool, optional (default is True)
+            Whether to return results at a fold level
+        get_patient_prediction : bool, optional (default is True)
+            Whether to return results at a spectra level
+        check_users_separated : bool, optional (default is True)
+            Whether to check if spectra of the same patients are separated among the folds
+        set_seed : bool, optional (default is True)
+            Whether to set a seed
+        random_state : int, optional (default is 42)
+            Seed value
+        save_model : bool, optional (default is False)
+            Whether to store the trained model
+        model_path : string, optional (default is "model_saved/model/")
+            Path to which store the trained model
+
+        Returns
+        -------
+        dict
+            a dictionary which contains the results of experimentation divided between the different types of
+            results
+
         """
         if set_seed:
             utils.set_seed(random_state)
@@ -115,16 +156,30 @@ class MLModel:
     def train_model_leave_one_patient_out(self, dataset, get_patient_prediction = True, patient_level = True, set_seed=True,
                                           random_state=42, save_model=False, model_path="model_saved/model/"):
         """
-        Train the model with leave_one_patient_out cross validation. Print the confusion matrix
-        and the performances at every fold and after all folds.
-        :param dataset: scikit_raman.Dataset
-            A dataset object for traning task.
-        :param get_patient_prediction, optional
-            if true prediction ef every patient are returned. The default value is True.
-        :param patient_level, optional
-            if true prediction at patient level are returned. The default value is True.
-        :return dict
-            dictionary based on the user choiches.
+        It trains a sklearn object with leave-one-patient cross validation and it returns the results as a dictionary.
+        Parameters
+        ----------
+        dataset : scikit_raman.Dataset
+            Dataset object on which apply the k-fold
+        get_patient_prediction : bool, optional (default is True)
+            Whether to return results at a spectra level
+        patient_level : bool, optional (default is True)
+            Whether to return results at a patient level
+        set_seed : bool, optional (default is True)
+            Whether to set a seed
+        random_state : int, optional (default is 42)
+            Seed value
+        save_model : bool, optional (default is False)
+            Whether to store the trained model
+        model_path : string, optional (default is "model_saved/model/")
+            Path to which store the trained model
+
+        Returns
+        -------
+        dict
+            a dictionary which contains the results of experimentation divided between the different types of
+            results
+
         """
         if set_seed:
             utils.set_seed(random_state)
@@ -174,11 +229,18 @@ class MLModel:
 
     def fit_model(self, X_train, y_train, set_seed=True, random_state=42):
         """
-        Fit the model.
-        :param X_train: np.array
-            Trainset to use for training
-        :param y_train: np.array
-            Labels used for the training
+        Train the model on a given training set.
+
+        Parameters
+        ----------
+        X_train : np.array
+            Array of spectra representing the test set
+        y_train : np.array
+            Array of numerical labels of the training set
+        set_seed : bool, optional (default is True)
+            Whether to set a seed value
+        random_state : int, optional (default is 42)
+            The value of the random seed
         """
         if set_seed:
             utils.set_seed(random_state)
@@ -186,36 +248,48 @@ class MLModel:
 
     def test_model(self, X_test):
         """
-        Test the model. Print the performances and the confusion matrix of the model.
-        :param X_test: np.array
-            Testset to use for the classification
-        :param y_test:np.array
-            Labels.
+        Test the model on a given test set.
+
+        Parameters
+        ----------
+        X_test : np.array
+            Array of spectra representing the test set
+
+        Returns
+        -------
+        np.array
+            Array of numerical labels predicted by the model
         """
         y_pred = self.model.predict(X_test)
         return y_pred
 
-    def grid_search_parameters(self, dataset, space, k_fold = True, k = 10, scoring = 'accuracy', n_jobs = 1):
+    def _grid_search_parameters(self, dataset, space, k_fold = True, k = 10, scoring = 'accuracy', n_jobs = 1):
         """
-        Apply the grid search strategy to optimize the hyperparameters of the Machine Learning models.
-        :param dataset: scikit_raman.Dataset
-            Dataset on which apply the search.
-        :param space: dict
-            For every parameter to optimize the possible value on which apply the search.
-        :param k_fold: Bool
-            If true a k-fold cross validation strategy is applied. Otherwise a leave one patient out
-            cross validation is applied. Default value is True.
-        :param k: int
-            Number of folds for the k-fold cross validation. Default value is 10.
-        :param scoring: str
-            Metrics on which optimize the hyperparameters. Default value is 'accuracy'
-        :param n_jobs: int
-            N° oj jobs to run in parallel. See sklearn docs for further information.
-        :return:
-            result.best_score: double
-                Best score obtained by the model.
-            result.best_params: dict
-                Best params found by the grid search.
+        It apply the grid-search strategy for the optimization of hyperparameters.
+
+        Parameters
+        ----------
+        dataset : scikit_raman.Dataset
+            Dataset on which apply the grid-search
+        space : dict
+            Dictionary contains str as keys and list of possible parameters. For more information see documentation
+            of GridSearchCV function of scikit-learn.
+        k_fold : bool, optional (default is True)
+            Whether to compute the grid-search in k-fold cross validation or leave-one-patient cross validation
+        k : int, optional (default is 10)
+            Number of folds for the k-fold cross validation process
+        scoring : string, optional (default is 'accuracy')
+            Metric to be monitored for the k-fold function
+        n_jobs : int, optional (default is 1)
+            Number of jobs to run in parallel
+
+        Returns
+        -------
+        float
+            Mean cross-validated score of the best_estimator
+        dict
+            Parameter setting that gave the best results on the hold out data.
+
         """
         if k_fold:
             folds = dataset.k_fold(k)
@@ -227,27 +301,33 @@ class MLModel:
         print('Best params: ' + str(result.best_params_))
         return result.best_score_, result.best_params_
 
-    def random_search_parameters(self, dataset, space, k_fold = True, k = 10, scoring = 'accuracy', n_jobs = 1):
+    def _random_search_parameters(self, dataset, space, k_fold = True, k = 10, scoring = 'accuracy', n_jobs = 1):
         """
-        Apply the random search strategy to optimize the hyperparameters of the Machine Learning models.
-        :param dataset: scikit_raman.Dataset
-            Dataset on which apply the search.
-        :param space: dict
-            For every parameter to optimize the possible value on which apply the search.
-        :param k_fold: Bool
-            If true a k-fold cross validation strategy is applied. Otherwise a leave one patient out
-            cross validation is applied. Default value is True.
-        :param k: int
-            Number of folds for the k-fold cross validation. Default value is 10.
-        :param scoring: str
-            Metrics on which optimize the hyperparameters. Default value is 'accuracy'
-        :param n_jobs: int
-            N° oj jobs to run in parallel. See sklearn docs for further information.
-        :return:
-            result.best_score: double
-                Best score obtained by the model.
-            result.best_params: dict
-                Best params found by the random search.
+        It apply the random search strategy for the optimization of hyperparameters.
+
+        Parameters
+        ----------
+        dataset : scikit_raman.Dataset
+            Dataset on which apply the grid-search
+        space : dict
+            Dictionary contains str as keys and list of possible parameters. For more information see documentation
+            of GridSearchCV function of scikit-learn.
+        k_fold : bool, optional (default is True)
+            Whether to compute the grid-search in k-fold cross validation or leave-one-patient cross validation
+        k : int, optional (default is 10)
+            Number of folds for the k-fold cross validation process
+        scoring : string, optional (default is 'accuracy')
+            Metric to be monitored for the k-fold function
+        n_jobs : int, optional (default is 1)
+            Number of jobs to run in parallel
+
+        Returns
+        -------
+        float
+            Mean cross-validated score of the best_estimator
+        dict
+            Parameter setting that gave the best results on the hold out data.
+
         """
         if k_fold:
             folds = dataset.k_fold(k)

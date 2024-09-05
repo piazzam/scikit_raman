@@ -7,41 +7,127 @@ import scikit_raman.module.utility as utility
 
 class Dataset:
     """
-    A class to represent a scikit-raman Dataset.
+    A class that represents a Dataset object for scikit_raman library.
 
     ...
 
     Attributes
     ----------
-    spectra : list
-        list of the spectra of the dataset.
-    x_axis : list
-        list of the x_axis of all the spectra of the dataset.
-    raw : list
-        list of bool that represent if that spectra is raw or dark.
-    user: list
-        list of string that contains the code of every patients of the dataset.
-    name: list
-        list of string that represents if the spectra is raw or dark.
-    category: list
-        list of category of the spectra (Cov, CovNeg, C).
-    labels: list
-        list of labels in numeric form.
+    spectra : np.array
+        Array of spectra contained in the dataset.
+    x_axis : np.array
+        Array of x_axis for each spectra contained in the dataset.
+    user: np.Array
+        Array of strings containing the code of patients.
+    category: np.Array
+        Array containing the patient's label in string form.
+    assumed_drugs: np.Array
+        Array containing the drugs taken by each patient.
+    labels: np.Array
+        Array contaning the patient's label in numerical form.
+
+    Methods
+    -------
+
+    extend(self, dataset)
+        Add another dataset in tail to the one instantiated.
+    load_file(ds, file_type, file_name, parquet_engine='fastparquet',
+                  label_dictionary={'cov': 0, 'covNeg': 1, 'ctrl': 2})
+        Load a file and automatically instantiates a scikit_raman.Dataset object.
+    load_drugs(self, drugs, drugs_category)
+        Load the drugs taken by each patient.
+    create_label(self, label_dictionary)
+        Starting from the string labels it creates the numerical version.
+    to_df(self, save_label=True)
+        Convert the scikit_raman.Dataset into a pandas.Dataframe object.
+    save_pickle(self, filename, save_label=True)
+        Convert the scikit_raman.Dataset into a pandas.Dataframe object and then store it as a pickle file.
+    save_parquet(self, filename, save_label=True, engine='fastparquet')
+        Convert the scikit_raman.Dataset into a pandas.Dataframe object and then store it as a parquet file.
+    get_raw_data(self)
+        Return a subset of Dataset corresponding only to raw data.
+    get_dark_data(self)
+        Return a subset of Dataset corresponding only to dark data.
+    get_by_indices(self, indices)
+        Return a subset of Dataset by specifying the indexes of desired elements.
+    change_category_name(self, dictionary)
+        Change the name associated to a category.
+    change_label_name(self, dictionary)
+        Change the numeric value of a label.
+    change_user_name_string(self, dictionary)
+        Change the string name of a patient.
+    change_category_and_user(self, dictionary)
+        Change the name associated to a category and the corresponding user code.
+    k_fold(self, k)
+        Create folds for k-fold procedure from Dataset object. It preserves the patients among the folds.
+    simple_k_fold(self, k)
+        Create folds for k-fold procedure from Dataset object.
+    stratified_k_fold(self, k)
+        Create folds for k-fold procedure from Dataset object. It is stratified among labels.
+    leave_one_patient_cv(self):
+        Create folds for leave-one-patient-out cross validation procedure from Dataset object.
+    get_unique_category(self):
+        Return a numpy array with unique categories' name.
+    get_unique_labels(self)
+        Return a numpy array with unique label's numerical value.
+    get_unique_user(self)
+        Return a numpy array with unique user's string name.
+    remove_elements(self, elements)
+        Remove elements from Dataset
+    spectra_to_numpy(self)
+        Transform the spectra list in np.array
+    x_axis_to_numpy(self)
+        Transform the spectra list in numpy.array
+    search_by_name(self, name)
+        Search and return subset of the dataset corresponding to the specified user.
+    search_by_name_indices(self, name)
+        Search and return subset of the dataset corresponding to the specified user.
+    search_by_category_name(self, cat)
+        Search and return subset of the dataset corresponding to the specified label name.
+    search_by_category_label(self, lab)
+        Search and return subset of the dataset corresponding to the specified user.
+    create_mean_spectra(self)
+        Create a new dataset with teh averaged spectra for each patient as a new spectra.
+    cut_based_xaxis(self, start, end):
+        Cut spectra and x-axis based on value on positions on x-axis
     """
 
     def __init__(self, spectra, x_axis, raw, user, name, category, labels,
                  assumed_drugs=[], label_dictionary={'cov': 0, 'covNeg': 1, 'ctrl': 2}):
+        """
+        Constructor for Dataset class
+
+        Parameters
+        ----------
+        spectra : list
+            List of spectra.
+        x_axis : list
+            List of x-axis.
+        raw : list
+            List of boolean corresponding to be be a raw or a dark element.
+        user : list
+            List of user codes.
+        name : list
+            List of stirng corresponding to raw or dark data.
+        category : list
+            List of string corresponding to the category of patients.
+        labels : list
+            List of int corresponding to numerical labels.
+        assumed_drugs: list, optional (default is [])
+            List of int corresponding to assumed drugs
+        label_dictionary dict, optional (default is {'cov': 0, 'covNeg': 1, 'ctrl': 2})
+            Dictionary for mapping string labels into numerical form.
+        """
         self.spectra = spectra
         self.spectra_to_numpy()
         self.x_axis = x_axis
         self.x_axis_to_numpy()
-        self.raw = raw
+        self._raw = raw
         self.user = user
-        self.name = name
+        self._name = name
         self.category = category
         self.assumed_drugs = np.array(assumed_drugs)
-        self.n_elements = len(spectra)
-        # self.label_dictionary = label_dictionary
+        self._n_elements = len(spectra)
         if labels.size != 0:
             self.labels = labels
         else:
@@ -49,6 +135,32 @@ class Dataset:
         self.n_dims = self.spectra.shape[1]
 
     def __getitem__(self, items):
+        """
+        Get subset of elements of the dataset based on integer position
+        Parameters
+        ----------
+        items : int
+            Integer position of elements to be returned
+
+        Returns
+        -------
+            np.array
+                Spectra at specified position
+            np.array
+                X-Axis at specified position
+            np.array
+                Raw at specified position
+            np.array
+                User at specified position
+            np.array
+                Name at specified position
+            np.array
+                Category at specified position
+            np.array
+                Labels at specified position
+            np.array
+                Assumed_drugs at specified position
+        """
         try:
             return self.spectra[items], self.x_axis[items], self.raw[items], self.user[items], self.name[items], \
                    self.category[items], self.labels[items], self.assumed_drugs[items]
@@ -57,6 +169,13 @@ class Dataset:
                    self.category[items], self.labels[items]
 
     def __len__(self):
+        """
+        Overriding of len function
+        Returns
+        -------
+        int
+            number of elements contained in the Dataset
+        """
         return self.n_elements
 
     def extend(self, dataset):
@@ -74,15 +193,22 @@ class Dataset:
                   label_dictionary={'cov': 0, 'covNeg': 1, 'ctrl': 2}):
         """
         Load a file and automatically create a Dataset object.
-        :param ds: scikit_raman.Dataset
-            Dataset object to be returned.
-        :param file_type: str
-            type of file to load.
-        :param file_name: str
-            name of the file to load
-        :param label_dictionary: dict, optional
-            dictionary for mapping category (str) in numeric label.
-        :return: a dataset object loaded from the file.
+
+        Parameters
+        ----------
+        file_type : str
+            String corresponding to the file type to be loaded.
+        file_name : str
+            String corresponding to the file path to be loaded.
+        parquet_engine : str, optional (default is fastparquet)
+            String corresponding to parquet engine for loading parquet file.
+        label_dictionary : dict, optional (default is {'cov': 0, 'covNeg': 1, 'ctrl': 2})
+            Dictionary for mapping string labels into numerical forms.
+
+        Returns
+        -------
+        scikit_raman.Dataset
+            Created dataset object.
         """
         if file_type == 'pkl':
             df = pd.read_pickle(file_name)
@@ -105,6 +231,16 @@ class Dataset:
         return ds(spectra, x_axis, raw, user, name, category, labels, [], label_dictionary)
 
     def load_drugs(self, drugs, drugs_category):
+        """
+        Load and assign to each its assumed drugs.
+
+        Parameters
+        ----------
+        drugs: pandas.Dataframe
+            Mapping each user into its assumed drugs
+        drugs_category: list
+
+        """
         assumed_drugs = []
         for i, u in enumerate(self.user):
             if self.category[i] in drugs_category:
@@ -116,10 +252,12 @@ class Dataset:
 
     def create_label(self, label_dictionary):
         """
-        Create numeric labels for the dataset object.
-        :param label_dictionary: dict
-            dictionary on which rely for the numeric labels.
-        :return:
+        Translate string labels into numerical version.
+
+        Parameters
+        ----------
+        label_dictionary : dict
+            Dictionary for mapping string labels into numerical version.
         """
         labels = []
         for el in self.category:
@@ -127,6 +265,20 @@ class Dataset:
         self.labels = np.array(labels)
 
     def to_df(self, save_label=True):
+        """
+        Convert the Dataset into a pandas.Dataframe object.
+
+        Parameters
+        ----------
+        save_label : bool, optional (defualt is True)
+            Whether to also add numerical labels to the df.
+
+        Returns
+        -------
+        pandas.Dataframe
+            Translated dataframe.
+
+        """
         if save_label:
             df = pd.DataFrame([], columns=['spectra', 'x-axis', 'raw', 'user', 'name', 'category', 'label'])
         else:
@@ -142,19 +294,44 @@ class Dataset:
         return df
 
     def save_pickle(self, filename, save_label=True):
+        """
+        Convert the dataset object into a pandas.Dataframe and then store it as a pickle file.
+
+        Parameters
+        ----------
+        filename : str
+            Filename of the pickle file.
+        save_label : bool, optional (default is True)
+            Whether to include numerical labels into the saved file.
+        """
         df = self.to_df(save_label)
         with open(filename, 'wb') as f:
             pickle.dump(df, f)
 
     def save_parquet(self, filename, save_label=True, engine='fastparquet'):
+        """
+        Convert the dataset object into a pandas.Dataframe and then store it as a parquet file.
+
+        Parameters
+        ----------
+        filename : str
+            Filename of the parquet file.
+        save_label : bool, optional (default is True)
+            Whether to include numerical labels into the saved file.
+        engine : str, optional (default is 'fastparquet')
+            Parquet - engine for saving the file.
+        """
         df = self.to_df(save_label)
         df.to_parquet(filename, engine=engine)
 
     def get_raw_data(self):
         """
-        Return a new Dataset object with only raw data.
-        :return: scikit_raman.Dataset
-            object with raw data.
+        Return a new dataset composed of only raw data.
+
+        Returns
+        -------
+        scikit_raman.Dataset
+            Object composed of raw data.
         """
         spectra = []
         x_axis = []
@@ -178,9 +355,12 @@ class Dataset:
 
     def get_dark_data(self):
         """
-        Return new dataset with only dark data.
-        :return: scikit_raman.Dataset
-            dataset object with dark data.
+        Return a new dataset composed of only dark data.
+
+        Returns
+        -------
+        scikit_raman.Dataset
+            Object composed of dark data.
         """
         spectra = []
         x_axis = []
@@ -203,6 +383,19 @@ class Dataset:
         return ds
 
     def get_by_indices(self, indices):
+        """
+        Return a new Dataset object composed of a subset of elements, specified by indexes value.
+
+        Parameters
+        ----------
+        indices : list
+            List of integer value.
+
+        Returns
+        -------
+        scikit_raman.Dataset
+            Reduced size object
+        """
         spectra = []
         x_axis = []
         raw = []
@@ -224,8 +417,11 @@ class Dataset:
 
     def change_category_name(self, dictionary):
         """
-        Change the name of the category in string form based on dictionary.
-        :param dictionary: dict
+        Change the name of the category in string form.
+
+        Parameters
+        ----------
+        dictionary : dict
             Map old names with new names.
         """
         new_category = []
@@ -235,8 +431,11 @@ class Dataset:
 
     def change_label_name(self, dictionary):
         """
-        Change the name of the category in string form based on dictionary.
-        :param dictionary: dict
+        Change the name of the category in string form.
+
+        Parameters
+        ----------
+        dictionary : dict
             Map old names with new names.
         """
         new_label = []
@@ -246,8 +445,11 @@ class Dataset:
 
     def change_user_name_string(self, dictionary):
         """
-        Change the name of the user name based on dictionary.
-        :param dictionary: dict
+        Change the name of the user name
+
+        Parameters
+        ----------
+        dictionary: dict
             Map old names with new names.
         """
         new_users = []
@@ -263,21 +465,31 @@ class Dataset:
 
     def change_category_and_user(self, dictionary):
         """
-        Change both category and user names based on the dictionary.
-        :param dictionary: dict
+        Change both category and user names.
+
+        Parameters
+        ----------
+        dictionary : dict
             Map old names with new names.
-        :return:
         """
         self.change_category_name(dictionary)
         self.change_user_name_string(dictionary)
 
     def k_fold(self, k):
         """
-        Implements the k-fold strategies. It preserves the patients.
-        :param k: int
-            Number of the fold
-        :return: list
-            Different folds for the different cv cycle.
+        Implements the k-fold strategies, with preservation of patients between different folds.
+
+        Parameters
+        ----------
+        k : int
+            Number of folds in k-fold procedure
+
+        Returns
+        -------
+        np.array
+            The training set indices for that split.
+        np.array
+            The testing set indices for that split.
         """
         x_train = self.spectra
         if not hasattr(self, 'labels'):
@@ -289,6 +501,21 @@ class Dataset:
             return folds
 
     def simple_k_fold(self, k):
+        """
+        Implements the k-fold strategies, without preservation of patients between different folds.
+
+        Parameters
+        ----------
+        k : int
+            Number of folds in k-fold procedure
+
+        Returns
+        -------
+        np.array
+            The training set indices for that split.
+        np.array
+            The testing set indices for that split.
+        """
         x_train = self.spectra
         if not hasattr(self, 'labels'):
             raise Exception("This dataset doesn't have labels")
@@ -299,11 +526,19 @@ class Dataset:
 
     def stratified_k_fold(self, k):
         """
-        Implements the k-fold strategies. It preserves the patients.
-        :param k: int
-            Number of the fold
-        :return: list
-            Different folds for the different cv cycle.
+        Implements the k-fold strategies, with stratification of labels between folds.
+
+        Parameters
+        ----------
+        k : int
+            Number of folds in k-fold procedure
+
+        Returns
+        -------
+        np.array
+            The training set indices for that split.
+        np.array
+            The testing set indices for that split.
         """
         x_train = self.spectra
         if not hasattr(self, 'labels'):
@@ -316,10 +551,15 @@ class Dataset:
 
     def leave_one_patient_cv(self):
         """
-        Apply leave-one-patient out cross-validation.
-        :return: list
-            Different folds for the different cv cycle. J corresponds to the number of
-            patients.
+        Implements leave-one-patient out cross-validation.
+
+        Returns
+        -------
+
+        np.array
+            The training set indices for that split.
+        np.array
+            The testing set indices for that split.
         """
         x_train = self.spectra
         if not hasattr(self, 'labels'):
@@ -333,32 +573,47 @@ class Dataset:
     def get_unique_category(self):
         """
         Get a numpy array with unique category values.
-        :return: np.array:
-            contains unique value of the categories
+
+        Returns
+        -------
+        np.array
+            Array with unique value of categories.
+
         """
         return np.unique(self.category)
 
     def get_unique_labels(self):
         """
         Get a numpy array with unique labels values.
-        :return: np.array:
-            contains unique value of the labels
+
+        Returns
+        -------
+        np.array
+            Array with unique value of categories.
+
         """
         return np.unique(self.labels)
 
     def get_unique_user(self):
         """
         Get a numpy array with unique user names.
-        :return: np.array:
-            contains unique value of the users.
+
+        Returns
+        -------
+
+        np.array
+            Array with unique value of user code.
         """
         return np.unique(self.user)
 
     def remove_elements(self, elements):
         """
-        Remove elements from the dataset.
-        :param elements:list
-            list of the elements to remove.
+        Remove specified elements from the dataset.
+
+        Parameters
+        ----------
+        elements: list
+            List of elements to be removed.
         """
         self.spectra = np.delete(self.spectra, elements, axis=0)
         self.x_axis = np.delete(self.x_axis, elements, axis=0)
@@ -371,8 +626,7 @@ class Dataset:
 
     def spectra_to_numpy(self):
         """
-        Transform the spectra list in numpy.array
-        :return:
+        Transform the spectra list in np.array
         """
         spectra_list = []
         for el in self.spectra:
@@ -383,7 +637,6 @@ class Dataset:
     def x_axis_to_numpy(self):
         """
         Transform the spectra list in numpy.array
-        :return:
         """
         x_axis_list = []
         for el in self.x_axis:
@@ -394,10 +647,16 @@ class Dataset:
     def search_by_name(self, name):
         """
         Search and return subset of the dataset corresponding to the specified user.
-        :param name:string
-            String corresponding to the user name of the patients.
-        :return: scikit_raman.Dataset
-            A dataset object representing the subset of the Dataset.
+
+        Parameters
+        ----------
+        name : str
+            User code to be searched
+
+        Returns
+        -------
+        scikit_raman.Dataset
+            Dataset object comprising of the subset related to the specified user.
         """
         ret_list = []
         for i in range(len(self.user)):
@@ -423,11 +682,18 @@ class Dataset:
 
     def search_by_name_indices(self, name):
         """
-        Search and return subset of the dataset corresponding to the specified user.
-        :param name:string
-            String corresponding to the user name of the patients.
-        :return: scikit_raman.Dataset
-            A dataset object representing the subset of the Dataset.
+        Search and return a list of int corresponding to indexes of the specified user.
+
+        Parameters
+        ----------
+        name : str
+            User code to be searched
+
+        Returns
+        -------
+        list
+            List of integers containing indexes of user's name.
+
         """
         ret_list = []
         for i in range(len(self.user)):
@@ -438,10 +704,17 @@ class Dataset:
     def search_by_category_name(self, cat):
         """
         Search and return subset of the dataset corresponding to the specified label name.
-        :param name:string
+
+        Parameters
+        ----------
+        cat : str
             String corresponding to the label.
-        :return: scikit_raman.Dataset
+
+        Returns
+        -------
+        scikit_raman.Dataset
             A dataset object representing the subset of the Dataset.
+
         """
         ret_list = []
         for i in range(len(self.category)):
@@ -468,9 +741,15 @@ class Dataset:
     def search_by_category_label(self, lab):
         """
         Search and return subset of the dataset corresponding to the specified user.
-        :param name:int
+
+        Parameters
+        ----------
+        lab : int
             Int corresponding to the user category of the patients.
-        :return: scikit_raman.Dataset
+
+        Returns
+        -------
+        scikit_raman.Dataset
             A dataset object representing the subset of the Dataset.
         """
         ret_list = []
@@ -496,6 +775,15 @@ class Dataset:
                        np.array(category), np.array(labels))
 
     def create_mean_spectra(self):
+        """
+        Create a new Dataset object with average spectra for each patient.
+
+        Returns
+        -------
+        scikit_raman.Dataset
+            New dataset object
+
+        """
         users = self.get_unique_user()
         spectra = []
         x_axis = []
@@ -518,6 +806,17 @@ class Dataset:
                        np.array(category), np.array(labels))
 
     def cut_based_xaxis(self, start, end):
+        """
+        Cut spectra and x-axis based on value on positions on x-axis
+
+        Parameters
+        ----------
+        start : int
+            Starting point on x-axis
+        end : int
+            Ending point on x-axis
+
+        """
         new_spectra = []
         new_x_axis = []
         for x, y in zip(self.x_axis, self.spectra):
