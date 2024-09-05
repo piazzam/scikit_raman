@@ -128,6 +128,16 @@ target_names: [ASMA, BPCO]
 
 ### Description
 The `preprocessing.yaml` file handle all desired preprocessing steps and their associated parameters.
+- **preprocessing_steps** (list): List with the names of preprocessing steps to apply. The names should match the preprocessing steps available in the library.
+- **parameters** (dict): Dictionary containing an association with function name defined above and its parameters.
+#### Complete Example
+```yaml
+preprocessing_steps: [delete_uninformative_spectra, resample_shift]
+parameters:{
+        resample_shift:{
+                        start: 450}
+}
+```
 
 ### Options
 
