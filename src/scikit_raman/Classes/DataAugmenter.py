@@ -10,23 +10,54 @@ class DataAugmenter:
     Attributes
     ----------
     spectra : list
-        list of the spectra of the dataset.
+        List of the spectra of the dataset.
     labels: list
-        list of labels in numeric form.
+        List of labels in numeric form.
+
+    Methods
+    -------
+    augment_signals(self, times, keep_original=True, betashift=0.0005, slopeshift=0.002, multishift=0.005)
+        Applies EMSC data augmentation strategy. Augment current dataset many times as specified by times.
+    emsc(self, params)
+        Apply emsc data augmentation.
+    emsc_single_spectra(self, params)
+        Apply emsc data augmentation.
+    emsc_single_class(self, params)
+        Apply emsc data augmentation.
     """
 
     def __init__(self, spectra, labels):
+        """
+        Constructor of class DataAugmenter
+
+        Parameters
+        ----------
+        spectra : list
+            List of spectra in dataset.
+        labels : list
+            List of labels in numerical form.
+        """
         self.spectra = spectra
         self.labels = labels
 
-    def dataaugment(self, betashift, slopeshift, multishift):
+    def _dataaugment(self, betashift, slopeshift, multishift):
         """
-        Function propaedeutic to data augmentation.
-        :param betashift:
-        :param slopeshift:
-        :param multishift:
-        :return np.array:
-            an array containing augmented signals.
+        Function propaedeutic to data augmentation. It augments the set of spectra of one time.
+
+        Parameters
+        ----------
+        betashift : float
+            Parameter for varying the shape of the spectra.
+        slopeshift : float
+            Parameter for varying the shape of the spectra.
+        multishift : float
+            Parameter for varying the shape of the spectra.
+
+        Returns
+        -------
+        np.array
+            An array containing augmented signals.
+
         """
         # baseline shift
         signal = self.spectra
@@ -43,14 +74,27 @@ class DataAugmenter:
 
         return augmented_signal
 
-    def dataaugment_single_spectra(self, betashift, slopeshift, multishift, index='random'):
+    def _dataaugment_single_spectra(self, betashift, slopeshift, multishift, index='random'):
         """
-        Function propaedeutic to data augmentation.
-        :param betashift:
-        :param slopeshift:
-        :param multishift:
-        :return np.array:
-            an array containing augmented signals.
+        Function propaedeutic to data augmentation. It augments a single spectrum of one time.
+
+        Parameters
+        ----------
+        betashift : float
+            Parameter for varying the shape of the spectra.
+        slopeshift : float
+            Parameter for varying the shape of the spectra.
+        multishift : float
+            Parameter for varying the shape of the spectra.
+        index : int or str, optional (default is 'random')
+            If it is equal to random the function randomly select the index, otherwise augment the signal specified by
+            index.
+
+        Returns
+        -------
+        np.array
+            An array containing augmented signals.
+
         """
         # baseline shift
         if index == 'random':
@@ -74,14 +118,27 @@ class DataAugmenter:
 
         return augmented_signal
 
-    def dataaugment_single_class(self, signal, betashift, slopeshift, multishift):
+    def _dataaugment_single_class(self, signal, betashift, slopeshift, multishift):
         """
-        Function propaedeutic to data augmentation.
-        :param betashift:
-        :param slopeshift:
-        :param multishift:
-        :return np.array:
-            an array containing augmented signals.
+        Function propaedeutic to data augmentation. It augments spectra of a single class.
+
+        Parameters
+        ----------
+        betashift : float
+            Parameter for varying the shape of the spectra.
+        slopeshift : float
+            Parameter for varying the shape of the spectra.
+        multishift : float
+            Parameter for varying the shape of the spectra.
+        index : int or str, optional (default is 'random')
+            If it is equal to random the function randomly select the index, otherwise augment the signal specified by
+            index.
+
+        Returns
+        -------
+        np.array
+            An array containing augmented signals.
+
         """
         # baseline shift
         beta = np.random.random(size=(signal.shape[0], 1)) * 2 * betashift - betashift
@@ -100,17 +157,19 @@ class DataAugmenter:
     def augment_signals(self, times, keep_original=True, betashift=0.0005, slopeshift=0.002, multishift=0.005):
         """
         It applies EMSC data augmentation strategy. Augment current dataset many times as specified by times.
-        :param times: int
-            number of reply of replicas of the dataset.
-        :param keep_original: bool
-            if true the original dataset is kept in the augmented dataset
-        :param betashift: float, optional
-            The default value is 0.005.
-        :param slopeshift: float, optional
-            The default values is 0.002.
-        :param multishift: float, optional.
-            The default values is 0.005
-        :return:
+
+        Parameters
+        ----------
+        times : int
+            Number of reply of replicas of the dataset.
+        keep_original : bool, optional (default is True)
+            Whether to keep the original dataset into the augmented signal
+        betashift : float
+            Parameter for varying the shape of the spectra.
+        slopeshift : float
+            Parameter for varying the shape of the spectra.
+        multishift : float
+            Parameter for varying the shape of the spectra.
         """
         if keep_original:
             aug_list = copy.copy(self.spectra)
@@ -119,9 +178,9 @@ class DataAugmenter:
             y_list = np.array([])
         for i in range(times):
             if keep_original==False and i == 0:
-                aug_list = self.dataaugment(betashift = betashift, slopeshift=slopeshift, multishift=multishift)
+                aug_list = self._dataaugment(betashift = betashift, slopeshift=slopeshift, multishift=multishift)
             else:
-                aug_list = np.concatenate((aug_list, self.dataaugment(betashift = betashift, slopeshift=slopeshift, multishift=multishift)))
+                aug_list = np.concatenate((aug_list, self._dataaugment(betashift = betashift, slopeshift=slopeshift, multishift=multishift)))
         for i in range(times):
             y_list = np.concatenate((y_list, self.labels), axis=0)
         self.spectra = aug_list
@@ -129,10 +188,12 @@ class DataAugmenter:
 
     def emsc(self, params):
         """
-        Apply emsc data augmentation.
-        :param params: dict, optional
-            Parameters on which apply the emsc function. The default value is None.
-        :return:
+        Function to apply emsc data augmentation.
+
+        Parameters
+        ----------
+        params : dict
+            Parameters for the application of data augmentation.
         """
         if params == None:
             keep_original = True
@@ -178,10 +239,12 @@ class DataAugmenter:
 
     def emsc_single_spectra(self, params):
         """
-        Apply emsc data augmentation.
-        :param params: dict, optional
-            Parameters on which apply the emsc function. The default value is None.
-        :return:
+        Apply EMSC data augmentation on a single spectra.
+
+        Parameters
+        ----------
+        params : dict
+            Parameters for the application of data augmentation.
         """
         if params == None:
             keep_original = True
@@ -217,11 +280,11 @@ class DataAugmenter:
             y_list = np.array([])
         for i in range(times):
             if keep_original == False and i == 0:
-                aug_list = self.dataaugment_single_spectra(betashift=betashift, slopeshift=slopeshift,
+                aug_list = self._dataaugment_single_spectra(betashift=betashift, slopeshift=slopeshift,
                                                            multishift=multishift)
             else:
                 aug_list = np.concatenate(
-                    (aug_list, self.dataaugment_single_spectra(betashift=betashift, slopeshift=slopeshift,
+                    (aug_list, self._dataaugment_single_spectra(betashift=betashift, slopeshift=slopeshift,
                                                                multishift=multishift)))
         for i in range(times):
             y_list = np.concatenate((y_list, self.labels), axis=0)
@@ -230,10 +293,12 @@ class DataAugmenter:
 
     def emsc_single_class(self, params):
         """
-        Apply emsc data augmentation.
-        :param params: dict, optional
-            Parameters on which apply the emsc function. The default value is None.
-        :return:
+        Apply EMSC data augmentation on a single class.
+
+        Parameters
+        ----------
+        params : dict
+            Parameters for the application of data augmentation.
         """
         if params == None:
             keep_original = True
@@ -282,11 +347,11 @@ class DataAugmenter:
             y_list = np.array([])
         for i in range(times):
             if keep_original == False and i == 0:
-                aug_list = self.dataaugment_single_class(array_spectra, betashift=betashift, slopeshift=slopeshift,
+                aug_list = self._dataaugment_single_class(array_spectra, betashift=betashift, slopeshift=slopeshift,
                                                            multishift=multishift)
             else:
                 aug_list = np.concatenate(
-                    (aug_list, self.dataaugment_single_class(array_spectra, betashift=betashift, slopeshift=slopeshift,
+                    (aug_list, self._dataaugment_single_class(array_spectra, betashift=betashift, slopeshift=slopeshift,
                                                                multishift=multishift)))
         for i in range(times):
             y_list = np.concatenate((y_list, array_label), axis=0)

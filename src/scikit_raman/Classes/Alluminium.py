@@ -3,34 +3,83 @@ from scipy import interpolate
 
 class Alluminium:
     """
-    A class that represent an Alluminium object.
+    A class for loading an Alluminium file.
     ...
 
     Attributes
     ----------
     x-axis : np.array
-        x-axis of the Alluminium.
+        X-axis of the Alluminium.
     spectra: np.array
-        spectra of the Alluminium.
-    """
+        Spectra of the Alluminium.
 
+    Methods
+    -------
+    read_from_txt(all, filename)
+        Read an alluminium spectra from txt file.
+    resample(self, x_axis)
+        Apply the resample of the alluminium spectra.
+    """
     def __init__(self, x_axis, spectra):
+        """
+        Constructor of Alluminium class.
+
+        Parameters
+        ----------
+        x_axis : np.array
+            X-axis of the Allumiunium.
+        spectra : np.array
+            spectra of the Alluminium.
+        """
         self.x_axis = x_axis
         self.spectra = spectra
 
     def __len__(self):
+        """
+        Overriding of len function.
+
+        Returns
+        -------
+
+        int
+            Length of the array spectra.
+        """
         return len(self.spectra)
 
     def __getitem__(self, item):
+        """
+        Overriding of getitem function.
+
+        Parameters
+        ----------
+        item : int
+            position to be returned by the function
+
+        Returns
+        -------
+
+        np.array
+            selected spectra
+        np.array
+            selected x-axis
+        """
         return self.spectra[item], self.x_axis[item]
 
     @classmethod
     def read_from_txt(all, filename):
         """
         Read an alluminium spectra from txt file.
-        :param filename: str
-            complete filename of the file
-        :return: an Alluminium object readed from filename.
+
+        Parameters
+        ----------
+        filename : str
+            Filename of Alluminium file.
+
+        Returns
+        -------
+        scikit_raman.Alluminium
+            Alluminium object read from filename.
+
         """
         df = pd.read_table(filename, delimiter='\t', names=['x-axis', 'spectral'])
         x_axis = list(df['x-axis'].replace(",", ".", regex=True).astype(float))
@@ -39,9 +88,12 @@ class Alluminium:
 
     def resample(self, x_axis):
         """
-        Apply the resample of the alluminium spectra.
-        :param x_axis: np.array
-            an array representing the x-axis from which interpolate.
+        Apply the resample function on the alluminium.
+
+        Parameters
+        ----------
+        x_axis : np.array
+            x-axis from which apply the interpolation.
         """
         x = self.x_axis['x-axis']
         y = self.spectra['spectra']

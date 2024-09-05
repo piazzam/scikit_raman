@@ -14,21 +14,88 @@ from scipy.signal import savgol_filter
 
 class Processor:
     """
-    This class represent a processor. This permits to apply the preprocessing steps to one
-    dataset.
-
+    A class that represent a Processor object.
     ...
 
-    Attributes:
+    Attributes
     ----------
-    dataset: scikit_raman.Dataset
-        An object of the class Dataset of scikit_raman.
+    dataset : scikit_raman.Dataset
+        scikit_raman.Dataset object to be preprocessed
+
+    Methods
+    -------
+    resample_one_shift(self, y, x, start=400, end=1600, points=991)
+        Resample the x-axis and the spectrum only for one spectrum.
+    resample_shift(self, start=400, end=1600, points=991)
+        Resample the x-axis and the spectra for the entire dataset.
+    delete_uninformative_spectra(self)
+        Remove outliers from the dataset
+    spike_removal(self)
+        Removes the spikes from the spectra.
+    smoothing_savitzky_golay(self, window_length=9, polyorder=2)
+        Apply the Savitzky-Golay filter.
+    remove_baseline_polynomial(self, deg=6, max_it=100000, tol=pow(10, -11))
+        Removes baseline (background noise) from the spectra.
+    snv_normalization(self)
+        Apply SNV normalization.
+    min_max_normalization(self)
+        Apply min-max normalization.
+    l2_normalization(self)
+        Apply l2 - normalization.
+    peak_normalization(self)
+        Apply peak - normalization.
+    pca_fit_transform(self, n_components=2)
+        Apply the pca on the spectra data.
+    pca_fit(self, n_components=2)
+        Create the pca object.
+    pca_transform(self, pca)
+        Transform the data with the created pca object.
+    tsne_fit_transform(self, n_components=2)
+        Apply the t-sne reduction.
+    remove_alluminium(self, alluminium)
+        Remove alluminium from the background of the spectra.
+    remove_drugs(self, drugs, drugs_category)
+        Remove the contribution of drugs from the spectra.
+    realignment(self, window_size = 10)
+        Align the spectra according to spectra in position 1001 cm-1.
+
     """
 
     def __init__(self, dataset):
+        """
+        Constructor of scikit_raman.Processor class.
+
+        Parameters
+        ----------
+        dataset : scikit_raman.Dataset
+            scikit_raman.Dataset object to be preprocessed
+        """
         self.dataset = dataset
 
     def resample_one_shift(self, y, x, start=400, end=1600, points=991):
+        """
+        Resample the x-axis and the spectrum only for one spectrum.
+
+        Parameters
+        ----------
+        y : np.array
+            Spectrum to be resampled.
+        x : np.array
+            X-Axis to be resampled.
+        start : int, optional (default is 400)
+            Starting point for the interpolation
+        end : int, optional (default is 1600)
+            Ending point for the interpolation
+        points: int, optional (default is 991)
+            Number of points of the spectrum
+
+        Returns
+        -------
+        np.array
+            Resampled spectra
+        np.array
+            Resampled x-axis
+        """
         x_new = list(np.linspace(start, end, points))
         fi = interpolate.interp1d(x, y, kind='linear', bounds_error=False,
                                   fill_value='extrapolate')
@@ -36,17 +103,18 @@ class Processor:
         return y_new, x_new
 
     def resample_shift(self, start=400, end=1600, points=991):
-        """Calculate the new set of points for the spectras contained the dataset. Apply the
-            shift of the spectra.
+        """
+        Resample the x-axis and the spectra for the entire dataset.
 
-            Parameters:
-            start: int
-                Starting point of the x-axis. Default value is 400.
-            end: int
-                Ending point of the x-axis. Default value is 1600.
-            points: int
-                Number of points to take in the x-axis. Default value is 991.
-            """
+        Parameters
+        ----------
+        start : int, optional (default is 400)
+            Starting point for the interpolation
+        end : int, optional (default is 1600)
+            Ending point for the interpolation
+        points: int, optional (default is 991)
+            Number of points of the spectrum
+        """
         x_new = np.linspace(start, end, points)
 
         result = []
@@ -61,7 +129,7 @@ class Processor:
 
     def delete_uninformative_spectra(self):
         """
-            Delete uninformative spectra from the dataset. Uninformative spectras are defined by:
+        Delete uninformative spectra from the dataset. Uninformative spectras are defined by:
             10% of zeros or 10% repeated continuos values.
         """
         tot = 0
@@ -86,47 +154,44 @@ class Processor:
         print("Tot = " + str(tot) + " spettri rimossi")
         self.dataset.remove_elements(df_to_remove)
 
-    def modified_z_score(self, intensity):
+    def _modified_z_score(self, intensity):
         """
-            Function propaedeutics for spike removal function
+        Function propaedeutics for spike removal function.
 
-            Parameters
-            ----------
-            intensity : TYPE
-                DESCRIPTION.
+        Parameters
+        ----------
+        intensity : np.array
+            Single spectrum for the function.
 
-            Returns
-            -------
-            modified_z_scores : TYPE
-                DESCRIPTION.
+        Returns
+        _______
 
+        np.array:
+            Modified version of the spectrum
         """
         median_int = np.median(intensity)
         mad_int = np.median([np.abs(intensity - median_int)])
         modified_z_scores = 0.6745 * (intensity - median_int) / mad_int
         return modified_z_scores
 
-    def fixer(self, X, m, index, threshold=3.5):
+    def _fixer(self, X, m, index, threshold=3.5):
         """
-            Function propaedeutics for spike removal function
+        Function propaedeutics for spike removal function
 
-            Parameters
-            ----------
-            X : TYPE
-                DESCRIPTION.
-            m : TYPE
-                DESCRIPTION.
-            index : TYPE
-                DESCRIPTION.
-            threshold : TYPE, optional
-                DESCRIPTION. The default is 3.5.
+        Parameters
+        ----------
+        X : np.array
+            Spectrum on which apply the function.
+        m : int
+        index: int
+        threshold: float, optional (default is 3.5)
 
-            Returns
-            -------
-            X_out : TYPE
-                DESCRIPTION.
+        Returns
+        -------
+        np.array :
+
         """
-        spikes = abs(np.array(self.modified_z_score(np.diff(X)))) > threshold
+        spikes = abs(np.array(self._modified_z_score(np.diff(X)))) > threshold
         X_out = X.copy()
         ns = 0
         for i in np.arange(len(spikes) - m):
@@ -146,11 +211,19 @@ class Processor:
         X_c = []
         for x in X:
             #x_fix = self.fixer(x, 5, X.index(x), threshold=3.5)
-            x_fix = self.fixer(x, 5, np.where(X == x), threshold=3.5)
+            x_fix = self._fixer(x, 5, np.where(X == x), threshold=3.5)
             X_c.append(x_fix)
         self.dataset.spectra = np.array(X_c)
 
     def smoothing_savitzky_golay(self, window_length=9, polyorder=2):
+        """
+        Apply smooting according to Savitzky-Golay algorithm.
+
+        Parameters
+        ----------
+        window_length : int, optional (default is 9)
+        polyorder : int, optional (default is 2)
+        """
         X = list(self.dataset.spectra)
         X_filter = savgol_filter(X, window_length=window_length, polyorder=polyorder)
         X_filter_bis = []
@@ -161,17 +234,16 @@ class Processor:
 
     def remove_baseline_polynomial(self, deg=6, max_it=100000, tol=pow(10, -11)):
         """
-        Removes baseline (background noise) from the spectra. It apply the
+        Removes baseline (background noise) from the spectra.
+
         Parameters
         ----------
-        df : pd.DataFrame
-            A Dataframe formatted according to out policy.
-        deg : int, optional
-            degree of the polynomial. The default is 6.
-        max_it : int, optional
-            maximum number of iterations. The default is 100000.
-        tol : int, optional
-            tolerance value. The default is pow(10, -11).
+        deg : int, optional (default is 6)
+            Degree of polynomial.
+        max_it : int, optional (default is 100000)
+            Maximum number of iterations.
+        tol : int, optional (default is pow(10, -11))
+            Tolerance value.
         """
         spectra = self.dataset.spectra
         X_out = []
@@ -226,11 +298,17 @@ class Processor:
 
     def pca_fit_transform(self, n_components=2):
         """
-        Apply the pca on the spectra data.
-        :param n_components: int, optional. The default value is 2.
-            Number of components of the pca.
-        :return: scikit_raman.PCA_result
-            An object that represents the results of PCA
+        Apply the PCA on the spectra data.
+        Parameters
+        ----------
+        n_components : int, optional (default is 2)
+            Number of components of the PCA.
+
+        Returns
+        -------
+
+        scikit_raman.Preprocessing.PCA_result
+            Result of PCA procedure.
         """
         pca = PCA(n_components=n_components)
         spectra = self.dataset.spectra
@@ -241,10 +319,17 @@ class Processor:
     def pca_fit(self, n_components=2):
         """
         Create the pca object.
-        :param n_components: int
-            Number of components for the pca object.
-        :return: sklearn.PCA object
+
+        Parameters
+        ----------
+        n_components : int, optional (default is 2)
+            Number of components for the PCA.
+
+        Returns
+        -------
+        sklearn.PCA
             PCA object fitted on the data.
+
         """
         pca = PCA(n_components=n_components)
         spectra = self.dataset.spectra
@@ -254,10 +339,16 @@ class Processor:
     def pca_transform(self, pca):
         """
         Transform the data with the pca object.
-        :param pca: sklearn.Decomposition.PCA object
-            PCA object to apply.
-        :return: scikit_raman.PCA_result
-            An object that represents the results of PCA
+
+        Parameters
+        ----------
+        pca : sklearn.PCA
+            PCA object fitted on the data
+
+        Returns
+        -------
+        scikit_raman.Preprocessing.PCA_result
+            Result of PCA procedure.
         """
         spectra = self.dataset.spectra
         pca_result = pca.transform(spectra)
@@ -266,11 +357,18 @@ class Processor:
 
     def tsne_fit_transform(self, n_components=2):
         """
-        Apply the t-sne reduction.
-        :param n_components: int
-            Number of components for the t-sne.
-        :return: scikit_raman.TSNE_result
+        Apply the TSNE feature reduction.
+
+        Parameters
+        ----------
+        n_components : int, optional (default is 2)
+            Number of TSNE components
+
+        Returns
+        -------
+        scikit_raman.TSNE_result
             An object that represents the result of tsne
+
         """
         tsne = TSNE(n_components=n_components)
         spectra = self.dataset.spectra
@@ -280,10 +378,12 @@ class Processor:
 
     def remove_alluminium(self, alluminium):
         """
-        Remove alluminium from the background of the spectra.
-        :param alluminium: scikit_raman.Alluminium
+        Remove the alluminium background.
+
+        Parameters
+        ----------
+        alluminium : scikit_raman.Alluminium
             this object represent an alluminium signal.
-        :return:
         """
         allu = alluminium.spectra
         for i in range(len(self.dataset)):
@@ -294,6 +394,14 @@ class Processor:
             self.dataset.spectra[i] = np.array(new_spectra)
 
     def remove_drugs(self, drugs, drugs_category):
+        """
+        Apply the removal of drugs from the spectra.
+
+        Parameters
+        ----------
+        drugs
+        drugs_category
+        """
         new_spectra = []
         for element in self.dataset:
             category = element[5]
@@ -317,6 +425,14 @@ class Processor:
         self.dataset.spectra = np.array(new_spectra)
 
     def realignment(self, window_size = 10):
+        """
+        Align the spectra according to value at 1001th position.
+
+        Parameters
+        ----------
+        window_size: int, optional
+            Dimension of the window on which search peak.
+        """
         y = self.dataset.spectra[0].tolist()
         x = self.dataset.x_axis[0].tolist()
         val = min(x, key=lambda x: abs(x - 1001))  # val = number with minimum distance from 1001
