@@ -35,3 +35,8 @@ def set_seed(keras=True, seed_keras=42, scikit_learn = True, seed_scikit_learn=4
         set_seed_numpy(seed_numpy)
     if random_set:
         set_seed_random(random_seed)
+
+def find_nearest(array, value):
+    array = np.asarray(array)
+    idx = (np.abs(array - value)).argmin()
+    return array[idx], idx

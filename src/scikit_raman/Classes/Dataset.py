@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import GroupKFold, LeaveOneGroupOut, StratifiedGroupKFold, KFold
 import pickle
+import scikit_raman.module.utility as utility
 
 
 class Dataset:
@@ -231,6 +232,17 @@ class Dataset:
         for el in self.category:
             new_category.append(dictionary[el])
         self.category = np.array(new_category)
+
+    def change_label_name(self, dictionary):
+        """
+        Change the name of the category in string form based on dictionary.
+        :param dictionary: dict
+            Map old names with new names.
+        """
+        new_label = []
+        for el in self.labels:
+            new_label.append(dictionary[el])
+        self.labels = np.array(new_label)
 
     def change_user_name_string(self, dictionary):
         """
@@ -504,3 +516,14 @@ class Dataset:
             labels.append(ds_user.labels[0])
         return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user_list), np.array(name),
                        np.array(category), np.array(labels))
+
+    def cut_based_xaxis(self, start, end):
+        new_spectra = []
+        new_x_axis = []
+        for x, y in zip(self.x_axis, self.spectra):
+            _, idx_start = utility.find_nearest(x, start)
+            _, idx_end = utility.find_nearest(x, end)
+            new_spectra.append(y[idx_start:idx_end])
+            new_x_axis.append(x[idx_start:idx_end])
+        self.spectra = np.array(new_spectra)
+        self.x_axis = np.array(new_x_axis)
