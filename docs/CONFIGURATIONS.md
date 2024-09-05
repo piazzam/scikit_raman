@@ -127,12 +127,12 @@ target_names: [ASMA, BPCO]
 ## Preprocessing Configuration File (`preprocessing.yaml`)
 
 ### Description
-The `preprocessing.yaml` file handle all desired preprocessing steps and their associated parameters.
+The `preprocessing.yaml` file handle all desired preprocessing steps and their associated parameters. For a complete overview of available preprocessing steps and its parameters see +add link
 
 ### Options
 
-- **preprocessing_steps** (list): List with the names of preprocessing steps to apply. The names should match the preprocessing steps available in the library.
-- **parameters** (dict): Dictionary containing an association with function name defined above and its parameters.
+- **preprocessing_steps** (list): List of names of preprocessing steps to be applied. The names should match the preprocessing steps available in the library.
+- **parameters** (dict): Dictionary containing an association with the function name defined above and its parameters.
 
 ### Example
 
@@ -147,35 +147,129 @@ parameters:{
 ## Model Parameters File (`model_configuration.yaml`)
 
 ### Description
-The `model_configuration.yaml` file is responsible for managing the parameters of the selected model when it is imported and is not one of the models already defined in the library.
+The `model_configuration.yaml` file is responsible for managing the parameters of the dl selected model when it is imported and is not one of the models already defined in the library. For a complete explanation of possible parameters see + add link
 
 ### Options
+- **batch_size** (int): Dimension of batch size
+- **epochs** (int): Number of training epochs
+- **optimizer** (string): Name of the optimizer. To see the implemented optimizer see +add link
+- **loss** (string): Name of loss function
+- **metrics** (list): List containing the names of metrics to be monitored during train
+- **learning_rate** (float): Value of the learning rate
 
 ### Example
+```yaml
+batch_size: 256
+epochs: 100
+optimizer: adam
+loss: binary_crossentropy
+metrics: ['val_accuracy']
+learning_rate: 0.001
+```
 
 ## K-Fold Parameters File (`k_fold.yaml`)
 
 ### Description
-The `k_fold.yaml` file is used for set all parameters for the K-Fold Cross Validation.
+The `k_fold.yaml` file is used for set all parameters for the K-Fold Cross Validation. For a complete overview of the available parameters, it is possible to refer to the original documentation +add link. 
 
 ### Options
+- **k** (int): Number of folds.
+- **fold_level** (bool): Whether to return results at a fold level.
+- **get_patient_prediction** (bool): Whether to return predictions at a single spectra level.
+- **return_history** (bool): Whether to return the history of training (training and validation accuracy and loss). **NOTE:** It is applicable only for Deep Learning experiments.
+- **data_augmentation** (bool): Whether to apply data augmentation procedure. **NOTE:** it is applicable only for Deep Learning experiments.
+- **f_name** (string): Name of the data augmentation function. The name should match the available functions in the library + add link. **NOTE:** It is applicable only for Deep Learning experiments and it works only if the *data_augmentation* parameter is equal to True.
+- **f_params** (dict): Dictionary containing data augmentation parameters. For an overview of available parameters please refer to the library's documentation. **NOTE:** It is applicable only for Deep Learning experiments and it works only if the *data_augmentation* parameter is equal to True.
+- **save_model** (bool): Whether to save the trained models.
+- **model_path** (string): Path on which save the trained models. **NOTE:** It works only if *save_model* parameter is equal to True.
+- - **save_weights** (bool): Whether to save weights of trained models. **NOTE:** It is applicable only for Deep Learning experiments.
+- **weights_path** (string): Path on which save the weights of trained models. **NOTE:** It is applicable only for Deep Learning experiments and it works only if the *save_weights* parameter is equal to True.
+- **set_seed** (bool): Whether to set a seed value for the experiment.
+- **random_state** (int): Seed value. **NOTE:** It works only if *set_seed* parameter is equal to True.
+- **check_users_separated** (bool): Whether to check if users are separated between the various train and test sets.
+- **model_name** (string): Name of the model for storing model checkpoints. **NOTE:** It is applicable only for Deep Learning experiments.
+- **checkpoint_folder_path** (string): Path on which save model checkpoints. **NOTE:** It is applicable only for Deep Learning experiments.
+- - **val_size** (float): Dimension (in percentage) of the validation set. **NOTE:** It is applicable only for Deep Learning experiments.
 
 ### Example
+```yaml
+k: 10
+fold_level: True
+get_patient_prediction: True
+return_history: True
+data_augmentation: True
+f_name: emsc
+f_params: None
+save_model: True
+model_path: model_saved
+save_weights: True
+weigths_path: model_save/weights
+set_seed: True
+random_state: 42
+check_users_separated: True
+model_name: CNN
+checkpoint_folder_path: model_saved/checkpoint
+val_size: 0.1
+```
+
 
 ## LOOCV Parameters File (`loocv.yaml`)
 
 ### Description
-The `loocv.yaml` file is used for set all parameters for the Leave One Out Cross Validation.
+The `loocv.yaml` file is used for set all parameters for the Leave One Out Cross Validation. For a complete overview of the available parameters, it is possible to refer to the original documentation +add link.
 
 ### Options
+- **patient_level** (bool): Whether to return results at a single patient level.
+- **get_patient_prediction** (bool): Whether to return results at a single patient level.
+- **return_history** (bool): Whether to return the history of training (training and validation accuracy and loss). **NOTE:** It is applicable only for Deep Learning experiments.
+- **val_size** (float): Dimension (in percentage) of the validation set. **NOTE:** It is applicable only for Deep Learning experiments.
+- **data_augmentation** (bool): Whether to apply data augmentation procedure. **NOTE:** it is applicable only for Deep Learning experiments.
+- **f_name** (string): Name of the data augmentation function. The name should match the available functions in the library + add link. **NOTE:** It is applicable only for Deep Learning experiments and it works only if the *data_augmentation* parameter is equal to True.
+- **f_params** (dict): Dictionary containing data augmentation parameters. For an overview of available parameters please refer to the library's documentation. **NOTE:** It is applicable only for Deep Learning experiments and it works only if the *data_augmentation* parameter is equal to True.
+- **save_model** (bool): Whether to save the trained models.
+- **model_path** (string): Path on which save the trained models. **NOTE:** It works only if *save_model* parameter is equal to True.
+- **save_weights** (bool): Whether to save weights of trained models. **NOTE:** It is applicable only for Deep Learning experiments.
+- **weights_path** (string): Path on which save the weights of trained models. **NOTE:** It is applicable only for Deep Learning experiments and it works only if the *save_weights* parameter is equal to True.
+- **set_seed** (bool): Whether to set a seed value for the experiment.
+- **random_state** (int): Seed value. **NOTE:** It works only if *set_seed* parameter is equal to True.
+- **model_name** (string): Name of the model for storing model checkpoints. **NOTE:** It is applicable only for Deep Learning experiments.
+- **checkpoint_folder_path** (string): Path on which save model checkpoints. **NOTE:** It is applicable only for Deep Learning experiments.
 
 ### Example
+```yaml
+patient_level: True
+get_patient_prediction: True
+return_history: True
+val_size: 0.1
+data_augmentation: True
+f_name: emsc
+f_params: None
+save_model: True
+model_path: model_saved
+save_weights: True
+weigths_path: model_save/weights
+set_seed: True
+random_state: 42
+model_name: CNN
+checkpoint_folder_path: model_saved/checkpoint
+```
 
 ## Evaluator Configuration File (`evaluator.yaml`)
 
 ### Description
-The `evaluator.yaml` is the configuration file which defines all the desired outputs. You can save confusion matrices, tables with the most relevant metrics and the data itself after manipulation.
+The `evaluator.yaml` is the configuration file which defines all the desired outputs. You can save confusion matrices, tables with the most relevant metrics and the data itself after manipulation. For a complete overview of the available parameters, it is possible to refer to the original documentation +add link.
 
 ### Options
 
+- **evaluator_steps** (list): List containing the names of functions to be applied.
+- **parameters** (dict): Dictionary containing an association with the function name defined above and its parameters. 
+
 ### Example
+
+```yaml
+preprocessing_steps: [total_result, resample_shift]
+parameters:{
+        total_result:{
+                        show: False}
+}
+```
