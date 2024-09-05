@@ -18,7 +18,7 @@ class DLExperiment(ExperimentBase.Experiment):
                                                               number_classes=self.configurations['n_classes'])
         elif self.configurations['model_name'] == 'load_model':
             base_model = dl_model_keras.load_model(self.configurations[
-                                                       'model_path'])  # Qui credo ci sia un errore. L'opzione da riferisirsi non è model_path?
+                                                       'model_path'])
             model_configuration_file = utils.parse_yaml_file(os.path.join(self.base_path,
                                                                           self.configurations['model_configuration']))
             model = DLModel.DLModelKeras(base_model, **model_configuration_file)

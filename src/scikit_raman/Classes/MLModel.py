@@ -194,14 +194,6 @@ class MLModel:
         """
         y_pred = self.model.predict(X_test)
         return y_pred
-        # print(y_pred)
-        # print(y_test)
-        #
-        # cm_model = confusion_matrix(y_pred, y_test)
-        # report = classification_report(y_pred, y_test)
-        #
-        # print(cm_model)
-        # print(report)
 
     def grid_search_parameters(self, dataset, space, k_fold = True, k = 10, scoring = 'accuracy', n_jobs = 1):
         """

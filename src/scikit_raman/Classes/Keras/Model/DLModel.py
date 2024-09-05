@@ -118,7 +118,7 @@ class DLModelKeras:
         self.callbacks.append(callback)
 
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level=True, get_patient_prediction=True,
-                                          return_history=True, test_size=0.1, data_augmentation=False, f_name='emsc',
+                                          return_history=True, val_size=0.1, data_augmentation=False, f_name='emsc',
                                           f_params=None, save_model=False, model_path="model_saved/models/final", save_weights=False,
                                           weights_path="model_saved/weights/", random_state=42, set_seed=True, model_name="Benchmark_CNN",
                                           checkpoint_folder_path="model_saved/models/checkpoint"):
@@ -151,7 +151,7 @@ class DLModelKeras:
             X_test_cv = dataset.spectra[test_idx]
             y_train_cv = dataset.labels[train_idx]
             y_test_cv = dataset.labels[test_idx]
-            X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv, test_size=test_size,
+            X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv, test_size=val_size,
                                                                     random_state=random_state,
                                                                     stratify=y_train_cv)
             if data_augmentation:
@@ -210,7 +210,8 @@ class DLModelKeras:
     def train_model_cv(self, dataset, number_classes, k=10, fold_level=True, get_patient_prediction=True, return_history=True,
                        data_augmentation=False, f_name='emsc', f_params=None, save_model=False, model_path="model_saved/models/",
                        save_weights=False, weights_path="model_saved/weights/", random_state=42, check_users_separated=True, 
-                       model_name="Benchmark_CNN", checkpoint_folder_path="model_saved/models/checkpoint", set_seed=True):
+                       model_name="Benchmark_CNN", checkpoint_folder_path="model_saved/models/checkpoint", set_seed=True,
+                       val_size=0.1):
         if set_seed:
             utils.set_seed(random_state)
         folds = dataset.k_fold(k)
@@ -242,7 +243,7 @@ class DLModelKeras:
             if check_users_separated:
                 if len(users_train) + len(user_test) > len(total_users):
                     raise Exception("Mixed train and test")
-            X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv, test_size=.1,
+            X_train_cv, X_val, y_train_cv, y_val = train_test_split(X_train_cv, y_train_cv, test_size=val_size,
                                                                     random_state=random_state,
                                                                     stratify=y_train_cv)
             if data_augmentation:
