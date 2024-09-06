@@ -562,7 +562,8 @@ class DLModelKeras:
 
     def fit_model(self, X_train, y_train, X_val, y_val, return_history=True, model_name="model", save_model=False,
                   save_weights=False, model_path="model_saved/model/", weights_path="model_saved/weights/",
-                  random_state=42, set_seed=True):
+                  random_state=42, set_seed=True, checkpoint_folder_path="model_saved/models/checkpoint",
+                  model_name_checkpoint="Benchmark_CNN"):
         """
         Train a model on a specified training set.
 
@@ -592,6 +593,10 @@ class DLModelKeras:
             Seed value
         set_seed : bool, optional (default is True)
             Whether to set a seed for reproducibility.
+        checkpoint_folder_path : string, optional (default is "model_saved/models/checkpoint")
+            Path for saving the checkpoints.
+        model_name : string, optional (default is "Benchmark_CNN")
+            Name of model for saving checkpoints.
 
         Returns
         -------
@@ -600,6 +605,9 @@ class DLModelKeras:
         """
         if set_seed:
             utils.set_seed(random_state)
+        ec = EpochCheckpointSaver(save_interval=39, folder_path=checkpoint_folder_path, model_name=model_name,
+                                  fold=model_name_checkpoint)
+        self.callbacks.append(ec)
         history = self.model.fit(X_train, y_train,
                                  epochs=self.epochs,
                                  validation_data=(X_val, y_val),
