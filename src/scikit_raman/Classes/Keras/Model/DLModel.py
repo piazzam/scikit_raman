@@ -265,7 +265,8 @@ class DLModelKeras:
                                           f_params=None, save_model=False, model_path="model_saved/models/final",
                                           save_weights=False,weights_path="model_saved/weights/", random_state=42,
                                           set_seed=True, model_name="Benchmark_CNN",
-                                          checkpoint_folder_path="model_saved/models/checkpoint"):
+                                          checkpoint_folder_path="model_saved/models/checkpoint",
+                                          verbose=1):
         """
         Train a model in a leave-one-patient-out strategy and return the results.
 
@@ -305,6 +306,8 @@ class DLModelKeras:
             Name of model for saving checkpoints.
         checkpoint_folder_path : string, optional (default is "model_saved/models/checkpoint")
             Path for saving the checkpoints.
+        verbose : int, optional (default is 1)
+            Verbosity mode. 0 = silent, 1 = progress bar, 2 = one line per epoch. "auto" becomes 1 for most cases.
 
         Returns
         -------
@@ -354,7 +357,7 @@ class DLModelKeras:
             history = trained_model.fit(X_train_cv, y_train_cv_cat,
                                         epochs=self.epochs,
                                         validation_data=(X_val, y_val_cat),
-                                        batch_size=self.batch_size, verbose=1,
+                                        batch_size=self.batch_size, verbose=verbose,
                                         callbacks=callbacks)
             histories.append(history)
             names_list.append(patient_name)
@@ -400,7 +403,7 @@ class DLModelKeras:
                        data_augmentation=False, f_name='emsc', f_params=None, save_model=False, model_path="model_saved/models/",
                        save_weights=False, weights_path="model_saved/weights/", random_state=42, check_users_separated=True, 
                        model_name="Benchmark_CNN", checkpoint_folder_path="model_saved/models/checkpoint", set_seed=True,
-                       val_size=0.1):
+                       val_size=0.1, verbose=1):
         """
         Train a model in a leave-one-patient-out strategy and return the results.
 
@@ -444,6 +447,8 @@ class DLModelKeras:
             Whether to set a seed for reproducibility.
         val_size : float, optional (default is 0.1)
             Percentage of dimension of validation set.
+        verbose : int, optional (default is 1)
+            Verbosity mode. 0 = silent, 1 = progress bar, 2 = one line per epoch. "auto" becomes 1 for most cases.
 
         Returns
         -------
@@ -495,7 +500,7 @@ class DLModelKeras:
             history = trained_model.fit(X_train_cv, y_train_cv_cat,
                                         epochs=self.epochs,
                                         validation_data=(X_val, y_val_cat),
-                                        batch_size=self.batch_size, verbose=1,
+                                        batch_size=self.batch_size, verbose=verbose,
                                         callbacks=self.callbacks)
             histories.append(history)
             names_list.append(patient_name)
