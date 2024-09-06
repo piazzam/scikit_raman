@@ -264,7 +264,7 @@ class DLModelKeras:
                                           return_history=True, val_size=0.1, data_augmentation=False, f_name='emsc',
                                           f_params=None, save_model=False, model_path="model_saved/models/final",
                                           save_weights=False,weights_path="model_saved/weights/", random_state=42,
-                                          set_seed=True, model_name="Benchmark_CNN",
+                                          set_seed=True, model_name="Benchmark_CNN", monitor="val_loss",
                                           checkpoint_folder_path="model_saved/models/checkpoint"):
         """
         Train a model in a leave-one-patient-out strategy and return the results.
@@ -323,9 +323,9 @@ class DLModelKeras:
         histories = []
         names_list = []
         for j, (train_idx, test_idx) in enumerate(folds, start=1):
-            es = EarlyStopping(monitor="val_categorical_accuracy", patience=100, verbose=1,
+            es = EarlyStopping(monitor=monitor, patience=100, verbose=1,
                                restore_best_weights=True)
-            lr = ReduceLROnPlateau(monitor="val_categorical_accuracy", factor=0.5, verbose=4, patience=80,
+            lr = ReduceLROnPlateau(monitor=monitor, factor=0.5, verbose=4, patience=80,
                                    cooldown=10)
             names_test_cv = dataset.user[test_idx]
             patient_name = np.unique(names_test_cv)[0]

@@ -253,8 +253,8 @@ class Evaluator:
         specificity = self._calculate_specificity(cm_total, labels=self.classes)
         for k in specificity.keys():
             report_total[k]['specificity'] = specificity[k]
-        report_total['macro avg']['specificity'] = self.calculate_macro_avg(specificity)
-        report_total['weighted avg']['specificity'] = self.calculate_weighted_avg(specificity)
+        report_total['macro avg']['specificity'] = self._calculate_macro_avg(specificity)
+        report_total['weighted avg']['specificity'] = self._calculate_weighted_avg(specificity)
         df_total = pd.DataFrame(cm_total, index=self.classes, columns=self.classes)
         df_report = pd.DataFrame(report_total)
         plt.figure(figsize=(10, 7))
