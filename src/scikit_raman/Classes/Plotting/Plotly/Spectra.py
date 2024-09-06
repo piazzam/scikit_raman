@@ -2,28 +2,52 @@ import plotly.graph_objects as go
 
 class PlottingSpectra:
     """
-        A class to plot the dataset in with Plotly.
+    A class for automatically plot a Raman spectra dataset with Plotly.
+    ...
 
-        ...
+    Attributes
+    ----------
+    dataset : scikit_raman.Dataset
+        Dataset object to plot.
 
-        Attributes
+    Methods
+    -------
+    plot_single_spectra_number(self, n, save = False, filename = "plot.png")
+        Plot a single spectra identified by its index.
+    plot_single_patient_name(self, name, save = False, filename = "plot.png")
+        Plot a subset of spectra identified by the name of the patient.
+    plot_dataset(self, save = False, filename = "plot.png", title = "Dataset")
+        Plot the entire dataset.
+    plot_category_name(self, category_name, save = False, filename = "plot.png")
+        Plot a subset of the dataset corresponding to the specified category by its string name.
+    plot_category_label(self, category_label, save = False, filename = "plot.png")
+        Plot a subset of the dataset corresponding to the specified category by its numerical label.
+    """
+    def __init__(self, dataset):
+        """
+        Constructor for class PlottingSpectra
+
+        Parameters
         ----------
         dataset : scikit_raman.Dataset
             Dataset object to plot.
-    """
-    def __init__(self, dataset):
+        """
         self.dataset = dataset
 
     def plot_single_spectra_number(self, n, save = False, filename = "plot.png", color="#000000"):
         """
-        Plot a single spectra taking it with the number offset.
-        :param n: int
-            The number offset of the spectra to plot.
-        :param save: boolean, optional
-            If true the generated plot is save.
-        :param filename: String, optional
-            If save parameter is true the plot is save with this filename.
-        :return:
+        Plot a single spectra identified by its index.
+
+        Parameters
+        ----------
+        n : int
+            Index of the spectro.
+        save : bool, optional (default is False)
+            Whether to save or not the plot.
+        filename : int, string (default is "plot.png")
+            Filename of the file to be stored.
+        color : str, optional (default is #000000)
+            RGB of spectra on the plot.
         """
         x = self.dataset.x_axis[n]
         y = self.dataset.spectra[n]
@@ -40,14 +64,16 @@ class PlottingSpectra:
 
     def plot_single_patient_name(self, name, save = False, filename = "plot.png",color="#000000"):
         """
-        Plot a subset of spectra taking it with the name of the patients.
-        :param name: string
-            The name of the user to plot.
-        :param save: boolean, optional
-            If true the generated plot is save.
-        :param filename: string, optional.
-            If save parameter is true the plot is save with this filename.
-        :return:
+        Plot a single spectra identified by its name.
+
+        Parameters
+        ----------
+        name : string
+            Name of the patient.
+        save : bool, optional (default is False)
+            Whether to save or not the plot.
+        filename : int, string (default is "plot.png")
+            Filename of the file to be stored.
         """
         ds = self.dataset.search_by_name(name)
         fig = go.Figure()
@@ -68,14 +94,16 @@ class PlottingSpectra:
 
     def plot_dataset(self, save = False, filename = "plot.png", title = "Dataset", color="#000000"):
         """
-        Plot the entire dataset
-        :param save: boolean, optional
-            If true the generated plot is save.
-        :param filename: string, optional.
-            If save parameter is true the plot is save with this filename.
-        :param title: String, optional
-            The title of the plot.
-        :return:
+        Plot the entire dataset.
+
+        Parameters
+        ----------
+        save : bool, optional (default is False)
+            Whether to save or not the plot.
+        filename : int, string (default is "plot.png")
+            Filename of the file to be stored.
+        title : string, optional (defualt is "Dataset")
+            Title of the plot.
         """
         fig = go.Figure()
         fig.layout.title = title
@@ -94,14 +122,16 @@ class PlottingSpectra:
 
     def plot_category_name(self, category_name, save = False, filename = "plot.png",color="#000000"):
         """
-        Plot a subset of the dataset corresponding to the category specified.
-        :param category_name: String
-            Name of the category to plot.
-        :param save: boolean, optional
-            If true the generated plot is save.
-        :param filename: string, optional.
-            If save parameter is true the plot is save with this filename.
-        :return:
+        Plot a subset of the dataset corresponding to the specified category by its string name.
+
+        Parameters
+        ----------
+        category_name : string
+            String name of the category.
+        save : bool, optional (default is False)
+            Whether to save or not the plot.
+        filename : int, string (default is "plot.png")
+            Filename of the file to be stored.
         """
         ds = self.dataset.search_by_category_name(category_name)
         fig = go.Figure()
@@ -122,14 +152,16 @@ class PlottingSpectra:
 
     def plot_category_label(self, category_label, save = False, filename = "plot.png", color="#000000"):
         """
-        Plot a subset of the dataset corresponding to the category specified.
-        :param category_label: int
-            Label of the category to plot.
-        :param save: boolean, optional
-            If true the generated plot is save.
-        :param filename: string, optional.
-            If save parameter is true the plot is save with this filename.
-        :return:
+        Plot a subset of the dataset corresponding to the specified category by its numerical label.
+
+        Parameters
+        ----------
+        category_label : int
+            Numerical value of the label.
+        save : bool, optional (default is False)
+            Whether to save or not the plot.
+        filename : int, string (default is "plot.png")
+            Filename of the file to be stored.
         """
         ds = self.dataset.search_by_category_label(category_label)
         fig = go.Figure()
