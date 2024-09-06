@@ -28,8 +28,8 @@ class DLExperiment(ExperimentBase.Experiment):
             Configuration file.
         """
         super().__init__(configuration_file)
-        # if self.configurations['experiment_type'] == 'ml':
-        #     raise Exception("Try to perform a ML experiments on a DL object")
+        if self.configurations['experiment_type'] == 'ml':
+             raise Exception("Try to perform a ML experiments on a DL object")
 
     def _load_model(self):
         """
