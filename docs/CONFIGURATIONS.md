@@ -46,12 +46,11 @@ The `config.yaml` file is the main configuration file that references other conf
 - **pca_components** (int): Number of PCA components if PCA is applied.
 - **model_name** (string): Name of the model. The type of experiment determines the available options.
   - **dl (Deep Learning)**:
-    - If `model_name` is `benchmark`, the benchmark model developed in the library is used. It is also necessary to define the `n_dims` option of the model, which is critical for correctly defining the model in order to respect the number of points (or length) of the spectral data. Additionally it is possible to define `weight_initializer` (it is an optional parameter), a boolean value that decide if initialize the weights or not.
+    - If `model_name` is `benchmark`, the benchmark model developed in the library is used. It is also necessary to define the `n_dims` option of the model, which is critical for correctly defining the model in order to respect the number of points (or length) of the spectral data.
       - Example:
         ```yaml
         model_name: benchmark
         n_dims: 991
-        weight_initializer: True
         ```
     - Otherwise, the user must provide the path to a saved model in the `model_path` option. Additionally, the `model_configuration` option must be selected, and the path to the YAML model parameters file must be entered. Click [here](#model-parameters-file-model_configurationyaml) for more details.
       - Example:
