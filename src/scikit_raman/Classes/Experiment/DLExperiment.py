@@ -41,8 +41,14 @@ class DLExperiment(ExperimentBase.Experiment):
             keras object corresponding to the desired model.
         """
         if self.configurations['model_name'] == 'benchmark':
-            model = DLModel.DLModelKeras.load_model_benchmark(self.configurations['n_dims'],
-                                                              number_classes=self.configurations['n_classes'])
+            if 'weight_initializer' in self.configurations:
+                model = DLModel.DLModelKeras.load_model_benchmark(self.configurations['n_dims'],
+                                                                  number_classes=self.configurations['n_classes'],
+                                                                  weight_initializer=self.configurations[
+                                                                      'weight_initializer'])
+            else:
+                model = DLModel.DLModelKeras.load_model_benchmark(self.configurations['n_dims'],
+                                                                  number_classes=self.configurations['n_classes'])
         elif self.configurations['model_name'] == 'load_model':
             base_model = dl_model_keras.load_model(self.configurations[
                                                        'model_path'])
