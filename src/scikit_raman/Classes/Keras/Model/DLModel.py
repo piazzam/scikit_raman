@@ -12,6 +12,7 @@ from scikit_raman.Classes.DataAugmenter import *
 from scikit_raman.Classes.Keras.Model.utility import get_optimizer
 from tensorflow.keras.models import load_model
 import scikit_raman.module.utility as utils
+import scikit_raman.module.models as models
 from scikit_raman.Classes.Keras.Model.callbacks import EpochCheckpointSaver
 import numpy as np
 import tensorflow as tf
@@ -109,7 +110,7 @@ class DLModelKeras:
         self.learning_rate = learning_rate
 
     @classmethod
-    def load_model_benchmark(dlm,  n_dims, number_classes=3):
+    def load_model_benchmark(dlm,  n_dims, number_classes=3, weight_initializer=True):
         """
         Load the benchmark model and return a DLModelKeras.
 
@@ -129,59 +130,11 @@ class DLModelKeras:
         metrics = ['categorical_accuracy']
         learning_rate = 0.00020441990333108206
         optimizer = 'adam'
-        initializer = HeUniform()
 
-        # ----- init model
-        model = Sequential()
-        model.add(InputLayer(shape=(n_dims,)))
-        model.add(Reshape((n_dims, 1)))
-
-        # ----- CNN layers
-        model.add(Conv1D(filters=100,
-                         kernel_size=100,
-                         strides=1,
-                         padding='same',
-                         activation='relu',
-                         kernel_initializer=initializer))
-        model.add(BatchNormalization(momentum=0.99, epsilon=0.01))
-        model.add(Conv1D(filters=100,
-                         kernel_size=5,
-                         strides=2,
-                         padding='same',
-                         activation='relu',
-                         kernel_initializer=initializer))
-        model.add(MaxPooling1D(pool_size=6,
-                               strides=3,
-                               padding='same'))
-        model.add(BatchNormalization(momentum=0.99, epsilon=0.01))
-        model.add(Conv1D(filters=25,
-                         kernel_size=9,
-                         strides=5,
-                         padding='same',
-                         activation='relu',
-                         kernel_initializer=initializer))
-        model.add(MaxPooling1D(pool_size=3,
-                               strides=2,
-                               padding='same'))
-
-        # ----- Flatten layer between CNN and Dense layers
-        model.add(Flatten())
-        model.add(Dropout(rate=0.1))
-        # ----- Dense layers
-        model.add(Dense(units=732))
-        model.add(LeakyReLU())
-        model.add(Dropout(rate=0.7))
-
-        model.add(Dense(units=189))
-        model.add(LeakyReLU())
-        model.add(Dropout(rate=0.25))
-
-        model.add(Dense(units=152))
-        model.add(LeakyReLU())
-        model.add(Dropout(rate=0.1))
-
-        # ----- Classification layer
-        model.add(Dense(units=number_classes, activation='softmax'))
+        if weight_initializer:
+            model = models.create_model_benchmark_weight_initialization(n_dims, number_classes)
+        else:
+            model = models.create_model_benchmark(n_dims, number_classes)
 
         epochs = 273
         batch_size = 338

@@ -6,58 +6,73 @@ from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import tensorflow as tf
 from scikit_raman.Classes.Keras.Model.DLModel import DLModelKeras
+from tensorflow.keras.initializers import HeUniform
 
 
-def create_model(n_dims, n_classes):
-    learning_rate = 0.1
-    optimizer = Adam(learning_rate=learning_rate)
-    epochs = 300
-    batch_size = 256
-    es = EarlyStopping(monitor="val_categorical_accuracy", patience=100, verbose=1,
-                       restore_best_weights=True)
-    reduce_lr = ReduceLROnPlateau(monitor='val_categorical_accuracy', factor=0.5,
-                                  patience=10, min_lr=0.0001)
-    callbacks = [es, reduce_lr]
-    metrics = ['categorical_accuracy']
-    loss = 'categorical_crossentropy'
+def create_model_benchmark_weight_initialization(n_dims, number_classes):
+    initializer = HeUniform()
+
+    # ----- init model
     model = Sequential()
-    model.add(InputLayer(input_shape=(n_dims,)))
+    model.add(InputLayer(shape=(n_dims,)))
     model.add(Reshape((n_dims, 1)))
 
-    model.add(Conv1D(filters=256,
-                     kernel_size=8,
+    # ----- CNN layers
+    model.add(Conv1D(filters=100,
+                     kernel_size=100,
+                     strides=1,
+                     padding='same',
+                     activation='relu',
+                     kernel_initializer=initializer))
+    model.add(BatchNormalization(momentum=0.99, epsilon=0.01))
+    model.add(Conv1D(filters=100,
+                     kernel_size=5,
                      strides=2,
                      padding='same',
-                     activation='relu'))
+                     activation='relu',
+                     kernel_initializer=initializer))
+    model.add(MaxPooling1D(pool_size=6,
+                           strides=3,
+                           padding='same'))
+    model.add(BatchNormalization(momentum=0.99, epsilon=0.01))
+    model.add(Conv1D(filters=25,
+                     kernel_size=9,
+                     strides=5,
+                     padding='same',
+                     activation='relu',
+                     kernel_initializer=initializer))
+    model.add(MaxPooling1D(pool_size=3,
+                           strides=2,
+                           padding='same'))
+
+    # ----- Flatten layer between CNN and Dense layers
     model.add(Flatten())
-
-    model.add(Dense(units=128))
+    model.add(Dropout(rate=0.1))
+    # ----- Dense layers
+    model.add(Dense(units=732))
     model.add(LeakyReLU())
-    model.add(Dropout(rate=0.5))
+    model.add(Dropout(rate=0.7))
 
-    model.add(Dense(units=32))
+    model.add(Dense(units=189))
     model.add(LeakyReLU())
-    model.add(Dropout(rate=0.5))
+    model.add(Dropout(rate=0.25))
 
-    model.add(Dense(units=16))
+    model.add(Dense(units=152))
     model.add(LeakyReLU())
-    model.add(Dropout(rate=0.5))
-    model.add(Dense(units=n_classes, activation='softmax'))
-    model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+    model.add(Dropout(rate=0.1))
 
-    keras_model = DLModelKeras(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
-    return keras_model
+    # ----- Classification layer
+    model.add(Dense(units=number_classes, activation='softmax'))
+    return model
 
-def create_model_benchmark_cnn(n_dims, n_classes):
-    learning_rate = 0.00020441990333108206
-    optimizer = Adam(learning_rate=learning_rate)
-    epochs = 300
-    batch_size = 256
+def create_model_benchmark(n_dims, number_classes):
+
+    # ----- init model
     model = Sequential()
-    model.add(InputLayer(input_shape=(n_dims,)))
+    model.add(InputLayer(shape=(n_dims,)))
     model.add(Reshape((n_dims, 1)))
-    loss = "categorical_crossentropy"
-    metrics = ['categorical_accuracy']
+
+    # ----- CNN layers
     model.add(Conv1D(filters=100,
                      kernel_size=100,
                      strides=1,
@@ -81,131 +96,26 @@ def create_model_benchmark_cnn(n_dims, n_classes):
     model.add(MaxPooling1D(pool_size=3,
                            strides=2,
                            padding='same'))
+
+    # ----- Flatten layer between CNN and Dense layers
     model.add(Flatten())
-    model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+    model.add(Dropout(rate=0.1))
+    # ----- Dense layers
+    model.add(Dense(units=732))
+    model.add(LeakyReLU())
+    model.add(Dropout(rate=0.7))
+
+    model.add(Dense(units=189))
+    model.add(LeakyReLU())
+    model.add(Dropout(rate=0.25))
+
+    model.add(Dense(units=152))
+    model.add(LeakyReLU())
+    model.add(Dropout(rate=0.1))
+
+    # ----- Classification layer
+    model.add(Dense(units=number_classes, activation='softmax'))
     return model
-
-def create_model_custom_uno(n_dims, n_classes):
-    es = EarlyStopping(monitor="val_categorical_accuracy", patience=50, verbose=1,
-                       restore_best_weights=True)
-    lr = ReduceLROnPlateau(monitor="val_categorical_accuracy", factor=0.5, verbose=4, patience=20,
-                           cooldown=10)
-    callbacks = [es, lr]
-    batch_size = 200
-    epochs = 200
-    learning_rate = 0.001
-    optimizer = Adam(learning_rate=learning_rate)
-    loss = "categorical_crossentropy"
-    metrics = ["categorical_accuracy"]
-    model = Sequential()
-    # model.add(tf.keras.layers.GaussianNoise(0.5))
-    model.add(InputLayer(input_shape=(n_dims,)))
-    model.add(Reshape((n_dims, 1)))
-
-    # ----- CNN layers
-    model.add(Conv1D(filters=16,
-                     kernel_size=21,
-                     strides=1,
-                     padding='same',
-                     activation='relu',
-                     kernel_regularizer=tf.keras.regularizers.l2(l=0.01)))
-    model.add(BatchNormalization())
-    model.add(MaxPooling1D(pool_size=2,
-                           strides=2,
-                           padding='same'))
-    model.add(Conv1D(filters=32,
-                     kernel_size=11,
-                     strides=1,
-                     padding='same',
-                     activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l=0.01)))
-    model.add(MaxPooling1D(pool_size=2, strides=2))
-    model.add(Conv1D(filters=64,
-                     kernel_size=5,
-                     padding='same',
-                     activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l=0.01)))
-    model.add(MaxPooling1D(pool_size=2, strides=2))
-    model.add(Flatten())
-    model.add(Dropout(rate=0.5))
-    # ----- Dense layers
-    model.add(Dense(units=256))
-    model.add(LeakyReLU())
-    model.add(Dropout(rate=0.5))
-
-    model.add(Dense(units=128))
-    model.add(LeakyReLU())
-    model.add(Dropout(rate=0.25))
-
-    model.add(Dense(units=64))
-    model.add(LeakyReLU())
-    model.add(Dropout(rate=0.5))
-
-    # ----- Classification layer
-    model.add(Dense(units=n_classes, activation='softmax'))
-    model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
-
-    keras_model = DLModelKeras(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
-    return keras_model
-
-def create_model_custom_uno_gaussian(n_dims=991, n_classes=2):
-    es = EarlyStopping(monitor="val_categorical_accuracy", patience=50, verbose=1,
-                       restore_best_weights=True)
-    lr = ReduceLROnPlateau(monitor="val_categorical_accuracy", factor=0.5, verbose=4, patience=20,
-                           cooldown=10)
-    callbacks = [es, lr]
-    batch_size = 200
-    epochs = 200
-    learning_rate = 0.001
-    optimizer = Adam(learning_rate=learning_rate)
-    loss = "categorical_crossentropy"
-    metrics = ["categorical_accuracy"]
-    model = Sequential()
-    model.add(tf.keras.layers.GaussianNoise(0.5))
-    model.add(InputLayer(input_shape=(n_dims,)))
-    model.add(Reshape((n_dims, 1)))
-
-    # ----- CNN layers
-    model.add(Conv1D(filters=16,
-                     kernel_size=21,
-                     strides=1,
-                     padding='same',
-                     activation='relu',
-                     kernel_regularizer=tf.keras.regularizers.l2(l=0.01)))
-    model.add(BatchNormalization())
-    model.add(MaxPooling1D(pool_size=2,
-                           strides=2,
-                           padding='same'))
-    model.add(Conv1D(filters=32,
-                     kernel_size=11,
-                     strides=1,
-                     padding='same',
-                     activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l=0.01)))
-    model.add(MaxPooling1D(pool_size=2, strides=2))
-    model.add(Conv1D(filters=64,
-                     kernel_size=5,
-                     padding='same',
-                     activation='relu', kernel_regularizer=tf.keras.regularizers.l2(l=0.01)))
-    model.add(MaxPooling1D(pool_size=2, strides=2))
-    model.add(Flatten())
-    model.add(Dropout(rate=0.5))
-    # ----- Dense layers
-    model.add(Dense(units=256))
-    model.add(LeakyReLU())
-    model.add(Dropout(rate=0.5))
-
-    model.add(Dense(units=128))
-    model.add(LeakyReLU())
-    model.add(Dropout(rate=0.25))
-
-    model.add(Dense(units=64))
-    model.add(LeakyReLU())
-    model.add(Dropout(rate=0.5))
-
-    # ----- Classification layer
-    model.add(Dense(units=n_classes, activation='softmax'))
-    model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
-
-    keras_model = DLModelKeras(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
-    return keras_model
 
 def create_model_resnet(n_dims=991, n_classes=2):
   es = EarlyStopping(monitor="val_loss", patience=50, verbose=1,
@@ -290,37 +200,3 @@ def ResNet34(shape = (991, 1), classes = 2):
     x = tf.keras.layers.Dense(classes, activation = 'softmax')(x)
     model = tf.keras.models.Model(inputs = x_input, outputs = x, name = "ResNet34")
     return model
-
-def create_model_simple_net(n_dims, n_classes):
-    es = EarlyStopping(monitor="val_categorical_accuracy", patience=50, verbose=1,
-                       restore_best_weights=True)
-    lr = ReduceLROnPlateau(monitor="val_categorical_accuracy", factor=0.5, verbose=4, patience=20,
-                           cooldown=10)
-    callbacks = [es, lr]
-    model = Sequential()
-    model.add(InputLayer(input_shape=(991,)))
-    model.add(Reshape((n_dims, 1)))
-    model.add(Conv1D(filters=128,
-                     kernel_size=1,
-                     strides=1,
-                     padding='same',
-                     activation='relu'))
-    model.add(Conv1D(filters=32,
-                     kernel_size=1,
-                     strides=1,
-                     padding='same',
-                     activation='relu'))
-    model.add(Flatten())
-    model.add(Dense(units=8, activation="relu"))
-    model.add(Dense(units=n_classes, activation="sigmoid"))
-
-    learning_rate = 0.001
-    opt = Adam(learning_rate=learning_rate)
-    batch_size = 256
-    epochs = 300
-    metrics = ['categorical_accuracy']
-    loss = 'categorical_crossentropy'
-    model.compile(optimizer=opt, loss=loss, metrics=metrics)
-
-    keras_model = DLModelKeras(model, batch_size, epochs, callbacks, opt, loss, metrics, learning_rate)
-    return keras_model
