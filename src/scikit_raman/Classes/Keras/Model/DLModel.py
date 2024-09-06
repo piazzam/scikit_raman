@@ -120,6 +120,8 @@ class DLModelKeras:
             Input size of desired model.
         number_classes : int, optional (default is 3)
             Output size of desired model.
+        weight_initializer : bool, optional (default is True)
+            Whether to initialize the weights of Deep Benchmark Model.
 
         Returns
         -------
