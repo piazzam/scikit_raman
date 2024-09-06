@@ -17,7 +17,7 @@ class MLModel:
     Attributes
     ----------
     model : sklearn
-        An object of whatevere Machine Learning model of sklearn library.
+        A Machine Learning model defined with sklearn library.
 
     Methods
     -------
@@ -34,8 +34,6 @@ class MLModel:
 
     test_model(self, X_test)
         Given a test set it test the model and return the predictions
-
-
     """
 
     def __init__(self, model):

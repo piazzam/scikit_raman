@@ -6,13 +6,40 @@ import scikit_raman.Classes.Experiment.dl_model_keras as dl_model_keras
 import scikit_raman.Classes.Experiment.utils as utils
 
 class DLExperiment(ExperimentBase.Experiment):
+    """
+	A class used to automatically execute a ML experimentation. Children class of ExperimentBase.Experiment.
+
+	Attributes
+	----------
+
+	Methods
+	-------
+	experiment(self)
+		Execute the defined experimentation.
+	"""
 
     def __init__(self, configuration_file):
+        """
+        Constructor for class MLExperiment
+
+        Parameters
+        ----------
+        configuration_file : string
+            Configuration file.
+        """
         super().__init__(configuration_file)
         # if self.configurations['experiment_type'] == 'ml':
         #     raise Exception("Try to perform a ML experiments on a DL object")
 
-    def load_model(self):
+    def _load_model(self):
+        """
+        Load the model defined in the configuration file.
+
+        Returns
+        -------
+        Keras
+            keras object corresponding to the desired model.
+        """
         if self.configurations['model_name'] == 'benchmark':
             model = DLModel.DLModelKeras.load_model_benchmark(self.configurations['n_dims'],
                                                               number_classes=self.configurations['n_classes'])
@@ -27,12 +54,15 @@ class DLExperiment(ExperimentBase.Experiment):
         return model
 
     def experiment(self):
-        ds = self.load_dataset()
-        model = self.load_model()
+        """
+        Execute the experiment defined in configuration file.
+        """
+        ds = self._load_dataset()
+        model = self._load_model()
         experiment_with_preprocessing = self.configurations['with_preprocessing']
         proc = preprocessing.Processor(ds)
         if experiment_with_preprocessing:
-            preprocessing_steps = self.load_preprocessing()
+            preprocessing_steps = self._load_preprocessing()
             for step in preprocessing_steps['preprocessing_steps']:
                 if step in preprocessing_steps['parameters']:
                     func = getattr(proc, step)
@@ -42,7 +72,7 @@ class DLExperiment(ExperimentBase.Experiment):
                     func()
         experiment_with_drugs = self.configurations['with_drugs']
         if experiment_with_drugs:
-            df_drugs, ds_drugs = self.load_drugs()
+            df_drugs, ds_drugs = self._load_drugs()
             drug_names = self.configurations['drug_names']
             ds.load_drugs(df_drugs, drug_names)
             polvere = self.configurations['polvere']
@@ -53,10 +83,10 @@ class DLExperiment(ExperimentBase.Experiment):
             proc.remove_drugs(drugs, drug_names)
         evaluation_procedure = self.configurations['evaluation_procedure']
         if evaluation_procedure == 'k_fold':
-            r = self.k_fold(ds, model)
-            self.store_results(r)
+            r = self._k_fold(ds, model)
+            self._store_results(r)
         elif evaluation_procedure == 'loocv':
-            r = self.loocv(ds, model)
-            self.store_results(r)
+            r = self._loocv(ds, model)
+            self._store_results(r)
         else:
             raise ("Evaluation procedure not defined")

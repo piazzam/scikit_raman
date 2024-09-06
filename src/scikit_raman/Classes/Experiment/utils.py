@@ -1,10 +1,35 @@
 import yaml
 def parse_yaml_file(file):
+    """
+    Parse a configuration file in .yaml format and return its content in a dictionary
+    Parameters
+    ----------
+    file : string
+        Path to configuration file.
+
+    Returns
+    -------
+    dict
+        Dictionary with .yaml configurations.
+    """
     with open(file, 'r') as f:
         data = yaml.load(f, Loader=yaml.FullLoader)
     return data
 
 def extract_drugs_list_polvere(ds_farmaco):
+    """
+    Load the spectra from powder drugs
+
+    Parameters
+    ----------
+    ds_farmaco : scikit_raman.Dataset
+        Drugs dataset
+
+    Returns
+    -------
+    list
+        List containing spectra for each drug
+    """
     ds_farmaco = ds_farmaco.search_by_category_name('polvere')
     ds_farmaco = ds_farmaco.create_mean_spectra()
     ds_farmaco_uno = ds_farmaco.search_by_name('farmaco1_polvere')
@@ -24,6 +49,19 @@ def extract_drugs_list_polvere(ds_farmaco):
     return drugs
 
 def extract_drugs_list_fisio(ds_farmaco):
+    """
+    Load the spectra from water solution drugs
+
+    Parameters
+    ----------
+    ds_farmaco : scikit_raman.Dataset
+        Drugs dataset
+
+    Returns
+    -------
+    list
+        List containing spectra for each drug
+    """
     ds_farmaco = ds_farmaco.search_by_category_name('in_fisio')
     ds_farmaco = ds_farmaco.create_mean_spectra()
     ds_farmaco_uno = ds_farmaco.search_by_name('farmaco1_in fisio')

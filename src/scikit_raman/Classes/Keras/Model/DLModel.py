@@ -17,7 +17,88 @@ import numpy as np
 import tensorflow as tf
 
 class DLModelKeras:
+    """
+    A class used to represent a tensorflow.Keras DL model.
+
+    ...
+
+    Attributes
+    ----------
+    model : tf.Keras
+        A Deep Neural Network defined with Keras framework.
+    batch_size : int
+        Dimension of the batch size.
+    epochs : int
+        Number of epochs.
+    callbacks : list
+        List containing the callbacks applied during training.
+    optimizer : string
+        Optimizer name.
+    loss : string
+        Loss function name.
+    metrics : list
+        List of metrics to be monitored during training.
+    learning_rate : float
+        Value of the learning rate.
+
+    Methods
+    -------
+    load_model_benchmark(dlm,  n_dims, number_classes=3)
+        Load the benchmark model and return a DLModelKeras.
+    load_model(dlm, filename="model_saved/model", batch_size=256, epochs=200, callbacks=[], optimizer='adam',
+                loss='categorical_crossentropy', metrics=['categorical_accuracy'], learning_rate=0.00020441990333108206)
+        Load a saved model, instantiates a DLModelKeras object and return it.
+    compile_model(self)
+        Compile the model.
+    add_callback(self, callback)
+        Add new callback.
+    train_model_leave_one_patient_out(self, dataset, number_classes, patient_level=True, get_patient_prediction=True,
+                                          return_history=True, val_size=0.1, data_augmentation=False, f_name='emsc',
+                                          f_params=None, save_model=False, model_path="model_saved/models/final",
+                                          save_weights=False,weights_path="model_saved/weights/", random_state=42,
+                                          set_seed=True, model_name="Benchmark_CNN",
+                                          checkpoint_folder_path="model_saved/models/checkpoint"):
+        Train a model with leave-one-patient-out cross validation.
+    train_model_cv(self, dataset, number_classes, k=10, fold_level=True, get_patient_prediction=True,
+                    return_history=True,data_augmentation=False, f_name='emsc', f_params=None, save_model=False,
+                       model_path="model_saved/models/",save_weights=False, weights_path="model_saved/weights/",
+                       random_state=42, check_users_separated=True, model_name="Benchmark_CNN",
+                       checkpoint_folder_path="model_saved/models/checkpoint", set_seed=True,val_size=0.1)
+        Train a model with k-fold cross validation.
+    fit_model(self, X_train, y_train, X_val, y_val, return_history=True, model_name="model", save_model=False,
+                  save_weights=False, model_path="model_saved/model/", weights_path="model_saved/weights/",
+                  random_state=42, set_seed=True)
+        Train a model on a specified training set.
+    test_model(self, X_test)
+        Test a model on a specified test set and return the predictions.
+    change_input_tl(self, new_input_dims, old_input_dims)
+        Preliminary function for Transfer Learning. It changes the input size of a Deep Model.
+    change_output_tl(self, new_input_dims, old_input_dims)
+        Preliminary function for Transfer Learning. It changes the output size of a Deep Model.
+    """
     def __init__(self, model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate):
+        """
+        Constructor function for DLModelKeras class.
+
+        Parameters
+        ----------
+        model : tf.Keras
+            A Deep Neural Network defined with Keras framework.
+        batch_size : int
+            Dimension of the batch size.
+        epochs : int
+            Number of epochs.
+        callbacks : list
+            List containing the callbacks applied during training.
+        optimizer : string
+            Optimizer name.
+        loss : string
+            Loss function name.
+        metrics : list
+            List of metrics to be monitored during training.
+        learning_rate : float
+            Value of the learning rate.
+        """
         self.model = model
         self.batch_size = batch_size
         self.epochs = epochs
@@ -28,7 +109,22 @@ class DLModelKeras:
         self.learning_rate = learning_rate
 
     @classmethod
-    def load_model_benchmark(dlm,  n_dims, number_classes=3, set_seed=True, folder_path="models/checkpoint"):
+    def load_model_benchmark(dlm,  n_dims, number_classes=3):
+        """
+        Load the benchmark model and return a DLModelKeras.
+
+        Parameters
+        ----------
+        n_dims : int
+            Input size of desired model.
+        number_classes : int, optional (default is 3)
+            Output size of desired model.
+
+        Returns
+        -------
+        scikit_raman.Keras.Model.DLModelKeras
+            DLModelKeras initialized with benchmark model parameters.
+        """
         loss = 'categorical_crossentropy'
         metrics = ['categorical_accuracy']
         learning_rate = 0.00020441990333108206
@@ -98,30 +194,123 @@ class DLModelKeras:
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
 
     @classmethod
-    def load_model(dlm, filename="model_saved/model", batch_size=256, epochs=200, callbacks=[], optimizer='adam', loss='categorical_crossentropy', metrics=['categorical_accuracy'], learning_rate=0.00020441990333108206,
-        seed = 42):
+    def load_model(dlm, filename="model_saved/model", batch_size=256, epochs=200, callbacks=[], optimizer='adam',
+                   loss='categorical_crossentropy', metrics=['categorical_accuracy'],
+                   learning_rate=0.001):
+        """
+        Load a saved model, instantiates a DLModelKeras object and return it.
+
+        Parameters
+        ----------
+        filename : str, optional (default is "model_saved/model")
+            Path from which load the model.
+        batch_size : int, optional (default is 256)
+            Dimension of the batch size.
+        epochs : int, optional (default is 200)
+            Number of training epochs.
+        callbacks : list, optional (default is [])
+            List of callbacks applied during the training phase.
+        optimizer : str, optional (default is 'adam')
+            String corresponding to the desired optimizer
+        loss : str, optional (default is 'categorical_crossentropy')
+            String corresponding to the desired loss function.
+        metrics : list, optional (default is ['categorical_accuracy'])
+            List containing the metrics to be monitored during training.
+        learning_rate : float, optional (default is 0.001)
+            Learning rate value
+
+        Returns
+        -------
+        scikit_raman.Keras.Model.DLModelKeras
+            DLModelKeras initialized with benchmark model parameters.
+        """
         utils.set_seed()
         model = load_model(filename)
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
 
     def compile_model(self):
+        """
+        Compile the model.
+        """
         optimizer = get_optimizer(self.optimizer, self.learning_rate)
         self.model.compile(optimizer=optimizer,
                            loss=self.loss, metrics=self.metrics)
 
 
     def load_weights(self, filename="model_saved/weights"):
+        """
+        Load weights of the Neural Network.
+
+        Parameters
+        ----------
+        filename : string
+            Path from which load the weights.
+        """
         self.model.load_weights(filename, skip_mismatch=True)
         
     def add_callback(self, callback):
+        """
+        Add callback to the list of callbacks.
+
+        Parameters
+        ----------
+        callback : keras.callbacks.Callback
+            Callback to add.
+        """
         self.callbacks = [cb for cb in self.callbacks if not isinstance(cb, type(callback))]
         self.callbacks.append(callback)
 
     def train_model_leave_one_patient_out(self, dataset, number_classes, patient_level=True, get_patient_prediction=True,
                                           return_history=True, val_size=0.1, data_augmentation=False, f_name='emsc',
-                                          f_params=None, save_model=False, model_path="model_saved/models/final", save_weights=False,
-                                          weights_path="model_saved/weights/", random_state=42, set_seed=True, model_name="Benchmark_CNN",
+                                          f_params=None, save_model=False, model_path="model_saved/models/final",
+                                          save_weights=False,weights_path="model_saved/weights/", random_state=42,
+                                          set_seed=True, model_name="Benchmark_CNN",
                                           checkpoint_folder_path="model_saved/models/checkpoint"):
+        """
+        Train a model in a leave-one-patient-out strategy and return the results.
+
+        Parameters
+        ----------
+        dataset : scikit_raman.Dataset
+            Dataset object on which compute the experiment.
+        number_classes : int
+            Number of classes of the problem.
+        patient_level : bool, optional (default is True)
+            Whether to return the results at a patient level.
+        get_patient_prediction : bool, optional (default is True)
+            Whether to return the results at a single spectra level.
+        return_history : bool, optional (default is True)
+            Whether to return the history of the training of the model.
+        val_size : float, optional (default is 0.1)
+            Percentage of dimension of validation set.
+        data_augmentation : bool, optional (default is False)
+            Whether to apply the data augmentation during the experimentation procedure.
+        f_name : string, optional (default is 'emsc')
+            Name of the data augmentation function.
+        f_params : dict, optional (default is None)
+            Parameters of data augmentation function.
+        save_model : bool, optional (default is False)
+            Whether to store the trained models or not.
+        model_path : string, optional (default is "model_saved/models/final")
+            Path for saving the trained models.
+        save_weights : bool, optional (default is False)
+            Whether to save the weights of trained models.
+        weights_path : string, optional (default is "model_saved/weights/")
+            Path for saving the weights of trained models.
+        random_state : int, optional (default is 42)
+            Seed
+        set_seed : bool, optional (default is True)
+            Whether to set a seed for reproducibility.
+        model_name : string, optional (default is "Benchmark_CNN")
+            Name of model for saving checkpoints.
+        checkpoint_folder_path : string, optional (default is "model_saved/models/checkpoint")
+            Path for saving the checkpoints.
+
+        Returns
+        -------
+        dict
+            Dictionary contained the desired results.
+        """
         if set_seed:
             utils.set_seed(random_state)
         folds = dataset.leave_one_patient_cv()
@@ -212,6 +401,55 @@ class DLModelKeras:
                        save_weights=False, weights_path="model_saved/weights/", random_state=42, check_users_separated=True, 
                        model_name="Benchmark_CNN", checkpoint_folder_path="model_saved/models/checkpoint", set_seed=True,
                        val_size=0.1):
+        """
+        Train a model in a leave-one-patient-out strategy and return the results.
+
+        Parameters
+        ----------
+        dataset : scikit_raman.Dataset
+            Dataset object on which compute the experiment.
+        number_classes : int
+            Number of classes of the problem.
+        k : int, optional (default is 10)
+            Number of folds for the k-fold function.
+        fold_level : bool, optional (default is True)
+            Whether to return the results at a fold level.
+        get_patient_prediction : boo, optional (default is True)
+            Whether to return results at a single spectra level.
+        return_history : bool, optional (default is True)
+            Whether to return the history of the training of the model.
+        data_augmentation : bool, optional (default is False)
+            Whether to apply the data augmentation during the experimentation procedure.
+        f_name : string, optional (default is 'emsc')
+            Name of the data augmentation function.
+        f_params : dict, optional (default is None)
+            Parameters of data augmentation function.
+        save_model : bool, optional (default is False)
+            Whether to store the trained models or not.
+        model_path : string, optional (default is "model_saved/models/final")
+            Path for saving the trained models.
+        save_weights : bool, optional (default is False)
+            Whether to save the weights of trained models.
+        weights_path : string, optional (default is "model_saved/weights/")
+            Path for saving the weights of trained models.
+        random_state : int, optional (default is 42)
+            Seed value
+        check_users_separated : bool, optional (default is True)
+            Whether to check if users are not mixed between train and test set.
+        model_name : string, optional (default is "Benchmark_CNN")
+            Name of model for saving checkpoints.
+        checkpoint_folder_path : string, optional (default is "model_saved/models/checkpoint")
+            Path for saving the checkpoints.
+        set_seed : bool, optional (default is True)
+            Whether to set a seed for reproducibility.
+        val_size : float, optional (default is 0.1)
+            Percentage of dimension of validation set.
+
+        Returns
+        -------
+        dict
+            Dictionary contained the desired results.
+        """
         if set_seed:
             utils.set_seed(random_state)
         folds = dataset.k_fold(k)
@@ -320,6 +558,41 @@ class DLModelKeras:
     def fit_model(self, X_train, y_train, X_val, y_val, return_history=True, model_name="model", save_model=False,
                   save_weights=False, model_path="model_saved/model/", weights_path="model_saved/weights/",
                   random_state=42, set_seed=True):
+        """
+        Train a model on a specified training set.
+
+        Parameters
+        ----------
+        X_train : np.array
+            <Array containing the independent features of the training set.>
+        y_train : np.array
+            Array containing the dependent features of the training set.
+        X_val : np.array
+            Array containing the independent features of the validation set.
+        y_val : np.array
+            Array containing the dependent features of the validation set.
+        return_history : bool, optional (default is True)
+            Whether to return the history of the training of the model.
+        model_name : string, optional (default is "Benchmark_CNN")
+            Name of model for saving checkpoints.
+        save_model : bool, optional (default is False)
+            Whether to store the trained models or not.
+        save_weights : bool, optional (default is False)
+            Whether to save the weights of trained models.
+        model_path : string, optional (default is "model_saved/models/final")
+            Path for saving the trained models.
+        weights_path : string, optional (default is "model_saved/weights/")
+            Path for saving the weights of trained models.
+        random_state : int, optional (default is 42)
+            Seed value
+        set_seed : bool, optional (default is True)
+            Whether to set a seed for reproducibility.
+
+        Returns
+        -------
+        dict
+            If requested dictionary with training history.
+        """
         if set_seed:
             utils.set_seed(random_state)
         history = self.model.fit(X_train, y_train,
@@ -339,11 +612,33 @@ class DLModelKeras:
         return dictionary
 
     def test_model(self, X_test):
+        """
+        Test a model on a specified test set and return the predictions.
+
+        Parameters
+        ----------
+        X_test : np.array
+            Array containing the independent features of the training set.
+        Returns
+        -------
+        np.array
+            Array containig the predictions of the model (in integer format).
+        """
         pred = self.model.predict(X_test)
         y_pred = np.argmax(pred, axis=-1)
         return y_pred
 
     def change_input_tl(self, new_input_dims, old_input_dims):
+        """
+        Preliminary function for Transfer Learning. It changes the input size of a Deep Model.
+
+        Parameters
+        ----------
+        new_input_dims : int
+            Desired input dimension.
+        old_input_dims : int
+            Actual input dimension.
+        """
         new_model = Sequential()
         new_model.add(InputLayer(input=(new_input_dims,)))
         new_model.add(Dense(old_input_dims, name="dense_added"))
@@ -353,6 +648,17 @@ class DLModelKeras:
         self.model = new_model
 
     def change_output_tl(self, new_output_dims, new_activation_function="softmax"):
+        """
+        Preliminary function for Transfer Learning. It changes the output size of a Deep Model, if requested it changes
+        also the activation function of last layer.
+
+        Parameters
+        ----------
+        new_output_dims : int
+            Desired output dimension.
+        new_activation_function : string, optional (default is "softmax")
+            Desired new activation function.
+        """
         input_shape = self.model.layers[0].shape
         new_model = tf.keras.models.Sequential(self.model.layers[:-1])
         new_model.build(input_shape)
