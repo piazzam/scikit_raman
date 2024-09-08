@@ -710,21 +710,41 @@ class Evaluator:
         """
         Save results into a CSV file.
 
+        This method appends the results of different experiments on the same dataset into a single CSV file. 
+        It stores metrics such as accuracy, precision, recall (sensitivity), and F1-score at both the spectra 
+        and patient levels for each target class.
+
         Parameters
         ----------
-        filename
-        name
-        classification
-        model
-        preprocessing
-        pca_or_data_augmentation
-        drugs_categories
-        all_target_names
-        DLModel
+        filename : str
+            The name or path of the CSV file where results will be stored. If the file does not exist, it will be created.
+        name : str
+            The name or identifier for the experiment (e.g., model or experiment label).
+        classification : str
+            Specifies the type of classification task, which could be binary (e.g., 'ASMA_vs_BPCO', 'ASMA_vs_CTRL') 
+            or multi-class (e.g., 'ASMA_vs_BPCO_vs_CTRL'). This helps to distinguish between different binary 
+            or multi-class classifications in the CSV file.
+        model : str
+            The model used in the experiment (e.g., SVM, CNN).
+        preprocessing : bool
+            Indicates whether preprocessing was applied or not before training the model.
+        pca_or_data_augmentation : bool
+            A boolean indicating whether PCA or data augmentation was applied. The choice between PCA or data 
+            augmentation is made based on the `DLModel` flag:
+            - If `DLModel=True`: `pca_or_data_augmentation` represents whether data augmentation was applied.
+            - If `DLModel=False`: `pca_or_data_augmentation` represents whether PCA was applied.
+        drugs_categories : list
+            List of patient categories related to the drugs used. If no drugs are used, this will be set to 'None'.
+        all_target_names : list
+            List of target class names for which metrics will be computed.
+        DLModel : bool, optional
+            A flag to indicate whether the model is a deep learning model. If `True`, data augmentation is used; if `False`, PCA is applied. 
+            Default is `False`.
 
         Returns
         -------
-
+        None
+            The method does not return anything but writes results to the specified CSV file.
         """
         report_patient_level = classification_report(self.results['patient_level']['label_list'],
                                                      self.results['patient_level']['pred_list'], 

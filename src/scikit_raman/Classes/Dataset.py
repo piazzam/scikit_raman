@@ -239,7 +239,7 @@ class Dataset:
         drugs: pandas.Dataframe
             Mapping each user into its assumed drugs
         drugs_category: list
-
+            List of patient categories related to the drugs being loaded.
         """
         assumed_drugs = []
         for i, u in enumerate(self.user):

@@ -399,8 +399,10 @@ class Processor:
 
         Parameters
         ----------
-        drugs
-        drugs_category
+        drugs: list
+            List of spectra corresponding to the drugs to be removed.
+        drugs_category: list
+            List of patient categories related to the drugs being removed.
         """
         new_spectra = []
         for element in self.dataset:
