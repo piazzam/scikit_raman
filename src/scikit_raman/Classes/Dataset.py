@@ -162,10 +162,10 @@ class Dataset:
                 Assumed_drugs at specified position
         """
         try:
-            return self.spectra[items], self.x_axis[items], self.raw[items], self.user[items], self.name[items], \
+            return self.spectra[items], self.x_axis[items], self._raw[items], self.user[items], self._name[items], \
                    self.category[items], self.labels[items], self.assumed_drugs[items]
         except IndexError:
-            return self.spectra[items], self.x_axis[items], self.raw[items], self.user[items], self.name[items], \
+            return self.spectra[items], self.x_axis[items], self._raw[items], self.user[items], self._name[items], \
                    self.category[items], self.labels[items]
 
     def __len__(self):
@@ -176,17 +176,17 @@ class Dataset:
         int
             number of elements contained in the Dataset
         """
-        return self.n_elements
+        return self._n_elements
 
     def extend(self, dataset):
         self.spectra = np.append(self.spectra, dataset.spectra, axis=0)
         self.x_axis = np.append(self.x_axis, dataset.x_axis, axis=0)
-        self.raw = np.append(self.raw, dataset.raw, axis=0)
+        self._raw = np.append(self._raw, dataset._raw, axis=0)
         self.user = np.append(self.user, dataset.user, axis=0)
-        self.name = np.append(self.name, dataset.name, axis=0)
+        self._name = np.append(self._name, dataset._name, axis=0)
         self.category = np.append(self.category, dataset.category, axis=0)
         self.labels = np.append(self.labels, dataset.labels, axis=0)
-        self.n_elements = self.n_elements + len(dataset)
+        self._n_elements = self._n_elements + len(dataset)
 
     @classmethod
     def load_file(ds, file_type, file_name, parquet_engine='fastparquet',
@@ -239,7 +239,7 @@ class Dataset:
         drugs: pandas.Dataframe
             Mapping each user into its assumed drugs
         drugs_category: list
-
+            List of patient categories related to the drugs being loaded.
         """
         assumed_drugs = []
         for i, u in enumerate(self.user):
@@ -285,9 +285,9 @@ class Dataset:
             df = pd.DataFrame([], columns=['spectra', 'x-axis', 'raw', 'user', 'name', 'category'])
         df['spectra'] = self.spectra.tolist()
         df['x-axis'] = self.x_axis.tolist()
-        df['raw'] = self.raw.tolist()
+        df['raw'] = self._raw.tolist()
         df['user'] = self.user.tolist()
-        df['name'] = self.name.tolist()
+        df['name'] = self._name.tolist()
         df['category'] = self.category.tolist()
         if save_label:
             df['labels'] = self.labels.tolist()
@@ -341,12 +341,12 @@ class Dataset:
         category = []
         labels = []
         for i in range(len(self.spectra)):
-            if self.raw[i] == True:
+            if self._raw[i] == True:
                 spectra.append(self.spectra[i])
                 x_axis.append(self.x_axis[i])
-                raw.append(self.raw[i])
+                raw.append(self._raw[i])
                 user.append(self.user[i])
-                name.append(self.name[i])
+                name.append(self._name[i])
                 category.append(self.category[i])
                 labels.append(self.labels[i])
         ds = Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name),
@@ -373,9 +373,9 @@ class Dataset:
             if self.raw[i] == False:
                 spectra.append(self.spectra[i])
                 x_axis.append(self.x_axis[i])
-                raw.append(self.raw[i])
+                raw.append(self._raw[i])
                 user.append(self.user[i])
-                name.append(self.name[i])
+                name.append(self._name[i])
                 category.append(self.category[i])
                 labels.append(self.labels[i])
         ds = Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name),
@@ -406,9 +406,9 @@ class Dataset:
         for index in indices:
             spectra.append(self.spectra[index])
             x_axis.append(self.x_axis[index])
-            raw.append(self.raw[index])
+            raw.append(self._raw[index])
             user.append(self.user[index])
-            name.append(self.name[index])
+            name.append(self._name[index])
             category.append(self.category[index])
             labels.append(self.labels[index])
         ds = Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name),
@@ -617,12 +617,12 @@ class Dataset:
         """
         self.spectra = np.delete(self.spectra, elements, axis=0)
         self.x_axis = np.delete(self.x_axis, elements, axis=0)
-        self.raw = np.delete(self.raw, elements, axis=0)
-        self.name = np.delete(self.name, elements, axis=0)
+        self._raw = np.delete(self._raw, elements, axis=0)
+        self._name = np.delete(self._name, elements, axis=0)
         self.user = np.delete(self.user, elements, axis=0)
         self.category = np.delete(self.category, elements, axis=0)
         self.labels = np.delete(self.labels, elements, axis=0)
-        self.n_elements -= len(elements)
+        self._n_elements -= len(elements)
 
     def spectra_to_numpy(self):
         """
@@ -672,9 +672,9 @@ class Dataset:
         for i in ret_list:
             spectra.append(self.spectra[i])
             x_axis.append(self.x_axis[i])
-            raw.append(self.raw[i])
+            raw.append(self._raw[i])
             user.append(self.user[i])
-            name.append(self.name[i])
+            name.append(self._name[i])
             category.append(self.category[i])
             labels.append(self.labels[i])
         return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name),
@@ -730,9 +730,9 @@ class Dataset:
         for i in ret_list:
             spectra.append(self.spectra[i])
             x_axis.append(self.x_axis[i])
-            raw.append(self.raw[i])
+            raw.append(self._raw[i])
             user.append(self.user[i])
-            name.append(self.name[i])
+            name.append(self._name[i])
             category.append(self.category[i])
             labels.append(self.labels[i])
         return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name),
@@ -766,9 +766,9 @@ class Dataset:
         for i in ret_list:
             spectra.append(self.spectra[i])
             x_axis.append(self.x_axis[i])
-            raw.append(self.raw[i])
+            raw.append(self._raw[i])
             user.append(self.user[i])
-            name.append(self.name[i])
+            name.append(self._name[i])
             category.append(self.category[i])
             labels.append(self.labels[i])
         return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user), np.array(name),
@@ -797,9 +797,9 @@ class Dataset:
             spectrum = np.mean(ds_user.spectra, axis=0)
             spectra.append(spectrum)
             x_axis.append(ds_user.x_axis[0])
-            raw.append(ds_user.raw[0])
+            raw.append(ds_user._raw[0])
             user_list.append(ds_user.user[0])
-            name.append(ds_user.name[0])
+            name.append(ds_user._name[0])
             category.append(ds_user.category[0])
             labels.append(ds_user.labels[0])
         return Dataset(np.array(spectra), np.array(x_axis), np.array(raw), np.array(user_list), np.array(name),

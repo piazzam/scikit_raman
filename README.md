@@ -82,7 +82,7 @@ To keep your project environment clean and isolated, it's recommended to install
    Replace `installation_option` with one of the following depending on your needs:
 
    - `standardKeras`: This option installs the library and its dependencies for general purposes using Keras with CPU support.
-   - `mindhardKeras`: This option installs the specific dependencies required to use the library with the GPU configuration of the mindHard virtual machine (the one in the MIND laboratory).
+   - `mindHardKeras`: This option installs the specific dependencies required to use the library with the GPU configuration of the mindHard virtual machine (the one in the MIND laboratory).
    - `torch`: For using the PyTorch implementation of the methods instead of the Keras version. 
 
    If you intend to use the library on your machine with a specific GPU configuration, we recommend referring to the [Tensorflow Documentation](https://www.tensorflow.org/install/source?hl=en#gpu) to understand what you need to install.

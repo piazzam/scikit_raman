@@ -20,7 +20,7 @@ class DLExperiment(ExperimentBase.Experiment):
 
     def __init__(self, configuration_file):
         """
-        Constructor for class MLExperiment
+        Constructor for class DLExperiment
 
         Parameters
         ----------

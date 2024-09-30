@@ -229,9 +229,9 @@ class DataAugmenter:
             y_list = np.array([])
         for i in range(times):
             if keep_original==False and i == 0:
-                aug_list = self.dataaugment(betashift = betashift, slopeshift=slopeshift, multishift=multishift)
+                aug_list = self._dataaugment(betashift = betashift, slopeshift=slopeshift, multishift=multishift)
             else:
-                aug_list = np.concatenate((aug_list, self.dataaugment(betashift = betashift, slopeshift=slopeshift, multishift=multishift)))
+                aug_list = np.concatenate((aug_list, self._dataaugment(betashift = betashift, slopeshift=slopeshift, multishift=multishift)))
         for i in range(times):
             y_list = np.concatenate((y_list, self.labels), axis=0)
         self.spectra = aug_list
