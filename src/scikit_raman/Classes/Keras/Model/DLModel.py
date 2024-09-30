@@ -15,6 +15,10 @@ import scikit_raman.module.utility as utils
 from scikit_raman.Classes.Keras.Model.callbacks import EpochCheckpointSaver
 import numpy as np
 import tensorflow as tf
+from tensorflow.keras.layers import Input, Reshape, Conv1D, BatchNormalization, MaxPooling1D, Flatten, Dropout, Dense, LeakyReLU
+from tensorflow.keras.models import Model
+from tensorflow.keras.initializers import HeUniform
+from tensorflow.keras.optimizers import Adam
 
 class DLModelKeras:
     """
@@ -194,6 +198,71 @@ class DLModelKeras:
         return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
 
     @classmethod
+    def load_model_benchmark_functional(dlm,  n_dims, number_classes=3):
+        """
+        Load the benchmark model and return a DLModelKeras. The keras model
+        has been defined according to the functional API.
+
+        Parameters
+        ----------
+        n_dims : int
+            Input size of desired model.
+        number_classes : int, optional (default is 3)
+            Output size of desired model.
+
+        Returns
+        -------
+        scikit_raman.Keras.Model.DLModelKeras
+            DLModelKeras initialized with benchmark model parameters.
+        """
+        loss = 'categorical_crossentropy'
+        metrics = ['categorical_accuracy']
+        learning_rate = 0.00020441990333108206
+        optimizer = Adam(learning_rate=learning_rate)
+        initializer = HeUniform()
+
+        input_layer = Input(shape=(n_dims,))
+        x = Reshape((n_dims, 1))(input_layer)
+
+        x = Conv1D(filters=100, kernel_size=100, strides=1, padding='same', activation='relu', kernel_initializer=initializer)(x)
+        x = BatchNormalization(momentum=0.99, epsilon=0.01)(x)
+
+        x = Conv1D(filters=100, kernel_size=5, strides=2, padding='same', activation='relu', kernel_initializer=initializer)(x)
+        x = MaxPooling1D(pool_size=6, strides=3, padding='same')(x)
+        x = BatchNormalization(momentum=0.99, epsilon=0.01)(x)
+
+        x = Conv1D(filters=25, kernel_size=9, strides=5, padding='same', activation='relu', kernel_initializer=initializer)(x)
+        x = MaxPooling1D(pool_size=3, strides=2, padding='same')(x)
+
+        x = Flatten()(x)
+        x = Dropout(rate=0.1)(x)
+
+        x = Dense(units=732)(x)
+        x = LeakyReLU()(x)
+        x = Dropout(rate=0.7)(x)
+
+        x = Dense(units=189)(x)
+        x = LeakyReLU()(x)
+        x = Dropout(rate=0.25)(x)
+
+        x = Dense(units=152)(x)
+        x = LeakyReLU()(x)
+        x = Dropout(rate=0.1)(x)
+
+        output_layer = Dense(units=number_classes, activation='softmax')(x)
+
+        model = Model(inputs=input_layer, outputs=output_layer)
+
+        model.compile(optimizer=optimizer, loss=loss, metrics=metrics)
+
+        epochs = 273
+        batch_size = 338
+        callbacks = []
+
+        # Restituisce il modello per l'addestramento
+        return dlm(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
+
+    @classmethod
     def load_model(dlm, filename="model_saved/model", batch_size=256, epochs=200, callbacks=[], optimizer='adam',
                    loss='categorical_crossentropy', metrics=['categorical_accuracy'],
                    learning_rate=0.001):
@@ -247,7 +316,7 @@ class DLModelKeras:
             Path from which load the weights.
         """
         self.model.load_weights(filename, skip_mismatch=True)
-        
+
     def add_callback(self, callback):
         """
         Add callback to the list of callbacks.
@@ -398,7 +467,7 @@ class DLModelKeras:
 
     def train_model_cv(self, dataset, number_classes, k=10, fold_level=True, get_patient_prediction=True, return_history=True,
                        data_augmentation=False, f_name='emsc', f_params=None, save_model=False, model_path="model_saved/models/",
-                       save_weights=False, weights_path="model_saved/weights/", random_state=42, check_users_separated=True, 
+                       save_weights=False, weights_path="model_saved/weights/", random_state=42, check_users_separated=True,
                        model_name="Benchmark_CNN", checkpoint_folder_path="model_saved/models/checkpoint", set_seed=True,
                        val_size=0.1):
         """
