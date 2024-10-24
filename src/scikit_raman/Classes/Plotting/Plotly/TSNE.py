@@ -47,7 +47,7 @@ class PlottingTSNE:
         filename : string, optional (default is plot.png)
             Filename of the file to be saved.
         """
-        fig = px.scatter(self.pca_result.result, x=0, y=1, color=color_type)
+        fig = px.scatter(self.tsne_result.result, x=0, y=1, color=color_type)
         fig.update_layout(xaxis_title=x_axis_title, yaxis_title=y_axis_title)
         fig.update_traces(marker=dict(size=12,
                                       line=dict(width=2,
@@ -76,7 +76,7 @@ class PlottingTSNE:
         filename : string, optional (default is plot.png)
             Filename of the file to be saved.
         """
-        fig = px.scatter_3d(self.pca_result.result, x=0, y=1, z=2, color=color_type,
+        fig = px.scatter_3d(self.tsne_result.result, x=0, y=1, z=2, color=color_type,
                             labels = {"0": x_axis_title, "1": y_axis_title, "2":z_axis_title})
         fig.update_layout(xaxis_title=x_axis_title, yaxis_title=y_axis_title)
         fig.update_traces(marker=dict(size=12,
