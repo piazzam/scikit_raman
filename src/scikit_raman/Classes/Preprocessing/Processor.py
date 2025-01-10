@@ -416,7 +416,7 @@ class Processor:
                         drug = drugs[i]
                         for s, d in zip(spectra, drug):
                             new_spectrum.append(s - d)
-                        if new_spectra != []:
+                        if new_spectrum != []:
                             spectra = new_spectrum
                             new_spectrum = []
                 if new_spectrum == []:
