@@ -421,7 +421,10 @@ class Processor:
                             new_spectrum = []
                 if new_spectrum == []:
                     new_spectrum = spectra
-                new_spectra.append(new_spectrum)
+                if type(new_spectrum) == np.array:
+                    new_spectra.append(new_spectrum)
+                else:
+                    new_spectra.append(np.array(new_spectrum))
             else:
                 new_spectra.append(spectra)
         self.dataset.spectra = np.array(new_spectra)

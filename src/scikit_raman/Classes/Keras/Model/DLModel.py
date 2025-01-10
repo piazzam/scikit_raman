@@ -350,9 +350,9 @@ class DLModelKeras:
         histories = []
         names_list = []
         for j, (train_idx, test_idx) in enumerate(folds, start=1):
-            es = EarlyStopping(monitor=monitor, patience=100, verbose=1,
+            es = EarlyStopping(monitor='loss', patience=100, verbose=1,
                                restore_best_weights=True)
-            lr = ReduceLROnPlateau(monitor=monitor, factor=0.5, verbose=4, patience=80,
+            lr = ReduceLROnPlateau(monitor='loss', factor=0.5, verbose=4, patience=80,
                                    cooldown=10)
             names_test_cv = dataset.user[test_idx]
             patient_name = np.unique(names_test_cv)[0]

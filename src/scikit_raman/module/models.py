@@ -5,7 +5,7 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import tensorflow as tf
-from scikit_raman.Classes.Keras.Model.DLModel import DLModelKeras
+#from scikit_raman.Classes.Keras.Model.DLModel import DLModelKeras
 from tensorflow.keras.initializers import HeUniform
 
 
@@ -131,8 +131,8 @@ def create_model_resnet(n_dims=991, n_classes=2):
   metrics = ["categorical_accuracy"]
   model = ResNet34()
   model.compile(optimizer=optimizer, loss = loss, metrics = metrics)
-  keras_model = DLModelKeras(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
-  return keras_model
+  #keras_model = DLModelKeras(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
+  return model
 
 
 def identity_block(x, filter):
