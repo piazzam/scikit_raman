@@ -688,7 +688,7 @@ class Evaluator:
             Whether to show or not the plot.
         """
         y_pred_prob = to_categorical(
-            y_pred, num_classes=None
+            y_pred, num_classes=len(self.classes)
         )
         for i in range(len(self.classes)):
             fpr, tpr, thresh = roc_curve(y, y_pred_prob[:, i], pos_label=i)
