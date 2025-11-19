@@ -410,9 +410,13 @@ class Processor:
             spectra = element[0]
             if category in drugs_category:
                 new_spectrum = []
-                assumed_drugs = element[7]
+                try:
+                    assumed_drugs = element[7]
+                except Exception as exc:
+                    print(element[3])
+                    assumed_drugs = np.zeros(8)
                 for i in range(len(assumed_drugs)):
-                    if assumed_drugs[i][0] == 1:
+                    if assumed_drugs[i] == 1:#if assumed_drugs[i][0] == 1:
                         drug = drugs[i]
                         for s, d in zip(spectra, drug):
                             new_spectrum.append(s - d)

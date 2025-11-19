@@ -129,7 +129,7 @@ def create_model_resnet(n_dims=991, n_classes=2):
   optimizer = Adam(learning_rate=learning_rate)
   loss = "categorical_crossentropy"
   metrics = ["categorical_accuracy"]
-  model = ResNet34()
+  model = ResNet34(classes=n_classes)
   model.compile(optimizer=optimizer, loss = loss, metrics = metrics)
   #keras_model = DLModelKeras(model, batch_size, epochs, callbacks, optimizer, loss, metrics, learning_rate)
   return model

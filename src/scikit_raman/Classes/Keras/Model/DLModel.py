@@ -629,9 +629,9 @@ class DLModelKeras:
         """
         if set_seed:
             utils.set_seed(random_state)
-        ec = EpochCheckpointSaver(save_interval=39, folder_path=checkpoint_folder_path, model_name=model_name,
-                                  fold=model_name_checkpoint)
-        self.callbacks.append(ec)
+        # ec = EpochCheckpointSaver(save_interval=39, folder_path=checkpoint_folder_path, model_name=model_name,
+        #                           fold=model_name_checkpoint)
+        # self.callbacks.append(ec)
         history = self.model.fit(X_train, y_train,
                                  epochs=self.epochs,
                                  validation_data=(X_val, y_val),

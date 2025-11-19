@@ -189,7 +189,7 @@ class Dataset:
         self._n_elements = self._n_elements + len(dataset)
 
     @classmethod
-    def load_file(ds, file_type, file_name, parquet_engine='fastparquet',
+    def load_file(ds, file_type, file_name, n_points=991, parquet_engine='fastparquet',
                   label_dictionary={'cov': 0, 'covNeg': 1, 'ctrl': 2}):
         """
         Load a file and automatically create a Dataset object.
@@ -242,11 +242,15 @@ class Dataset:
             List of patient categories related to the drugs being loaded.
         """
         assumed_drugs = []
+        users = []
         for i, u in enumerate(self.user):
             if self.category[i] in drugs_category:
-                this_user = drugs[drugs['Codice Labion'] == u]
-                assumed_drug = [this_user['farmaco1'], this_user['farmaco2'], this_user['farmaco3'], this_user['farmaco4'],
-                                this_user['farmaco5'], this_user['farmaco6']]
+                this_user = drugs[drugs['ID'] == u]
+                if len(this_user) == 0:
+                    users.append(u)
+                assumed_drug = [this_user['TRIXEO'].to_numpy(), this_user['TRELEGY (ellipta)'].to_numpy(), this_user['DUAKLIR GENUAIR'].to_numpy(), 
+                                this_user['RELVAR'].to_numpy(),this_user['TRIMBOW'].to_numpy(), this_user['ROLUFTA'].to_numpy(), this_user['FOSTER'].to_numpy(),
+                                this_user['VENTOLIN'].to_numpy()]
                 assumed_drugs.append(assumed_drug)
         self.assumed_drugs = np.array(assumed_drugs)
 
@@ -826,3 +830,17 @@ class Dataset:
             new_x_axis.append(x[idx_start:idx_end])
         self.spectra = np.array(new_spectra)
         self.x_axis = np.array(new_x_axis)
+    
+    def cut_n_points(self, n_points):
+        
+        new_spectra = []
+        new_x_axis = []
+        for x, y in zip(self.x_axis, self.spectra):
+            new_spectra.append(y[:n_points])
+            new_x_axis.append(x[:n_points])
+        self.spectra = np.array(new_spectra)
+        self.x_axis = np.array(new_x_axis)
+    
+    def stack_spectra_xaxis(self):
+        self.spectra = np.stack(self.spectra)
+        self.x_axis = np.stack(self.x_axis)
