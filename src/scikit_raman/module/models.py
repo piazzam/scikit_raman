@@ -117,6 +117,79 @@ def create_model_benchmark(n_dims, number_classes):
     model.add(Dense(units=number_classes, activation='softmax'))
     return model
 
+def create_optimal_model_cnn(n_dims, number_classes):
+    # Best hyperparameters found by Optuna:
+    # lr          = 0.0018290309003364676
+    # optimizer   = rmsprop
+    # batch_size  = 128
+    # dropout     = 0.4875008829725923
+    # f1          = 94
+    # f2          = 107
+    # f3          = 25
+    # k1          = 111
+    # k2          = 8
+    # k3          = 14
+    # d1          = 681
+    # d2          = 231
+    # d3          = 201
+
+    # ----- init model
+    model = Sequential()
+    model.add(InputLayer(shape=(n_dims,)))
+    model.add(Reshape((n_dims, 1)))
+
+    # ----- CNN layers
+    model.add(Conv1D(filters=94,
+                     kernel_size=111,
+                     strides=1,
+                     padding='same',
+                     activation='relu'))
+
+    model.add(BatchNormalization())
+
+    model.add(Conv1D(filters=107,
+                     kernel_size=8,
+                     strides=2,
+                     padding='same',
+                     activation='relu'))
+
+    model.add(MaxPooling1D(pool_size=6,
+                           strides=3,
+                           padding='same'))
+
+    model.add(BatchNormalization())
+
+    model.add(Conv1D(filters=25,
+                     kernel_size=14,
+                     strides=5,
+                     padding='same',
+                     activation='relu'))
+
+    model.add(MaxPooling1D(pool_size=3,
+                           strides=2,
+                           padding='same'))
+
+    # ----- Flatten layer between CNN and Dense layers
+    model.add(Flatten())
+
+    # Best dropout found by Optuna
+    model.add(Dropout(rate=0.4875008829725923))
+
+    # ----- Dense layers
+    model.add(Dense(units=681))
+    model.add(LeakyReLU())
+
+    model.add(Dense(units=231))
+    model.add(LeakyReLU())
+
+    model.add(Dense(units=201))
+    model.add(LeakyReLU())
+
+    # ----- Classification layer
+    model.add(Dense(units=number_classes, activation='softmax'))
+
+    return model
+
 def create_model_resnet(n_dims=991, n_classes=2):
   es = EarlyStopping(monitor="val_loss", patience=50, verbose=1,
                                            restore_best_weights=True)

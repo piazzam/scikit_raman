@@ -19,7 +19,9 @@ import tensorflow as tf
 from tensorflow.keras.layers import Input, Reshape, Conv1D, BatchNormalization, MaxPooling1D, Flatten, Dropout, Dense, LeakyReLU
 from tensorflow.keras.models import Model
 from tensorflow.keras.initializers import HeUniform
-from tensorflow.keras.optimizers import Adam
+from tensorflow.keras.optimizers import Adam, RMSprop
+import optuna
+import gc
 
 class DLModelKeras:
     """
@@ -493,9 +495,10 @@ class DLModelKeras:
         total_users = np.unique(dataset.user)
         for j, (train_idx, test_idx) in enumerate(folds, start=1):
             names_test_cv = dataset.user[test_idx]
-            patient_name = np.unique(names_test_cv)[0]
-            print(f'\n[*] Patient {j}: {patient_name}')
-            ec = EpochCheckpointSaver(save_interval=39, folder_path=checkpoint_folder_path, model_name=model_name, fold=patient_name)
+            patient_name_ext = np.unique(names_test_cv)
+            fold_name = "Fold_"+str(j)
+            print(f'\n[*] Fold {j}: {patient_name_ext}')
+            ec = EpochCheckpointSaver(save_interval=39, folder_path=checkpoint_folder_path, model_name=model_name, fold=fold_name)
             self.add_callback(ec)
             trained_model = clone_model(self.model)
             optimizer = get_optimizer(self.optimizer, self.learning_rate)
@@ -527,7 +530,7 @@ class DLModelKeras:
                                         batch_size=self.batch_size, verbose=verbose,
                                         callbacks=self.callbacks)
             histories.append(history)
-            names_list.append(patient_name)
+            names_list.append(fold_name)
             pred = trained_model.predict(X_test_cv)
             y_pred = np.argmax(pred, axis=-1)
             if get_patient_prediction:
@@ -702,3 +705,281 @@ class DLModelKeras:
         new_model.add(Dense(units=new_output_dims,
                       activation=new_activation_function, name="new_output_layer"))
         self.model = new_model
+
+    def build_raman_model(self, params, number_classes, loss, metrics):
+
+        model = Sequential()
+        model.add(InputLayer(shape=(991, 1)))
+
+        model.add(Conv1D(params["f1"], params["k1"], padding='same', activation='relu'))
+        model.add(BatchNormalization())
+
+        model.add(Conv1D(params["f2"], params["k2"], strides=2, padding='same', activation='relu'))
+        model.add(MaxPooling1D(pool_size=6, strides=3, padding='same'))
+        model.add(BatchNormalization())
+
+        model.add(Conv1D(params["f3"], params["k3"], strides=5, padding='same', activation='relu'))
+        model.add(MaxPooling1D(pool_size=3, strides=2, padding='same'))
+
+        model.add(Flatten())
+        model.add(Dropout(params["dropout"]))
+
+        model.add(Dense(params["d1"]))
+        model.add(LeakyReLU())
+
+        model.add(Dense(params["d2"]))
+        model.add(LeakyReLU())
+
+        model.add(Dense(params["d3"]))
+        model.add(LeakyReLU())
+
+        model.add(Dense(number_classes, activation='softmax'))
+
+        if params["optimizer"] == "adam":
+            opt = Adam(learning_rate=params["lr"])
+        else:
+            opt = RMSprop(learning_rate=params["lr"])
+
+        model.compile(
+            optimizer=opt,
+            loss=loss,
+            metrics=metrics
+        )
+
+        return model    
+
+    def train_single_fold(self, model, X_train, y_train, X_val, y_val, epochs, batch_size):
+
+        history = model.fit(
+            X_train, y_train,
+            validation_data=(X_val, y_val),
+            epochs=epochs,
+            batch_size=batch_size,
+            verbose=0,
+            callbacks=[
+                tf.keras.callbacks.EarlyStopping(
+                    monitor="val_accuracy",
+                    patience=10,
+                    restore_best_weights=True
+                )
+            ]
+        )
+
+        return max(history.history["val_accuracy"])
+    
+    def tune_raman_kfold(self, dataset, number_classes, k=5, n_trials=30, random_state=42,
+                         num_classes=3):
+
+        utils.set_seed(random_state)
+        folds = dataset.k_fold(k)
+
+        BASE_EPOCHS = self.epochs
+        BASE_LOSS = self.loss
+        BASE_METRICS = self.metrics
+        BASE_BATCH = self.batch_size
+
+        def objective(trial):
+
+            params = {
+                "lr": trial.suggest_float("lr", 1e-5, 3e-3, log=True),
+                "optimizer": trial.suggest_categorical("optimizer", ["adam", "rmsprop"]),
+                "batch_size": trial.suggest_categorical(
+                    "batch_size",
+                    [128, 256, BASE_BATCH, 512]
+                ),
+                "dropout": trial.suggest_float("dropout", 0.1, 0.7),
+
+                # CNN (centered on benchmark)
+                "f1": trial.suggest_int("f1", 70, 130),
+                "f2": trial.suggest_int("f2", 70, 130),
+                "f3": trial.suggest_int("f3", 15, 40),
+
+                "k1": trial.suggest_int("k1", 60, 140),
+                "k2": trial.suggest_int("k2", 3, 9),
+                "k3": trial.suggest_int("k3", 5, 15),
+
+                # DENSE (centered)
+                "d1": trial.suggest_int("d1", 500, 950),
+                "d2": trial.suggest_int("d2", 120, 300),
+                "d3": trial.suggest_int("d3", 80, 220),
+            }
+
+            scores = []
+
+            for train_idx, val_idx in folds:
+
+                X_train = dataset.spectra[train_idx][..., None]
+                y_train = dataset.labels[train_idx]
+
+                X_val = dataset.spectra[val_idx][..., None]
+                y_val = dataset.labels[val_idx]
+
+                y_train = to_categorical(y_train, num_classes)
+                y_val = to_categorical(y_val, num_classes)
+
+                model = self.build_raman_model(
+                    params,
+                    number_classes,
+                    BASE_LOSS,
+                    BASE_METRICS
+                )
+
+                score = self.train_single_fold(
+                    model,
+                    X_train, y_train,
+                    X_val, y_val,
+                    BASE_EPOCHS,
+                    params["batch_size"]
+                )
+
+                scores.append(score)
+
+            return np.mean(scores)
+
+        study = optuna.create_study(direction="maximize")
+        study.optimize(objective, n_trials=n_trials)
+
+        print("\n====================")
+        print("BEST RESULT")
+        print("====================")
+        print("Best accuracy:", study.best_value)
+        print("Best params:")
+        for k, v in study.best_params.items():
+            print(k, ":", v)
+
+        return study
+    
+    def build_resnet_raman(self, params, n_classes=3):
+
+        inputs = tf.keras.layers.Input(shape=(991, 1))
+
+        x = tf.keras.layers.ZeroPadding1D(3)(inputs)
+
+        x = tf.keras.layers.Conv1D(
+            params["init_filters"],
+            7,
+            strides=2,
+            padding='same'
+        )(x)
+
+        x = tf.keras.layers.BatchNormalization()(x)
+        x = tf.keras.layers.Activation('relu')(x)
+        x = tf.keras.layers.MaxPool1D(pool_size=3, strides=2, padding='same')(x)
+
+        block_layers = [3, 4, 6, 3]
+        filters = params["init_filters"]
+
+        for i in range(4):
+
+            if i != 0:
+                filters *= 2
+                x = models.convolutional_block(x, filters)
+
+            for j in range(block_layers[i]):
+                x = models.identity_block(x, filters)
+
+        x = tf.keras.layers.AveragePooling1D(2, padding='same')(x)
+        x = tf.keras.layers.Flatten()(x)
+
+        x = tf.keras.layers.Dense(
+            params["dense1"],
+            activation='relu',
+            kernel_regularizer=tf.keras.regularizers.l2(params["l2"])
+        )(x)
+
+        x = tf.keras.layers.Dropout(params["dropout"])(x)
+
+        outputs = tf.keras.layers.Dense(n_classes, activation='softmax')(x)
+
+        if params["optimizer"] == "adam":
+            opt = tf.keras.optimizers.Adam(learning_rate=params["lr"])
+        else:
+            opt = tf.keras.optimizers.RMSprop(learning_rate=params["lr"])
+
+        model = tf.keras.models.Model(inputs, outputs)
+
+        model.compile(
+            optimizer=opt,
+            loss="sparse_categorical_crossentropy",
+            metrics=["accuracy"]
+        )
+
+        return model
+
+    def tune_resnet_kfold(self, dataset, n_classes, k=5, n_trials=30, random_state=42,
+                          num_classes=3):
+
+
+        utils.set_seed(random_state)
+        folds = dataset.k_fold(k)
+
+        BASE_EPOCHS = self.epochs
+        BASE_BATCH = self.batch_size
+
+        def objective(trial):
+
+            # =========================
+            # SEARCH SPACE (RESNET-SPECIFIC)
+            # =========================
+            params = {
+                "lr": trial.suggest_float("lr", 1e-5, 3e-3, log=True),
+                "optimizer": trial.suggest_categorical("optimizer", ["adam", "rmsprop"]),
+                "batch_size": trial.suggest_categorical("batch_size", [128, 256, BASE_BATCH, 512]),
+
+                # MODEL CAPACITY
+                "init_filters": trial.suggest_categorical("init_filters", [32, 64, 96, 128]),
+
+                # HEAD
+                "dense1": trial.suggest_int("dense1", 256, 1024),
+                "dropout": trial.suggest_float("dropout", 0.1, 0.6),
+
+                # REGULARIZATION
+                "l2": trial.suggest_float("l2", 1e-6, 1e-3, log=True),
+            }
+
+            scores = []
+
+            for train_idx, val_idx in folds:
+
+                X_train = dataset.spectra[train_idx][..., None]
+                y_train = dataset.labels[train_idx]
+
+                X_val = dataset.spectra[val_idx][..., None]
+                y_val = dataset.labels[val_idx]
+
+                model = self.build_resnet_raman(params, n_classes)
+
+                try:
+                    score = self.train_single_fold(
+                        model,
+                        X_train,
+                        y_train,
+                        X_val,
+                        y_val,
+                        BASE_EPOCHS,
+                        params["batch_size"]
+                    )
+                    scores.append(score)
+
+                except tf.errors.ResourceExhaustedError:
+                    tf.keras.backend.clear_session()
+                    del model, X_train, y_train, X_val, y_val
+                    gc.collect()
+                    raise optuna.exceptions.TrialPruned()
+
+                del model, X_train, y_train, X_val, y_val
+                tf.keras.backend.clear_session()
+                gc.collect()
+
+            return float(np.mean(scores))
+
+        study = optuna.create_study(direction="maximize")
+        study.optimize(objective, n_trials=n_trials)
+
+        print("\n====================")
+        print("BEST RESNET RESULT")
+        print("====================")
+        print("Best accuracy:", study.best_value)
+        print("Best params:", study.best_params)
+
+        return study
