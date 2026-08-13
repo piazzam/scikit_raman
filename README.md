@@ -56,7 +56,7 @@ To keep your project environment clean and isolated, it's recommended to install
 3. Clone the scikit_raman repository:
 
    ```
-   git clone https://gitlab.com/marcoplaza98/scikit_raman.git
+   git clone https://github.com/piazzam/scikit_raman.git
    ```
 
 4. Navigate into the cloned repository directory:
