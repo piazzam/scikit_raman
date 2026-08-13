@@ -126,6 +126,11 @@ scikit-raman-cli -p ml_config.yaml -t ml
 
 scikit_raman should work on any platform where Python is supported. The installation steps provided above are applicable to most Unix-like systems (Linux, macOS). For Windows users, you may need to adjust the commands slightly to accommodate differences in command line interfaces.
 
+## 📄 License
+
+This project is licensed under the BSD 3-Clause License.
+See the [LICENSE](LICENSE) file for details.
+
 ## 🙏 Acknowledgments
 
 We extend our gratitude to the following individuals for their contributions to this project:
