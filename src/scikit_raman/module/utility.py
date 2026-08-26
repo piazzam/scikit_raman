@@ -1,6 +1,4 @@
 import numpy as np
-from tensorflow import keras
-import tensorflow as tf
 from sklearn.utils import check_random_state
 import random
 import os
@@ -12,10 +10,6 @@ def spectra_to_numpy(df):
         spectra_list.append(np.array(el))
     spectra_list = np.array(spectra_list)
     return spectra_list
-
-#def set_seed_keras(seed):
-    #keras.utils.set_random_seed(seed) #this also set ranomd seed for numpy - tensorflow and python
-    #tf.config.experimental.enable_op_determinism()
 
 def set_seed_scikit_learn(seed):
     random_state = check_random_state(seed)
