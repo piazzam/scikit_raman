@@ -1,6 +1,6 @@
 # scikit_raman
 
-scikit_raman is a Python library designed for manipulation and analysis of Raman Spectral Data. This project originated from the author's thesis during their Master's degree in Computer Science at the University of Milan-Bicocca.
+scikit_raman is an internal Python library designed for manipulation and analysis of Raman Spectral Data. This project originated from the author's thesis during their Master's degree in Computer Science at the University of Milan-Bicocca.
 
 ## 📌 Table of Contents
 
@@ -124,7 +124,7 @@ scikit-raman-cli -p ml_config.yaml -t ml
 
 ## 🌎 Supported Platforms
 
-scikit_raman should work on any platform where Python is supported. The installation steps provided above are applicable to most Unix-like systems (Linux, macOS). For Windows users, you may need to adjust the commands slightly to accommodate differences in command line interfaces.
+scikit_raman was primarily developed and used in Linux-based research environments with Python 3.9 and 3.10. Other operating systems and Python versions may work but have not been systematically tested. GPU support depends on the selected deep-learning framework and the compatibility of the local CUDA environment.
 
 ## 📄 License
 
