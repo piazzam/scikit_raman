@@ -18,6 +18,12 @@ scikit_raman is an internal Python library designed for manipulation and analysi
   - [🌎 Supported Platforms](#-supported-platforms)
   - [🙏 Acknowledgments](#-acknowledgments)
 
+## 📚 Documentation
+
+The complete documentation, including configuration options, command-line usage, and API references, is available at:
+
+**[scikit_raman Documentation](https://piazzam.github.io/scikit_raman/)**
+
 ## 🔗 Dependencies
 
 Before installing scikit_raman, ensure you have the following prerequisites installed:
