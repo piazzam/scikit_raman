@@ -151,6 +151,7 @@ If you use or refer to `scikit_raman` in academic work, please cite the publicat
   year    = {2024},
   doi     = {10.1016/j.compbiomed.2024.108028}
 }
+```
 
 ## 📄 License
 
