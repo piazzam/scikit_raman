@@ -6,6 +6,7 @@ scikit_raman is an internal Python library designed for manipulation and analysi
 
 - [scikit\_raman](#scikit_raman)
   - [📌 Table of Contents](#-table-of-contents)
+  - [📚 Documentation](#-documentation)
   - [🔗 Dependencies](#-dependencies)
   - [⚙️ Installation](#️-installation)
     - [Method 1: Standard Installation](#method-1-standard-installation)
@@ -16,6 +17,8 @@ scikit_raman is an internal Python library designed for manipulation and analysi
     - [Python API](#python-api)
     - [CLI](#cli)
   - [🌎 Supported Platforms](#-supported-platforms)
+  - [📝 Citation](#-citation)
+  - [📄 License](#-license)
   - [🙏 Acknowledgments](#-acknowledgments)
 
 ## 📚 Documentation
@@ -131,6 +134,23 @@ scikit-raman-cli -p ml_config.yaml -t ml
 ## 🌎 Supported Platforms
 
 scikit_raman was primarily developed and used in Linux-based research environments with Python 3.9 and 3.10. Other operating systems and Python versions may work but have not been systematically tested. GPU support depends on the selected deep-learning framework and the compatibility of the local CUDA environment.
+
+## 📝 Citation
+
+If you use or refer to `scikit_raman` in academic work, please cite the publication describing the computational pipeline:
+
+> D. Bertazioli, M. Piazza, C. Carlomagno, A. Gualerzi, M. Bedoni, and E. Messina, “An integrated computational pipeline for machine learning-driven diagnosis based on Raman spectra of saliva samples,” *Computers in Biology and Medicine*, vol. 171, article 108028, 2024. https://doi.org/10.1016/j.compbiomed.2024.108028
+
+```bibtex
+@article{bertazioli2024integrated,
+  title   = {An integrated computational pipeline for machine learning-driven diagnosis based on Raman spectra of saliva samples},
+  author  = {Bertazioli, D. and Piazza, M. and Carlomagno, C. and Gualerzi, A. and Bedoni, M. and Messina, E.},
+  journal = {Computers in Biology and Medicine},
+  volume  = {171},
+  pages   = {108028},
+  year    = {2024},
+  doi     = {10.1016/j.compbiomed.2024.108028}
+}
 
 ## 📄 License
 
