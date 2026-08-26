@@ -1,0 +1,37 @@
+site_name: scikit_raman
+site_description: Internal research library for Raman spectral data analysis
+site_url: https://piazzam.github.io/scikit_raman/
+
+repo_name: piazzam/scikit_raman
+repo_url: https://github.com/piazzam/scikit_raman
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          paths:
+            - src
+          options:
+            docstring_style: numpy
+            show_source: true
+            show_signature_annotations: true
+            members_order: source
+
+nav:
+  - Overview: index.md
+  - Configuration: CONFIGURATIONS.md
+  - Command-line interface: CLI.md
+  - API reference:
+      - Dataset: api/dataset.md
+      - Preprocessing: api/preprocessing.md
+      - Experiments: api/experiments.md
+      - Models: api/models.md
+      - Evaluation: api/evaluation.md
