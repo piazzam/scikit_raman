@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          # Pinned to 3.10: the runtime dependencies in pyproject.toml are hard
+          # pinned to versions (numpy 1.23.5, pandas 1.4.4, ...) that only ship
+          # wheels for 3.9/3.10. Widening the matrix needs those pins relaxed
+          # first (a separate change).
+          python-version: "3.10"
+          cache: pip
+
+      - name: Install package and dev dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e '.[dev]'
+
+      - name: Lint with ruff
+        run: ruff check .
+
+      - name: Run tests
+        run: pytest -v
