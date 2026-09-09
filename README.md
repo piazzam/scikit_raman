@@ -2,6 +2,10 @@
 
 scikit_raman is an internal Python library designed for manipulation and analysis of Raman Spectral Data. This project originated from the author's thesis during their Master's degree in Computer Science at the University of Milan-Bicocca.
 
+## 🏛️ Academic affiliation
+
+This project was developed at the **University of Milano-Bicocca**, within the **MIND Laboratory**, under the supervision of **Prof. Enza Messina**.
+
 ## 📌 Table of Contents
 
 - [scikit\_raman](#scikit_raman)
